@@ -1,11 +1,13 @@
-module github.com/bloxapp/ssv
+module github.com/MatheusFranco99/ssv
 
 go 1.19
 
 require (
+	github.com/MatheusFranco99/ssv-spec-AleaBFT v0.3.2
 	github.com/aquasecurity/table v1.8.0
 	github.com/attestantio/go-eth2-client v0.15.2
 	github.com/bloxapp/eth2-key-manager v1.2.0
+	github.com/bloxapp/ssv v0.4.0
 	github.com/bloxapp/ssv-spec v0.2.8-0.20230118104749-37a78c8e8a93
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1
 	github.com/dgraph-io/badger/v3 v3.2103.2
@@ -161,7 +163,7 @@ require (
 	golang.org/x/exp v0.0.0-20230105000112-eab7a2c85304 // indirect
 	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
