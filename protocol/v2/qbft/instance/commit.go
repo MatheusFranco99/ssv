@@ -12,15 +12,11 @@ import (
 	"github.com/bloxapp/ssv/protocol/v2/qbft"
 )
 
-func makeTimestamp() int64 {
-    return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
 // UponCommit returns true if a quorum of commit messages was received.
 // Assumes commit message is valid!
 func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgContainer *specqbft.MsgContainer) (bool, []byte, *specqbft.SignedMessage, error) {
 	
-	i.logger.Debug("$$$$$$ UponCommit start. time(micro):",makeTimestamp())
+	i.logger.Debug("$$$$$$ UponCommit start.",zap.Int64("time(micro)",makeTimestamp()))
 	
 	addMsg, err := commitMsgContainer.AddFirstMsgForSignerAndRound(signedCommit)
 	if err != nil {
@@ -40,12 +36,12 @@ func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgCon
 			return false, nil, nil, errors.Wrap(err, "could not get msg commit data")
 		}
 
-		i.logger.Debug("$$$$$$ UponCommit start aggregate. time(micro):",makeTimestamp())
+		i.logger.Debug("$$$$$$ UponCommit start aggregate. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
 		agg, err := aggregateCommitMsgs(commitMsgs)
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
 		}
-		i.logger.Debug("$$$$$$ UponCommit finish aggregate. time(micro):",makeTimestamp())
+		i.logger.Debug("$$$$$$ UponCommit finish aggregate. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
 
 
 		i.logger.Debug("got commit quorum",
@@ -53,11 +49,11 @@ func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgCon
 			zap.Any("commit-signers", signedCommit.Signers),
 			zap.Any("agg-signers", agg.Signers))
 
-		i.logger.Debug("$$$$$$ UponCommit return with quorum. time(micro):",makeTimestamp())
+		i.logger.Debug("$$$$$$ UponCommit return with quorum. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
 
 		return true, msgCommitData.Data, agg, nil
 	}
-	i.logger.Debug("$$$$$$ UponCommit return no quorum. time(micro):",makeTimestamp())
+	i.logger.Debug("$$$$$$ UponCommit return no quorum. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
 	return false, nil, nil, nil
 }
 

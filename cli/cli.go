@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/cli/bootnode"
-	"github.com/bloxapp/ssv/cli/operator"
+	"github.com/MatheusFranco99/ssv/cli/bootnode"
+	"github.com/MatheusFranco99/ssv/cli/operator"
 )
 
 // Logger is the default logger

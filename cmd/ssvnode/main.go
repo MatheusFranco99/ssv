@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bloxapp/ssv/cli"
+	"github.com/MatheusFranco99/ssv/cli"
 )
 
 var (

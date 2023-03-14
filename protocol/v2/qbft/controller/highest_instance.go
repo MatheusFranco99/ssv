@@ -1,9 +1,9 @@
 package controller
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
 
 	"github.com/pkg/errors"
 )

@@ -12,9 +12,6 @@ import (
 )
 
 
-func makeTimestamp() int64 {
-    return time.Now().UnixNano() / int64(time.Millisecond)
-}
 
 // uponPrepare process prepare message
 // Assumes prepare message is valid!
@@ -22,8 +19,8 @@ func (i *Instance) uponPrepare(
 	signedPrepare *specqbft.SignedMessage,
 	prepareMsgContainer,
 	commitMsgContainer *specqbft.MsgContainer) error {
+		i.logger.Debug("$$$$$$ UponPrepare start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
 	
-	i.logger.Debug("$$$$$$ UponPrepare start. time(micro):",makeTimestamp())
 
 
 	acceptedProposalData, err := i.State.ProposalAcceptedForCurrentRound.Message.GetProposalData()
@@ -60,16 +57,16 @@ func (i *Instance) uponPrepare(
 		zap.Any("prepare-signers", signedPrepare.Signers),
 		zap.Any("commit-singers", commitMsg.Signers))
 
-	i.logger.Debug("$$$$$$ UponPrepare broadcast start. time(micro):",makeTimestamp())
+	i.logger.Debug("$$$$$$ UponPrepare broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
 
 	if err := i.Broadcast(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 
-	i.logger.Debug("$$$$$$ UponPrepare broadcast finish. time(micro):",makeTimestamp())
+	i.logger.Debug("$$$$$$ UponPrepare broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
 
 
-	i.logger.Debug("$$$$$$ UponPrepare return. time(micro):",makeTimestamp())
+	i.logger.Debug("$$$$$$ UponPrepare return. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
 	return nil
 }
 

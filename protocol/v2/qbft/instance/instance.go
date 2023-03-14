@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"sync"
+	"time"
 
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
@@ -68,7 +69,7 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 
 		i.config.GetTimer().TimeoutForRound(specqbft.FirstRound)
 
-		i.logger.Debug("$$$$$$ starting QBFT instance. time(micro):",makeTimestamp())
+		i.logger.Debug("$$$$$$ starting QBFT instance. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
 
 		// propose if this node is the proposer
 		if proposer(i.State, i.GetConfig(), specqbft.FirstRound) == i.State.Share.OperatorID {
@@ -121,7 +122,7 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 			if decided {
 				i.State.Decided = decided
 				i.State.DecidedValue = decidedValue
-				i.logger.Debug("$$$$$$ Decided on value with commit. Value:",decidedValue," Decision:",decided, " time(micro):",makeTimestamp())
+				i.logger.Debug("$$$$$$ Decided on value with commit.",zap.Int64("time(micro)",makeTimestamp()))
 			}
 			return err
 		case specqbft.RoundChangeMsgType:
