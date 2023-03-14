@@ -1,9 +1,9 @@
 package forksfactory
 
 import (
-	"github.com/bloxapp/ssv/ibft/storage/forks"
-	"github.com/bloxapp/ssv/ibft/storage/forks/genesis"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	"github.com/MatheusFranco99/ssv/ibft/storage/forks"
+	"github.com/MatheusFranco99/ssv/ibft/storage/forks/genesis"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 )
 
 // NewFork returns a new fork instance from the given version

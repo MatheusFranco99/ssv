@@ -7,19 +7,19 @@ import (
 	"strings"
 	"testing"
 
-	spectests "github.com/bloxapp/ssv-spec/qbft/spectest/tests"
-	"github.com/bloxapp/ssv-spec/qbft/spectest/tests/controller/futuremsg"
-	"github.com/bloxapp/ssv-spec/qbft/spectest/tests/timeout"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv-spec/types/testingutils"
-	testing2 "github.com/bloxapp/ssv/protocol/v2/qbft/testing"
+	spectests "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests/controller/futuremsg"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests/timeout"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
+	testing2 "github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
-	protocoltesting "github.com/bloxapp/ssv/protocol/v2/testing"
-	"github.com/bloxapp/ssv/protocol/v2/types"
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 
 func init() {

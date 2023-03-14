@@ -16,14 +16,14 @@ import (
 	"github.com/bloxapp/eth2-key-manager/signer"
 	slashingprotection "github.com/bloxapp/eth2-key-manager/slashing_protection"
 	"github.com/bloxapp/eth2-key-manager/wallets"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/ferranbt/fastssz"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
-	"github.com/bloxapp/ssv/storage/basedb"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 // minimal att&block epoch/slot distance to protect slashing

@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/utils/logex"
-	"github.com/bloxapp/ssv/utils/tasks"
+	"github.com/MatheusFranco99/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/utils/tasks"
 )
 
 func init() {

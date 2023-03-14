@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
-	"github.com/bloxapp/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
 )
 
 //go:generate mockgen -package=eth1 -destination=./mock_client.go -source=./client.go

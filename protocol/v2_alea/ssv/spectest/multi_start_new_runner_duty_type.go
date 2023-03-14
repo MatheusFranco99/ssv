@@ -4,12 +4,12 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/bloxapp/ssv-spec/ssv"
-	"github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv-spec/types/testingutils"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bloxapp/ssv/protocol/v2/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
 )
 
 type StartNewRunnerDutySpecTest struct {

@@ -3,7 +3,7 @@ package types
 import (
 	"sync"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 var (

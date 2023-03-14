@@ -2,8 +2,8 @@ package storage
 
 import (
 	"fmt"
-	"github.com/bloxapp/ssv/storage/basedb"
-	"github.com/bloxapp/ssv/storage/kv"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/storage/kv"
 )
 
 // GetStorageFactory resolve and returns db instance based on db type

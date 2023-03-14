@@ -5,9 +5,9 @@ import (
 	"encoding/gob"
 	"fmt"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
 )
 
 // SSVShare is a combination of spectypes.Share and its Metadata.

@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	types "github.com/bloxapp/ssv-spec/types"
+	types "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bloxapp/ssv/eth1/abiparser"
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"

@@ -2,7 +2,7 @@ package message
 
 import (
 	"fmt"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 const (

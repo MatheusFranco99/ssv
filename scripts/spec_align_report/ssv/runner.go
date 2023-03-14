@@ -1,6 +1,6 @@
 package ssv
 
-import "github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+import "github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 
 func ProcessRunner() {
 	if err := utils.Mkdir(utils.DataPath+"/runner", true); err != nil {

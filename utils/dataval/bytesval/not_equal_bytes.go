@@ -3,7 +3,7 @@ package bytesval
 import (
 	"bytes"
 	"errors"
-	"github.com/bloxapp/ssv/ibft/valcheck"
+	"github.com/MatheusFranco99/ssv/ibft/valcheck"
 )
 
 // notEqualBytesValidation implements val.ValueImplementation interface

@@ -4,7 +4,7 @@ import (
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
 )
 
 type signing interface {

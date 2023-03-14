@@ -2,7 +2,7 @@ package discovery
 
 import (
 	"context"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"
 	"time"
 

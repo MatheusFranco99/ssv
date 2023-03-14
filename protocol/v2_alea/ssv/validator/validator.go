@@ -4,19 +4,19 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/bloxapp/ssv/protocol/v2/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	specssv "github.com/bloxapp/ssv-spec/ssv"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/ibft/storage"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/queue"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/runner"
-	"github.com/bloxapp/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/ibft/storage"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
 )
 
 var logger = logging.Logger("ssv/protocol/ssv/validator").Desugar()

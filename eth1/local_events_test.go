@@ -1,7 +1,7 @@
 package eth1
 
 import (
-	"github.com/bloxapp/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 	"testing"

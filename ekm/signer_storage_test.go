@@ -16,10 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
-	ssvstorage "github.com/bloxapp/ssv/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
-	"github.com/bloxapp/ssv/utils/threshold"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	ssvstorage "github.com/MatheusFranco99/ssv/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/utils/threshold"
 )
 
 func _byteArray(input string) []byte {

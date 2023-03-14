@@ -3,8 +3,8 @@ package validator
 import (
 	"context"
 	"fmt"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/network/forks/genesis"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/network/forks/genesis"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"sync"

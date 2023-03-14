@@ -3,8 +3,8 @@ package message
 import (
 	"encoding/json"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 // StatusCode is the response status code

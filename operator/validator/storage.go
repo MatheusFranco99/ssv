@@ -6,13 +6,13 @@ import (
 	"strings"
 	"sync"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"go.uber.org/zap"
 
-	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
-	"github.com/bloxapp/ssv/protocol/v2/blockchain/eth1"
-	"github.com/bloxapp/ssv/protocol/v2/types"
-	"github.com/bloxapp/ssv/storage/basedb"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/eth1"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 // ICollection interface for validator storage

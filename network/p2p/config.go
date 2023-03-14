@@ -14,11 +14,11 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network"
-	"github.com/bloxapp/ssv/network/commons"
-	"github.com/bloxapp/ssv/network/forks"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	uc "github.com/bloxapp/ssv/utils/commons"
+	"github.com/MatheusFranco99/ssv/network"
+	"github.com/MatheusFranco99/ssv/network/commons"
+	"github.com/MatheusFranco99/ssv/network/forks"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	uc "github.com/MatheusFranco99/ssv/utils/commons"
 )
 
 const (

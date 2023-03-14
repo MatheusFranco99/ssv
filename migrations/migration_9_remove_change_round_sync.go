@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	"github.com/bloxapp/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 var migrationRemoveChangeRoundSync = Migration{

@@ -4,7 +4,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"go.uber.org/zap"
 
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 )
 
 // getForkVersion returns the fork version of the given slot

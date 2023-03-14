@@ -4,11 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 
-	specssv "github.com/bloxapp/ssv-spec/ssv"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 )
 
 // State holds all the relevant progress the duty execution progress

@@ -4,12 +4,12 @@ import (
 	"context"
 	"sync"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"go.uber.org/zap"
 
-	qbftstorage "github.com/bloxapp/ssv/ibft/storage"
-	"github.com/bloxapp/ssv/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
+	qbftstorage "github.com/MatheusFranco99/ssv/ibft/storage"
+	"github.com/MatheusFranco99/ssv/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 var db basedb.IDb

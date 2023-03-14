@@ -3,7 +3,7 @@ package topics
 import (
 	"bytes"
 	"context"
-	"github.com/bloxapp/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/forks"
 	ps_pb "github.com/libp2p/go-libp2p-pubsub/pb"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/zap"

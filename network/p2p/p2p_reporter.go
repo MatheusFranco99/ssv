@@ -3,11 +3,11 @@ package p2pv1
 import (
 	"math"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"go.uber.org/zap"
 
-	ssvpeers "github.com/bloxapp/ssv/network/peers"
-	protocolp2p "github.com/bloxapp/ssv/protocol/v2/p2p"
+	ssvpeers "github.com/MatheusFranco99/ssv/network/peers"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 )
 
 // ReportValidation reports the result for the given message

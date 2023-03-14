@@ -11,13 +11,13 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/eth1"
-	"github.com/bloxapp/ssv/eth1/abiparser"
-	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
-	"github.com/bloxapp/ssv/protocol/v2/types"
-	registrystorage "github.com/bloxapp/ssv/registry/storage"
-	"github.com/bloxapp/ssv/utils/rsaencryption"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/eth1"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	registrystorage "github.com/MatheusFranco99/ssv/registry/storage"
+	"github.com/MatheusFranco99/ssv/utils/rsaencryption"
 )
 
 // UpdateShareMetadata will update the given share object w/o involving storage,

@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/bloxapp/ssv/scripts/spec_align_report/qbft"
-	"github.com/bloxapp/ssv/scripts/spec_align_report/ssv"
-	"github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+	"github.com/MatheusFranco99/ssv/scripts/spec_align_report/qbft"
+	"github.com/MatheusFranco99/ssv/scripts/spec_align_report/ssv"
+	"github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 )
 
 func main() {

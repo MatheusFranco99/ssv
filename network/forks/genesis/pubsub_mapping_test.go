@@ -2,7 +2,7 @@ package genesis
 
 import (
 	"encoding/hex"
-	"github.com/bloxapp/ssv/utils/threshold"
+	"github.com/MatheusFranco99/ssv/utils/threshold"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/stretchr/testify/require"
 	"testing"

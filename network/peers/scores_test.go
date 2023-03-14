@@ -2,8 +2,8 @@ package peers
 
 import (
 	crand "crypto/rand"
-	"github.com/bloxapp/ssv/network/commons"
-	nettesting "github.com/bloxapp/ssv/network/testing"
+	"github.com/MatheusFranco99/ssv/network/commons"
+	nettesting "github.com/MatheusFranco99/ssv/network/testing"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"

@@ -3,10 +3,10 @@ package storage
 import (
 	"sync"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"go.uber.org/zap"
 )
 

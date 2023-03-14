@@ -3,17 +3,17 @@ package storage
 import (
 	"testing"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
-	ssvstorage "github.com/bloxapp/ssv/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
-	"github.com/bloxapp/ssv/utils/logex"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	ssvstorage "github.com/MatheusFranco99/ssv/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 
 func init() {

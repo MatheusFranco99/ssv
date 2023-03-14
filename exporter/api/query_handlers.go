@@ -4,13 +4,13 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/protocol/v2/message"
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
 )
 
 const (

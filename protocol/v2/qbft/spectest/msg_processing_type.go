@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft"
-	qbfttesting "github.com/bloxapp/ssv/protocol/v2/qbft/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	qbfttesting "github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectests "github.com/bloxapp/ssv-spec/qbft/spectest/tests"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	spectestingutils "github.com/bloxapp/ssv-spec/types/testingutils"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectests "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 	"github.com/stretchr/testify/require"
 )
 

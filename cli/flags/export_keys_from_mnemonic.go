@@ -3,7 +3,7 @@ package flags
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/bloxapp/ssv/utils/cliflag"
+	"github.com/MatheusFranco99/ssv/utils/cliflag"
 )
 
 // Flag names.

@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"github.com/bloxapp/ssv/network/records"
+	"github.com/MatheusFranco99/ssv/network/records"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"

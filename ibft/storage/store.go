@@ -6,17 +6,17 @@ import (
 	"log"
 	"sync"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/ibft/storage/forks"
-	forksfactory "github.com/bloxapp/ssv/ibft/storage/forks/factory"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/ibft/storage/forks"
+	forksfactory "github.com/MatheusFranco99/ssv/ibft/storage/forks/factory"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 const (

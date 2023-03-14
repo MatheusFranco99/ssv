@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )

@@ -1,7 +1,7 @@
 package discovery
 
 import (
-	"github.com/bloxapp/ssv/utils/format"
+	"github.com/MatheusFranco99/ssv/utils/format"
 	"strconv"
 )
 

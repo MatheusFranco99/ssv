@@ -4,7 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/bloxapp/ssv/network/commons"
+	"github.com/MatheusFranco99/ssv/network/commons"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

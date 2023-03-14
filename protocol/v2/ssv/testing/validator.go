@@ -3,14 +3,14 @@ package testing
 import (
 	"context"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	spectestingutils "github.com/bloxapp/ssv-spec/types/testingutils"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 
-	"github.com/bloxapp/ssv/protocol/v2/ssv/runner"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/validator"
-	"github.com/bloxapp/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
 )
 
 var BaseValidator = func(keySet *spectestingutils.TestKeySet) *validator.Validator {

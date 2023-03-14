@@ -18,7 +18,7 @@ RUN cd jemalloc-5.2.1 \
 RUN go version
 RUN python --version
 
-WORKDIR /go/src/github.com/bloxapp/ssv/
+WORKDIR /go/src/github.com/MatheusFranco99/ssv/
 COPY go.mod .
 COPY go.sum .
 RUN go mod download

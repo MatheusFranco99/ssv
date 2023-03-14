@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectests "github.com/bloxapp/ssv-spec/qbft/spectest/tests"
-	"github.com/bloxapp/ssv-spec/types/testingutils"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectests "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )

@@ -2,7 +2,7 @@ package records
 
 import (
 	crand "crypto/rand"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/stretchr/testify/require"
 	"testing"

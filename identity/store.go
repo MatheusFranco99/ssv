@@ -2,8 +2,8 @@ package p2p
 
 import (
 	"crypto/ecdsa"
-	"github.com/bloxapp/ssv/storage/basedb"
-	"github.com/bloxapp/ssv/utils"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/utils"
 	gcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

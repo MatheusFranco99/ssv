@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/bloxapp/ssv/protocol/v2/message"
-	protocolp2p "github.com/bloxapp/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"

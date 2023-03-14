@@ -3,7 +3,7 @@ package controller
 import (
 	"testing"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
 
 	"github.com/stretchr/testify/require"
 )

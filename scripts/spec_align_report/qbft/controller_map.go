@@ -1,6 +1,6 @@
 package qbft
 
-import "github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+import "github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 
 // Controller mapping
 
@@ -9,11 +9,11 @@ func ControllerSet() []utils.KeyValue {
 
 	// list of changes package names & imports between spec and implementation
 	controllerMap.Set("package controller", "package qbft")
-	controllerMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	controllerMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	controllerMap.Set("\"go.uber.org/zap\"\n\n", "")
-	controllerMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
-	controllerMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/instance\"\n", "")
-	controllerMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	controllerMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
+	controllerMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance\"\n", "")
+	controllerMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	controllerMap.Set("logging \"github.com/ipfs/go-log\"\n", "")
 	controllerMap.Set("*instance.Instance", "*Instance")
 	controllerMap.Set("specqbft.", "")
@@ -49,11 +49,11 @@ func DecidedSet() []utils.KeyValue {
 
 	// list of changes package names & imports between spec and implementation
 	decidedMap.Set("package controller", "package qbft")
-	decidedMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	decidedMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	decidedMap.Set("\"go.uber.org/zap\"\n", "")
-	decidedMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/instance\"\n", "")
-	decidedMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
-	decidedMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	decidedMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance\"\n", "")
+	decidedMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
+	decidedMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	decidedMap.Set("specqbft.", "")
 	decidedMap.Set("spectypes.", "types.")
 	decidedMap.Set("instance.NewInstance", "NewInstance")
@@ -78,10 +78,10 @@ func FutureMessageSet() []utils.KeyValue {
 
 	// list of changes package names & imports between spec and implementation
 	futureMessageMap.Set("package controller", "package qbft")
-	futureMessageMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "")
-	futureMessageMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
+	futureMessageMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "")
+	futureMessageMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
 	futureMessageMap.Set("\"go.uber.org/zap\"\n", "")
-	futureMessageMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	futureMessageMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	futureMessageMap.Set("specqbft.", "")
 	futureMessageMap.Set("spectypes.", "types.")
 	futureMessageMap.Set("qbft.IConfig", "IConfig")

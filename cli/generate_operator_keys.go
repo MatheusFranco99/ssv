@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bloxapp/ssv/utils/rsaencryption"
+	"github.com/MatheusFranco99/ssv/utils/rsaencryption"
 )
 
 // generateOperatorKeysCmd is the command to generate operator private/public keys

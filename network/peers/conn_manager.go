@@ -2,7 +2,7 @@ package peers
 
 import (
 	"context"
-	"github.com/bloxapp/ssv/network/records"
+	"github.com/MatheusFranco99/ssv/network/records"
 	connmgrcore "github.com/libp2p/go-libp2p/core/connmgr"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"

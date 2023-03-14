@@ -1,7 +1,7 @@
 package records
 
 import (
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/p2p/enr"
 	"github.com/ethereum/go-ethereum/rlp"

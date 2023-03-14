@@ -1,18 +1,18 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+	"github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 )
 
 func RunnerSet() []utils.KeyValue {
 	var runnerSet = utils.NewMap()
 	runnerSet.Set("package runner", "package ssv")
-	runnerSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
-	runnerSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	runnerSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	runnerSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
+	runnerSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	runnerSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	runnerSet.Set("logging \"github.com/ipfs/go-log\"\n", "")
 	runnerSet.Set("\"go.uber.org/zap\"\n\n", "")
-	runnerSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/controller\"\n", "")
+	runnerSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller\"\n", "")
 
 	runnerSet.Set("var logger = logging.Logger(\"ssv/protocol/ssv/runner\").Desugar()", "")
 	runnerSet.Set("specssv.", "")
@@ -36,9 +36,9 @@ func SpecRunnerSet() []utils.KeyValue {
 func RunnerStateSet() []utils.KeyValue {
 	var mapSet = utils.NewMap()
 	mapSet.Set("package runner", "package ssv")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/instance\"", "")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance\"", "")
 	mapSet.Set("specssv.", "")
 	mapSet.Set("instance.Instance", "qbft.Instance")
 	mapSet.Set("spectypes.", "types.")
@@ -48,7 +48,7 @@ func RunnerStateSet() []utils.KeyValue {
 func SpecRunnerStateSet() []utils.KeyValue {
 	var mapSet = utils.NewMap()
 
-	mapSet.Set("\"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	return mapSet.Range()
 }
 
@@ -56,11 +56,11 @@ func AggregatorSet() []utils.KeyValue {
 	var mapSet = utils.NewMap()
 	mapSet.Set("package runner", "package ssv")
 	mapSet.Set("\"encoding/hex\"", "")
-	mapSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	mapSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	mapSet.Set("\"go.uber.org/zap\"\n\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/controller\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller\"\n", "")
 	//mapSet.Set("var logger = logging.Logger(\"ssv/protocol/ssv/runner\").Desugar()", "")
 	mapSet.Set("specssv.", "")
 	mapSet.Set("specqbft.", "qbft.")
@@ -87,11 +87,11 @@ func AttesterSet() []utils.KeyValue {
 
 	mapSet.Set("package runner", "package ssv")
 	mapSet.Set("\"encoding/hex\"", "")
-	mapSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	mapSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	mapSet.Set("\"go.uber.org/zap\"\n\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/controller\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller\"\n", "")
 	mapSet.Set("logger   *zap.Logger\n", "")
 	mapSet.Set("logger := logger.With(zap.String(\"validator\", hex.EncodeToString(share.ValidatorPubKey)))\n", "")
 	mapSet.Set("logger:         logger.With(zap.String(\"who\", \"BaseRunner\")),\n", "")
@@ -119,11 +119,11 @@ func ProposerSet() []utils.KeyValue {
 
 	mapSet.Set("package runner", "package ssv")
 	mapSet.Set("\"encoding/hex\"", "")
-	mapSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	mapSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	mapSet.Set("\"go.uber.org/zap\"\n\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/controller\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller\"\n", "")
 	mapSet.Set("logger   *zap.Logger\n", "")
 	mapSet.Set("logger := logger.With(zap.String(\"validator\", hex.EncodeToString(share.ValidatorPubKey)))\n", "")
 	mapSet.Set("logger:         logger.With(zap.String(\"who\", \"BaseRunner\")),\n", "")
@@ -147,11 +147,11 @@ func SyncCommitteeSet() []utils.KeyValue {
 
 	mapSet.Set("package runner", "package ssv")
 	mapSet.Set("\"encoding/hex\"", "")
-	mapSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	mapSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	mapSet.Set("\"go.uber.org/zap\"\n\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/controller\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller\"\n", "")
 	mapSet.Set("logger   *zap.Logger\n", "")
 	mapSet.Set("logger := logger.With(zap.String(\"validator\", hex.EncodeToString(share.ValidatorPubKey)))\n", "")
 	mapSet.Set("logger:         logger.With(zap.String(\"who\", \"BaseRunner\")),\n", "")
@@ -178,11 +178,11 @@ func SyncCommitteeAggregatorSet() []utils.KeyValue {
 
 	mapSet.Set("package runner", "package ssv")
 	mapSet.Set("\"encoding/hex\"", "")
-	mapSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	mapSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	mapSet.Set("\"go.uber.org/zap\"\n\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft/controller\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller\"\n", "")
 	mapSet.Set("logger   *zap.Logger\n", "")
 	mapSet.Set("logger := logger.With(zap.String(\"validator\", hex.EncodeToString(share.ValidatorPubKey)))\n", "")
 	mapSet.Set("logger:         logger.With(zap.String(\"who\", \"BaseRunner\")),\n", "")
@@ -205,7 +205,7 @@ func RunnerValidationsSet() []utils.KeyValue {
 	var mapSet = utils.NewMap()
 
 	mapSet.Set("package runner", "package ssv")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
 	mapSet.Set("specssv.", "")
 
 	return mapSet.Range()
@@ -219,7 +219,7 @@ func RunnerSignaturesSet() []utils.KeyValue {
 	var mapSet = utils.NewMap()
 
 	mapSet.Set("package runner", "package ssv")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
 	mapSet.Set("specssv.", "")
 
 	return mapSet.Range()

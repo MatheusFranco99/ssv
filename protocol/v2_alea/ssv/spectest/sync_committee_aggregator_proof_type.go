@@ -2,13 +2,13 @@ package spectest
 
 import (
 	"encoding/hex"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/queue"
-	ssvtesting "github.com/bloxapp/ssv/protocol/v2/ssv/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
+	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2/ssv/testing"
 	"testing"
 
-	"github.com/bloxapp/ssv-spec/ssv/spectest/tests/runner/duties/synccommitteeaggregator"
-	"github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv-spec/types/testingutils"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests/runner/duties/synccommitteeaggregator"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"
 )
 

@@ -2,7 +2,7 @@ package runner
 
 import (
 	"encoding/hex"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 func getPostConsensusSigners(state *State, root []byte) []spectypes.OperatorID {

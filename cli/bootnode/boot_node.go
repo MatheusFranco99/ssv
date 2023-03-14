@@ -2,9 +2,9 @@ package bootnode
 
 import (
 	"fmt"
-	global_config "github.com/bloxapp/ssv/cli/config"
-	bootnode "github.com/bloxapp/ssv/utils/boot_node"
-	"github.com/bloxapp/ssv/utils/logex"
+	global_config "github.com/MatheusFranco99/ssv/cli/config"
+	bootnode "github.com/MatheusFranco99/ssv/utils/boot_node"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"

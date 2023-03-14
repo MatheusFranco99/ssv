@@ -2,7 +2,7 @@ package tasks
 
 import (
 	"context"
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"

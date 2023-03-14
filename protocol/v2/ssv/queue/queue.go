@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/bloxapp/ssv-spec/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 // Filter is a function that returns true if the given message should be included.
@@ -175,7 +175,7 @@ func (i *msgItem) NextP() unsafe.Pointer {
 // import (
 // 	"sync"
 
-// 	"github.com/bloxapp/ssv-spec/types"
+// 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 // )
 
 // // Filter is a function that returns true if the given message should be included.
@@ -309,7 +309,7 @@ func (i *msgItem) NextP() unsafe.Pointer {
 // import (
 // 	"sync/atomic"
 
-// 	"github.com/bloxapp/ssv-spec/types"
+// 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 // )
 
 // // Filter is a function that returns true if the given message should be included.

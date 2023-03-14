@@ -3,8 +3,8 @@ package qbft
 import (
 	"testing"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectests "github.com/bloxapp/ssv-spec/qbft/spectest/tests"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectests "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests"
 	"github.com/stretchr/testify/require"
 )
 

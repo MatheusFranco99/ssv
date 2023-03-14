@@ -3,12 +3,12 @@ package protocolp2p
 import (
 	"errors"
 
-	"github.com/bloxapp/ssv-spec/p2p"
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/p2p"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/bloxapp/ssv/protocol/v2/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
 )
 
 var (

@@ -1,7 +1,7 @@
 package qbft
 
 import (
-	"github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+	"github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 )
 
 func ProcessInstance() {

@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/protocol/v2/queue"
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/protocol/v2/queue"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 
 //go:generate mockgen -package=beacon -destination=./mock_validator_metadata.go -source=./validator_metadata.go

@@ -1,8 +1,8 @@
 package genesis
 
 import (
-	"github.com/bloxapp/ssv/network/records"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	"github.com/MatheusFranco99/ssv/network/records"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 	"github.com/ethereum/go-ethereum/p2p/enode"
 )
 

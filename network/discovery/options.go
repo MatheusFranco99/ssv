@@ -2,7 +2,7 @@ package discovery
 
 import (
 	"crypto/ecdsa"
-	"github.com/bloxapp/ssv/network/commons"
+	"github.com/MatheusFranco99/ssv/network/commons"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net"

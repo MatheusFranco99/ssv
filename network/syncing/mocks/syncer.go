@@ -8,10 +8,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	qbft "github.com/bloxapp/ssv-spec/qbft"
-	types "github.com/bloxapp/ssv-spec/types"
-	syncing "github.com/bloxapp/ssv/network/syncing"
-	protocolp2p "github.com/bloxapp/ssv/protocol/v2/p2p"
+	qbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	types "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	syncing "github.com/MatheusFranco99/ssv/network/syncing"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 	gomock "github.com/golang/mock/gomock"
 )
 

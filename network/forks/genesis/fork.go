@@ -1,7 +1,7 @@
 package genesis
 
 import (
-	"github.com/bloxapp/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/forks"
 	"github.com/libp2p/go-libp2p"
 	"time"
 )

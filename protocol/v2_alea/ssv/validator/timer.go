@@ -2,11 +2,11 @@ package validator
 
 import (
 	"encoding/json"
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/protocol/v2/message"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/queue"
-	"github.com/bloxapp/ssv/protocol/v2/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

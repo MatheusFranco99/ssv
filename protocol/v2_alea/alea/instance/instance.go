@@ -11,8 +11,8 @@ import (
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
 
-	// specqbft "github.com/bloxapp/ssv-spec/qbft"
-	// spectypes "github.com/bloxapp/ssv-spec/types"
+	// specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	// spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	spectypesalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 )

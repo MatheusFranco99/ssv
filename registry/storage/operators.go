@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bloxapp/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

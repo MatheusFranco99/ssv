@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/cli/flags"
-	"github.com/bloxapp/ssv/utils/threshold"
+	"github.com/MatheusFranco99/ssv/cli/flags"
+	"github.com/MatheusFranco99/ssv/utils/threshold"
 )
 
 // createThreshold is the command to create threshold based on the given private key

@@ -1,8 +1,8 @@
 package topics
 
 import (
-	forksfactory "github.com/bloxapp/ssv/network/forks/factory"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	forksfactory "github.com/MatheusFranco99/ssv/network/forks/factory"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"testing"

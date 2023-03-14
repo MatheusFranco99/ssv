@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	registrystorage "github.com/bloxapp/ssv/registry/storage"
+	registrystorage "github.com/MatheusFranco99/ssv/registry/storage"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"

@@ -9,9 +9,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/protocol/v2/ssv/validator"
-	"github.com/bloxapp/ssv/protocol/v2/types"
-	"github.com/bloxapp/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 // validatorIterator is the function used to iterate over existing validators

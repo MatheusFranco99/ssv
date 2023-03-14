@@ -3,9 +3,9 @@ package topics
 import (
 	"time"
 
-	"github.com/bloxapp/ssv/network/forks"
-	"github.com/bloxapp/ssv/network/peers"
-	"github.com/bloxapp/ssv/network/topics/params"
+	"github.com/MatheusFranco99/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/peers"
+	"github.com/MatheusFranco99/ssv/network/topics/params"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/zap"

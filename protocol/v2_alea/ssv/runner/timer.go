@@ -1,10 +1,10 @@
 package runner
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/roundtimer"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/roundtimer"
 )
 
 type TimeoutF func(identifier spectypes.MessageID, height specqbft.Height) func()

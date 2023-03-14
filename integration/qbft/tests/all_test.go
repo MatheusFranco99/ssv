@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/integration/qbft/scenarios"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/integration/qbft/scenarios"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

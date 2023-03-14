@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/bloxapp/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

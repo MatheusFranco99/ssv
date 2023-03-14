@@ -1,7 +1,7 @@
 package genesis
 
 import (
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 // EncodeNetworkMsg encodes network message

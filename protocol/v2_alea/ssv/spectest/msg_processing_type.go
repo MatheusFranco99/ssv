@@ -2,18 +2,18 @@ package spectest
 
 import (
 	"encoding/hex"
-	"github.com/bloxapp/ssv-spec/qbft"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/queue"
-	ssvtesting "github.com/bloxapp/ssv/protocol/v2/ssv/testing"
-	"github.com/bloxapp/ssv/protocol/v2/ssv/validator"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
+	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2/ssv/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
 	"testing"
 
-	specssv "github.com/bloxapp/ssv-spec/ssv"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	spectestingutils "github.com/bloxapp/ssv-spec/types/testingutils"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bloxapp/ssv/protocol/v2/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
 )
 
 type MsgProcessingSpecTest struct {

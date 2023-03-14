@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"testing"
 
-	qbfttesting "github.com/bloxapp/ssv/protocol/v2/qbft/testing"
+	qbfttesting "github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
 
-	"github.com/bloxapp/ssv-spec/qbft/spectest/tests/controller/futuremsg"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	spectestingutils "github.com/bloxapp/ssv-spec/types/testingutils"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft/spectest/tests/controller/futuremsg"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"
 )
 

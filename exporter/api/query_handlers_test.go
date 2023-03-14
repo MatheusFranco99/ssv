@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"testing"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	qbftstorage "github.com/bloxapp/ssv/ibft/storage"
-	"github.com/bloxapp/ssv/operator/storage"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	qbftstorageprotocol "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
-	protocoltesting "github.com/bloxapp/ssv/protocol/v2/testing"
-	ssvstorage "github.com/bloxapp/ssv/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
-	"github.com/bloxapp/ssv/utils/logex"
+	qbftstorage "github.com/MatheusFranco99/ssv/ibft/storage"
+	"github.com/MatheusFranco99/ssv/operator/storage"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	qbftstorageprotocol "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2/testing"
+	ssvstorage "github.com/MatheusFranco99/ssv/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 
 func TestHandleUnknownQuery(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/bloxapp/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/forks"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"

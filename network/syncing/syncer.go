@@ -8,11 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bloxapp/ssv-spec/qbft"
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	protocolp2p "github.com/bloxapp/ssv/protocol/v2/p2p"
-	"github.com/bloxapp/ssv/utils/tasks"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/utils/tasks"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

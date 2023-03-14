@@ -1,22 +1,22 @@
 package ssv
 
-import "github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+import "github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 
 func validatorSet() []utils.KeyValue {
 	var mapSet = utils.NewMap()
 	mapSet.Set("package validator", "package ssv")
 	mapSet.Set("\"context\"\n", "")
 	mapSet.Set("\"encoding/hex\"\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/message\"\n", "")
-	mapSet.Set("specssv \"github.com/bloxapp/ssv-spec/ssv\"\n", "")
-	mapSet.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/message\"\n", "")
+	mapSet.Set("specssv \"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv\"\n", "")
+	mapSet.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	mapSet.Set("logging \"github.com/ipfs/go-log\"\n", "")
-	mapSet.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"", "\"github.com/bloxapp/ssv-spec/qbft\"")
+	mapSet.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"")
 	mapSet.Set("\"go.uber.org/zap\"\n\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/ibft/storage\"\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/ssv/msgqueue\"\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/ssv/runner\"\n", "")
-	mapSet.Set("\"github.com/bloxapp/ssv/protocol/v2/types\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/ibft/storage\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/ssv/msgqueue\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner\"\n", "")
+	mapSet.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/types\"\n", "")
 
 	mapSet.Set("ctx    context.Context\n", "")
 	mapSet.Set("cancel context.CancelFunc\n", "")

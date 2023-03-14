@@ -1,7 +1,7 @@
 package connections
 
 import (
-	"github.com/bloxapp/ssv/network/peers"
+	"github.com/MatheusFranco99/ssv/network/peers"
 	"github.com/libp2p/go-libp2p/core/connmgr"
 	"github.com/libp2p/go-libp2p/core/control"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"

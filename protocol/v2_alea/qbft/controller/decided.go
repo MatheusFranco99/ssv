@@ -1,13 +1,13 @@
 package controller
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 )
 
 // UponDecided returns decided msg if decided, nil otherwise

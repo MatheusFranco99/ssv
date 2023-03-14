@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/forks"
 )
 
 // StreamResponder abstracts the stream access with a simpler interface that accepts only the data to send

@@ -1,8 +1,8 @@
 package validator
 
 import (
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/network/forks"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/network/forks"
 	"go.uber.org/zap"
 )
 

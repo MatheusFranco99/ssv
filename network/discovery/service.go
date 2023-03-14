@@ -10,8 +10,8 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network/peers"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	"github.com/MatheusFranco99/ssv/network/peers"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 )
 
 const (

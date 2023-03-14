@@ -1,7 +1,7 @@
 package rsaencryption
 
 import (
-	testingspace "github.com/bloxapp/ssv/utils/rsaencryption/testingspace"
+	testingspace "github.com/MatheusFranco99/ssv/utils/rsaencryption/testingspace"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

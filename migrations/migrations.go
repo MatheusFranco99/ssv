@@ -7,12 +7,12 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/ekm"
-	operatorstorage "github.com/bloxapp/ssv/operator/storage"
-	validatorstorage "github.com/bloxapp/ssv/operator/validator"
-	"github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
-	"github.com/bloxapp/ssv/protocol/v2/blockchain/eth1"
-	"github.com/bloxapp/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/ekm"
+	operatorstorage "github.com/MatheusFranco99/ssv/operator/storage"
+	validatorstorage "github.com/MatheusFranco99/ssv/operator/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/eth1"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
 var (

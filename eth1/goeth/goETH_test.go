@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/eth1"
-	"github.com/bloxapp/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/eth1"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
 )
 
 func TestEth1Client_handleEvent(t *testing.T) {

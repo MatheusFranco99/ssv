@@ -9,7 +9,7 @@ import (
 	"github.com/prysmaticlabs/prysm/async/event"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/utils/tasks"
+	"github.com/MatheusFranco99/ssv/utils/tasks"
 )
 
 const (

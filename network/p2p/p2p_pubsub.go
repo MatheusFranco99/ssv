@@ -4,15 +4,15 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network"
-	"github.com/bloxapp/ssv/protocol/v2/message"
-	p2pprotocol "github.com/bloxapp/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/network"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 )
 
 const (

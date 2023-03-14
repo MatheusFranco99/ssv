@@ -1,8 +1,8 @@
 package genesis
 
 import (
-	"github.com/bloxapp/ssv/network/forks"
-	scrypto "github.com/bloxapp/ssv/utils/crypto"
+	"github.com/MatheusFranco99/ssv/network/forks"
+	scrypto "github.com/MatheusFranco99/ssv/utils/crypto"
 )
 
 // MsgID returns msg_id for the given message

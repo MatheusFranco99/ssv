@@ -4,14 +4,14 @@ import (
 	"encoding/hex"
 	"strings"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/eth1"
-	"github.com/bloxapp/ssv/eth1/abiparser"
-	"github.com/bloxapp/ssv/exporter"
-	registrystorage "github.com/bloxapp/ssv/registry/storage"
+	"github.com/MatheusFranco99/ssv/eth1"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/exporter"
+	registrystorage "github.com/MatheusFranco99/ssv/registry/storage"
 )
 
 // Eth1EventHandler is a factory function for creating eth1 event handler

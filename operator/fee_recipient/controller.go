@@ -9,10 +9,10 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/operator/slot_ticker"
-	"github.com/bloxapp/ssv/operator/validator"
-	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
-	"github.com/bloxapp/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/operator/slot_ticker"
+	"github.com/MatheusFranco99/ssv/operator/validator"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
 	"go.uber.org/zap"
 
 	"github.com/hashicorp/go-multierror"

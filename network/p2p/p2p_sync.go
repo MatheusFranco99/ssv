@@ -7,17 +7,17 @@ import (
 
 	"github.com/multiformats/go-multistream"
 
-	"github.com/bloxapp/ssv-spec/qbft"
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	libp2p_protocol "github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/protocol/v2/message"
-	p2pprotocol "github.com/bloxapp/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 )
 
 // extremeLowPeerCount is the maximum number of peers considered as too low

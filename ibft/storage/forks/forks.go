@@ -1,7 +1,7 @@
 package forks
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 )
 
 // Fork is the interface for fork

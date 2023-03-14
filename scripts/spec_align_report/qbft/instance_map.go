@@ -1,6 +1,6 @@
 package qbft
 
-import "github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+import "github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 
 // Instance mapping
 
@@ -9,10 +9,10 @@ func InstanceSet() []utils.KeyValue {
 
 	// list of changes package names & imports between spec and implementation
 	instanceMap.Set("package instance", "package qbft")
-	instanceMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"\n", "")
-	instanceMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	instanceMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"\n", "")
+	instanceMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	instanceMap.Set("logging \"github.com/ipfs/go-log\"\n", "")
-	instanceMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
+	instanceMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
 	instanceMap.Set("\"go.uber.org/zap\"\n\n", "")
 	instanceMap.Set("specqbft.", "")
 	instanceMap.Set("spectypes.", "types.")
@@ -33,7 +33,7 @@ func InstanceSet() []utils.KeyValue {
 func SpecInstanceSet() []utils.KeyValue {
 	var specInstanceMap = utils.NewMap()
 	specInstanceMap.Set("\"fmt\"\n", "")
-	specInstanceMap.Set("\"github.com/bloxapp/ssv-spec/types\"\n", "")
+	specInstanceMap.Set("\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"\n", "")
 
 	// We import from spec - so for the diff we remove it from spec
 	specInstanceMap.Set("type ProposedValueCheckF func(data []byte) error", "")
@@ -48,12 +48,12 @@ func ProposalSet() []utils.KeyValue {
 
 	// list of changes package names & imports between spec and implementation
 	proposalMap.Set("package instance", "package qbft")
-	proposalMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	proposalMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	proposalMap.Set("\"go.uber.org/zap\"\n", "")
-	proposalMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
+	proposalMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
 
 	proposalMap.Set("qbft.IConfig", "IConfig")
-	proposalMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	proposalMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 
 	proposalMap.Set("specqbft.", "")
 	proposalMap.Set("spectypes.", "types.")
@@ -73,11 +73,11 @@ func PrepareSet() []utils.KeyValue {
 	// list of changes package names & imports between spec and implementation
 
 	prepareMap.Set("package instance", "package qbft")
-	prepareMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	prepareMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	prepareMap.Set("qbft.IConfig", "IConfig")
-	prepareMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	prepareMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	prepareMap.Set("\"go.uber.org/zap\"\n", "")
-	prepareMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
+	prepareMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
 
 	prepareMap.Set("specqbft.", "")
 	prepareMap.Set("spectypes.", "types.")
@@ -94,11 +94,11 @@ func CommitSet() []utils.KeyValue {
 	// list of changes package names & imports between spec and implementation
 
 	commitMap.Set("package instance", "package qbft")
-	commitMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	commitMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	commitMap.Set("qbft.IConfig", "IConfig")
-	commitMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	commitMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	commitMap.Set("\"go.uber.org/zap\"\n", "")
-	commitMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
+	commitMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
 
 	commitMap.Set("specqbft.", "")
 	commitMap.Set("spectypes.", "types.")
@@ -116,11 +116,11 @@ func RoundChangeSet() []utils.KeyValue {
 	// list of changes package names & imports between spec and implementation
 
 	roundChangeMap.Set("package instance", "package qbft")
-	roundChangeMap.Set("spectypes \"github.com/bloxapp/ssv-spec/types\"", "\"github.com/bloxapp/ssv-spec/types\"")
+	roundChangeMap.Set("spectypes \"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"", "\"github.com/MatheusFranco99/ssv-spec-AleaBFT/types\"")
 	roundChangeMap.Set("qbft.IConfig", "IConfig")
-	roundChangeMap.Set("specqbft \"github.com/bloxapp/ssv-spec/qbft\"\n", "")
+	roundChangeMap.Set("specqbft \"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft\"\n", "")
 	roundChangeMap.Set("\"go.uber.org/zap\"\n", "")
-	roundChangeMap.Set("\"github.com/bloxapp/ssv/protocol/v2/qbft\"\n", "")
+	roundChangeMap.Set("\"github.com/MatheusFranco99/ssv/protocol/v2/qbft\"\n", "")
 
 	roundChangeMap.Set("specqbft.", "")
 	roundChangeMap.Set("spectypes.", "types.")

@@ -1,12 +1,12 @@
 package validator
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv/ibft/storage"
-	"github.com/bloxapp/ssv/protocol/v2/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/ibft/storage"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
 	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
-	"github.com/bloxapp/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
 	"go.uber.org/zap"
 )
 

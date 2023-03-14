@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bloxapp/ssv/eth1"
-	"github.com/bloxapp/ssv/eth1/abiparser"
-	"github.com/bloxapp/ssv/monitoring/metrics"
-	"github.com/bloxapp/ssv/utils/tasks"
+	"github.com/MatheusFranco99/ssv/eth1"
+	"github.com/MatheusFranco99/ssv/eth1/abiparser"
+	"github.com/MatheusFranco99/ssv/monitoring/metrics"
+	"github.com/MatheusFranco99/ssv/utils/tasks"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"

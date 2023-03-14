@@ -8,11 +8,11 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bloxapp/ssv/eth1"
-	ssvstorage "github.com/bloxapp/ssv/storage"
-	"github.com/bloxapp/ssv/storage/basedb"
-	"github.com/bloxapp/ssv/utils/logex"
-	"github.com/bloxapp/ssv/utils/rsaencryption"
+	"github.com/MatheusFranco99/ssv/eth1"
+	ssvstorage "github.com/MatheusFranco99/ssv/storage"
+	"github.com/MatheusFranco99/ssv/storage/basedb"
+	"github.com/MatheusFranco99/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/utils/rsaencryption"
 )
 
 var (

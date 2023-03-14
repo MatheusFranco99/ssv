@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/pkg/errors"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 )
 
 // Message represents an exporter message

@@ -9,7 +9,7 @@ import (
 	util "github.com/wealdtech/go-eth2-util"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/cli/flags"
+	"github.com/MatheusFranco99/ssv/cli/flags"
 )
 
 // exportKeysCmd is the command to export private/public keys based on given mnemonic

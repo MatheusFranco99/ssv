@@ -2,9 +2,9 @@ package connections
 
 import (
 	"context"
-	"github.com/bloxapp/ssv/network/peers"
-	"github.com/bloxapp/ssv/network/records"
-	"github.com/bloxapp/ssv/utils/tasks"
+	"github.com/MatheusFranco99/ssv/network/peers"
+	"github.com/MatheusFranco99/ssv/network/records"
+	"github.com/MatheusFranco99/ssv/utils/tasks"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/pkg/errors"

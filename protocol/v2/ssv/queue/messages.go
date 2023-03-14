@@ -1,11 +1,11 @@
 package queue
 
 import (
-	"github.com/bloxapp/ssv-spec/qbft"
-	"github.com/bloxapp/ssv-spec/ssv"
-	"github.com/bloxapp/ssv-spec/types"
-	ssvmessage "github.com/bloxapp/ssv/protocol/v2/message"
-	ssvtypes "github.com/bloxapp/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	ssvmessage "github.com/MatheusFranco99/ssv/protocol/v2/message"
+	ssvtypes "github.com/MatheusFranco99/ssv/protocol/v2/types"
 	"github.com/pkg/errors"
 )
 

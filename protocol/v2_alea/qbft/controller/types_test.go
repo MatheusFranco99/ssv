@@ -5,9 +5,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/stretchr/testify/require"
 )
 

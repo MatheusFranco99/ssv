@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"github.com/bloxapp/ssv/network/forks"
-	"github.com/bloxapp/ssv/network/forks/genesis"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
+	"github.com/MatheusFranco99/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/forks/genesis"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
 )
 
 // NewFork returns a new fork instance from the given version

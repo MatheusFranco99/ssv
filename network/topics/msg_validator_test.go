@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	ps_pb "github.com/libp2p/go-libp2p-pubsub/pb"
@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network/forks/genesis"
-	"github.com/bloxapp/ssv/utils/threshold"
+	"github.com/MatheusFranco99/ssv/network/forks/genesis"
+	"github.com/MatheusFranco99/ssv/utils/threshold"
 )
 
 func TestMsgValidator(t *testing.T) {

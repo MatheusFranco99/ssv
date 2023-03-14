@@ -3,7 +3,7 @@ package qbftstorage
 import (
 	"encoding/json"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 )
 
 // StoredInstance contains instance state alongside with a decided message (aggregated commits).

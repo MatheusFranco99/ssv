@@ -1,7 +1,7 @@
 package genesis
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 )
 
 // ForkGenesis is the genesis fork for controller

@@ -9,17 +9,17 @@ import (
 	"testing"
 	"time"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network"
-	forksfactory "github.com/bloxapp/ssv/network/forks/factory"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	protcolp2p "github.com/bloxapp/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/network"
+	forksfactory "github.com/MatheusFranco99/ssv/network/forks/factory"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	protcolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 )
 
 func TestGetMaxPeers(t *testing.T) {

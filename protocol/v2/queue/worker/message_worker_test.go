@@ -2,14 +2,14 @@ package worker
 
 import (
 	"context"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"sync"
 	"testing"
 	"time"
 
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"

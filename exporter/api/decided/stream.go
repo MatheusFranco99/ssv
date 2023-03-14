@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/exporter/api"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/exporter/api"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 )
 
 // NewStreamPublisher handles incoming newly decided messages.

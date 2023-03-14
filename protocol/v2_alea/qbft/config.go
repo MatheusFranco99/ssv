@@ -1,9 +1,9 @@
 package qbft
 
 import (
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
-	spectypes "github.com/bloxapp/ssv-spec/types"
-	qbftstorage "github.com/bloxapp/ssv/protocol/v2/qbft/storage"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
 )
 
 type signing interface {

@@ -3,9 +3,9 @@ package storage
 import (
 	"testing"
 
-	"github.com/bloxapp/ssv-spec/types"
-	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
-	"github.com/bloxapp/ssv/utils/logex"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
+	"github.com/MatheusFranco99/ssv/utils/logex"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zapcore"
 )

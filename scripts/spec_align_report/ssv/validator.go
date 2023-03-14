@@ -1,6 +1,6 @@
 package ssv
 
-import "github.com/bloxapp/ssv/scripts/spec_align_report/utils"
+import "github.com/MatheusFranco99/ssv/scripts/spec_align_report/utils"
 
 func ProcessValidator() {
 	if err := utils.Mkdir(utils.DataPath+"/validator", true); err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/forks"
 )
 
 // MsgValidatorFunc represents a message validator

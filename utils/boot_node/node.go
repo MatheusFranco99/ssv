@@ -18,8 +18,8 @@ import (
 	"github.com/prysmaticlabs/prysm/network"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/beacon/goclient"
-	"github.com/bloxapp/ssv/utils"
+	"github.com/MatheusFranco99/ssv/beacon/goclient"
+	"github.com/MatheusFranco99/ssv/utils"
 )
 
 // Options contains options to create the node

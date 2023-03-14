@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	specqbft "github.com/bloxapp/ssv-spec/qbft"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"go.uber.org/zap"
 )
 

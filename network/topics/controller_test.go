@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	"github.com/bloxapp/ssv/network/forks/genesis"
+	"github.com/MatheusFranco99/ssv/network/forks/genesis"
 
-	"github.com/bloxapp/ssv/network/discovery"
-	"github.com/bloxapp/ssv/network/forks"
+	"github.com/MatheusFranco99/ssv/network/discovery"
+	"github.com/MatheusFranco99/ssv/network/forks"
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"

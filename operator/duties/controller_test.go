@@ -8,13 +8,13 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/eth2-key-manager/core"
-	spectypes "github.com/bloxapp/ssv-spec/types"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/operator/duties/mocks"
-	"github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/operator/duties/mocks"
+	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
 )
 
 func TestDutyController_ListenToTicker(t *testing.T) {

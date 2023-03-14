@@ -2,7 +2,7 @@ package discovery
 
 import (
 	"context"
-	"github.com/bloxapp/ssv/utils"
+	"github.com/MatheusFranco99/ssv/utils"
 	"go.uber.org/zap"
 )
 
