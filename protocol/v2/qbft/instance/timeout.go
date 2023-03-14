@@ -5,7 +5,14 @@ import (
 	"go.uber.org/zap"
 )
 
+
+func makeTimestamp() int64 {
+    return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 func (i *Instance) UponRoundTimeout() error {
+	i.logger.Debug("$$$$$$ UponRoundTimeout start. time(micro):",makeTimestamp())
+
 	newRound := i.State.Round + 1
 	i.logger.Debug("round timed out", zap.Uint64("round", uint64(newRound)))
 	i.State.Round = newRound
@@ -16,10 +23,14 @@ func (i *Instance) UponRoundTimeout() error {
 	if err != nil {
 		return errors.Wrap(err, "could not generate round change msg")
 	}
+	i.logger.Debug("$$$$$$ UponRoundTimeout broadcast start. time(micro):",makeTimestamp())
 
 	if err := i.Broadcast(roundChange); err != nil {
 		return errors.Wrap(err, "failed to broadcast round change message")
 	}
+	i.logger.Debug("$$$$$$ UponRoundTimeout broadcast finish. time(micro):",makeTimestamp())
+
+	i.logger.Debug("$$$$$$ UponRoundTimeout return. time(micro):",makeTimestamp())
 
 	return nil
 }

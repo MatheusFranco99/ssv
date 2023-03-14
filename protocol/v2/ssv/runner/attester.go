@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 )
 
 type AttesterRunner struct {

@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/bloxapp/ssv/protocol/v2/qbft"
-	"github.com/bloxapp/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 	logging "github.com/ipfs/go-log"
 )
 

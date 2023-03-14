@@ -5,7 +5,7 @@ import (
 	spectypes "github.com/bloxapp/ssv-spec/types"
 	"github.com/bloxapp/ssv/ibft/storage"
 	"github.com/bloxapp/ssv/protocol/v2/qbft"
-	qbftcontroller "github.com/bloxapp/ssv/protocol/v2/qbft/controller"
+	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 	"github.com/bloxapp/ssv/protocol/v2/types"
 	"go.uber.org/zap"
 )

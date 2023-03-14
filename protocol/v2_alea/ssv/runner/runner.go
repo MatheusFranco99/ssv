@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 )
 
 var logger = logging.Logger("ssv/protocol/ssv/runner").Desugar()

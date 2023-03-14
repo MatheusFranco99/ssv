@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/bloxapp/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 )
 
 type SyncCommitteeRunner struct {

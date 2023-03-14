@@ -11,9 +11,17 @@ import (
 	"github.com/bloxapp/ssv/protocol/v2/qbft"
 )
 
+func makeTimestamp() int64 {
+    return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 // uponProposal process proposal message
 // Assumes proposal message is valid!
 func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeMsgContainer *specqbft.MsgContainer) error {
+	
+	i.logger.Debug("$$$$$$ UponProposal start. time(micro):",makeTimestamp())
+
+
 	addedMsg, err := proposeMsgContainer.AddFirstMsgForSignerAndRound(signedProposal)
 	if err != nil {
 		return errors.Wrap(err, "could not add proposal msg to container")
@@ -45,9 +53,15 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 		zap.Any("proposal-signers", signedProposal.Signers),
 		zap.Any("prepare-signers", prepare.Signers))
 
+	i.logger.Debug("$$$$$$ UponProposal broadcast start. time(micro):",makeTimestamp())
+
 	if err := i.Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
+	i.logger.Debug("$$$$$$ UponProposal broadcast finish. time(micro):",makeTimestamp())
+	
+	i.logger.Debug("$$$$$$ UponProposal return. time(micro):",makeTimestamp())
+
 	return nil
 }
 

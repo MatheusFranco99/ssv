@@ -8,6 +8,11 @@ import (
 	"go.uber.org/zap"
 )
 
+func makeTimestamp() int64 {
+    return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+
 // uponRoundChange process round change messages.
 // Assumes round change message is valid!
 func (i *Instance) uponRoundChange(
@@ -16,6 +21,9 @@ func (i *Instance) uponRoundChange(
 	roundChangeMsgContainer *specqbft.MsgContainer,
 	valCheck specqbft.ProposedValueCheckF,
 ) error {
+
+	i.logger.Debug("$$$$$$ UponRoundChange start. time(micro):",makeTimestamp())
+
 	addedMsg, err := roundChangeMsgContainer.AddFirstMsgForSignerAndRound(signedRoundChange)
 	if err != nil {
 		return errors.Wrap(err, "could not add round change msg to container")
@@ -37,6 +45,8 @@ func (i *Instance) uponRoundChange(
 		roundChangeMsgContainer,
 		valCheck)
 	if err != nil {
+		i.logger.Debug("$$$$$$ UponRoundChange return couldn't get proposal justification. time(micro):",makeTimestamp())
+
 		return errors.Wrap(err, "could not get proposal justification for leading round")
 	}
 	if justifiedRoundChangeMsg != nil {
@@ -56,22 +66,31 @@ func (i *Instance) uponRoundChange(
 			return errors.Wrap(err, "failed to create proposal")
 		}
 
+		i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification. time(micro):",makeTimestamp())
+
 		i.logger.Debug("got justified change round, broadcasting proposal message",
 			zap.Uint64("round", uint64(i.State.Round)))
+			
+		i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast start. time(micro):",makeTimestamp())
 
 		if err := i.Broadcast(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
+		i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast finish. time(micro):",makeTimestamp())
+
 	} else if partialQuorum, rcs := hasReceivedPartialQuorum(i.State, roundChangeMsgContainer); partialQuorum {
 		newRound := minRound(rcs)
 		if newRound <= i.State.Round {
 			return nil // no need to advance round
 		}
 		err := i.uponChangeRoundPartialQuorum(newRound, instanceStartValue)
+		i.logger.Debug("$$$$$$ UponRoundChange return upon change round with partial quorum. time(micro):",makeTimestamp())
 		if err != nil {
 			return err
 		}
 	}
+	i.logger.Debug("$$$$$$ UponRoundChange return. time(micro):",makeTimestamp())
+
 	return nil
 }
 

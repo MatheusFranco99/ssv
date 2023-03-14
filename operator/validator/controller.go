@@ -28,7 +28,7 @@ import (
 	forksprotocol "github.com/bloxapp/ssv/protocol/forks"
 	beaconprotocol "github.com/bloxapp/ssv/protocol/v2/blockchain/beacon"
 	p2pprotocol "github.com/bloxapp/ssv/protocol/v2/p2p"
-	qbftcontroller "github.com/bloxapp/ssv/protocol/v2/qbft/controller"
+	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 	"github.com/bloxapp/ssv/protocol/v2/qbft/roundtimer"
 	utilsprotocol "github.com/bloxapp/ssv/protocol/v2/queue"
 	"github.com/bloxapp/ssv/protocol/v2/queue/worker"

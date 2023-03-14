@@ -145,7 +145,9 @@ func createDutyExecuteMsg(duty *spectypes.Duty, pubKey *bls.PublicKey) (*spectyp
 
 // listenToTicker loop over the given slot channel
 func (dc *dutyController) listenToTicker(slots <-chan phase0.Slot) {
+	dc.logger.Debug("On dutyController.listenToTicker")
 	for currentSlot := range slots {
+		dc.logger.Debug("slot", zap.Uint64("slot", uint64(currentSlot)))
 		// execute duties
 		duties, err := dc.fetcher.GetDuties(currentSlot)
 		if err != nil {

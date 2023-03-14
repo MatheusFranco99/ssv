@@ -14,6 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+func makeTimestamp() int64 {
+    return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 var logger = logging.Logger("ssv/protocol/qbft/instance").Desugar()
 
 // Instance is a single QBFT instance that starts with a Start call (including a value).
@@ -64,7 +68,7 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 
 		i.config.GetTimer().TimeoutForRound(specqbft.FirstRound)
 
-		i.logger.Debug("starting QBFT instance")
+		i.logger.Debug("$$$$$$ starting QBFT instance. time(micro):",makeTimestamp())
 
 		// propose if this node is the proposer
 		if proposer(i.State, i.GetConfig(), specqbft.FirstRound) == i.State.Share.OperatorID {
@@ -117,6 +121,7 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 			if decided {
 				i.State.Decided = decided
 				i.State.DecidedValue = decidedValue
+				i.logger.Debug("$$$$$$ Decided on value with commit. Value:",decidedValue," Decision:",decided, " time(micro):",makeTimestamp())
 			}
 			return err
 		case specqbft.RoundChangeMsgType:
