@@ -16,7 +16,9 @@ import (
 // Assumes proposal message is valid!
 func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeMsgContainer *specqbft.MsgContainer) error {
 	
-	i.logger.Debug("$$$$$$ UponProposal start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	senderID := int(signedProposal.GetSigners()[0])
+
+
 
 
 	addedMsg, err := proposeMsgContainer.AddFirstMsgForSignerAndRound(signedProposal)
@@ -26,8 +28,13 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 	if !addedMsg {
 		return nil // uponProposal was already called
 	}
+
+
 	newRound := signedProposal.Message.Round
 	i.State.ProposalAcceptedForCurrentRound = signedProposal
+
+	i.logger.Debug("$$$$$$ UponProposal start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
+
 
 	// A future justified proposal should bump us into future round and reset timer
 	if signedProposal.Message.Round > i.State.Round {
@@ -50,14 +57,14 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 		zap.Any("proposal-signers", signedProposal.Signers),
 		zap.Any("prepare-signers", prepare.Signers))
 
-	i.logger.Debug("$$$$$$ UponProposal broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponProposal broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
 
 	if err := i.Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
-	i.logger.Debug("$$$$$$ UponProposal broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponProposal broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
 	
-	i.logger.Debug("$$$$$$ UponProposal return. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponProposal return. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
 
 	return nil
 }

@@ -19,7 +19,10 @@ func (i *Instance) uponPrepare(
 	signedPrepare *specqbft.SignedMessage,
 	prepareMsgContainer,
 	commitMsgContainer *specqbft.MsgContainer) error {
-		i.logger.Debug("$$$$$$ UponPrepare start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+
+	senderID := int(signedPrepare.GetSigners()[0])
+
+	i.logger.Debug("$$$$$$ UponPrepare start.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(i.State.Round)))
 	
 
 
@@ -35,10 +38,12 @@ func (i *Instance) uponPrepare(
 		return nil // uponPrepare was already called
 	}
 	if !specqbft.HasQuorum(i.State.Share, prepareMsgContainer.MessagesForRound(i.State.Round)) {
+		i.logger.Debug("$$$$$$ UponPrepare return no quorum.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(i.State.Round)))
 		return nil // no quorum yet
 	}
 
 	if didSendCommitForHeightAndRound(i.State, commitMsgContainer) {
+		i.logger.Debug("$$$$$$ UponPrepare return already commit.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(i.State.Round)))
 		return nil // already moved to commit stage
 	}
 
@@ -57,16 +62,16 @@ func (i *Instance) uponPrepare(
 		zap.Any("prepare-signers", signedPrepare.Signers),
 		zap.Any("commit-singers", commitMsg.Signers))
 
-	i.logger.Debug("$$$$$$ UponPrepare broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponPrepare broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(i.State.Round)))
 
 	if err := i.Broadcast(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 
-	i.logger.Debug("$$$$$$ UponPrepare broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponPrepare broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(i.State.Round)))
 
 
-	i.logger.Debug("$$$$$$ UponPrepare return. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponPrepare return. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(i.State.Round)))
 	return nil
 }
 

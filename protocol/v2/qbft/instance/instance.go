@@ -16,7 +16,7 @@ import (
 )
 
 func makeTimestamp() int64 {
-    return time.Now().UnixNano() / int64(time.Millisecond)
+    return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
 var logger = logging.Logger("ssv/protocol/qbft/instance").Desugar()

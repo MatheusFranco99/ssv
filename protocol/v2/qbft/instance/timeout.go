@@ -7,7 +7,10 @@ import (
 
 
 func (i *Instance) UponRoundTimeout() error {
-	i.logger.Debug("$$$$$$ UponRoundTimeout start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+
+	round := int(i.State.Round)
+
+	i.logger.Debug("$$$$$$ UponRoundTimeout start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("round",round))
 
 	newRound := i.State.Round + 1
 	i.logger.Debug("round timed out", zap.Uint64("round", uint64(newRound)))
@@ -19,14 +22,14 @@ func (i *Instance) UponRoundTimeout() error {
 	if err != nil {
 		return errors.Wrap(err, "could not generate round change msg")
 	}
-	i.logger.Debug("$$$$$$ UponRoundTimeout broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponRoundTimeout broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("round",round))
 
 	if err := i.Broadcast(roundChange); err != nil {
 		return errors.Wrap(err, "failed to broadcast round change message")
 	}
-	i.logger.Debug("$$$$$$ UponRoundTimeout broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponRoundTimeout broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("round",round))
 
-	i.logger.Debug("$$$$$$ UponRoundTimeout return. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponRoundTimeout return. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("round",round))
 
 	return nil
 }

@@ -16,7 +16,10 @@ import (
 // Assumes commit message is valid!
 func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgContainer *specqbft.MsgContainer) (bool, []byte, *specqbft.SignedMessage, error) {
 	
-	i.logger.Debug("$$$$$$ UponCommit start.",zap.Int64("time(micro)",makeTimestamp()))
+
+	senderID := int(signedCommit.GetSigners()[0])
+
+	i.logger.Debug("$$$$$$ UponCommit start.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(signedCommit.Message.Round)))
 	
 	addMsg, err := commitMsgContainer.AddFirstMsgForSignerAndRound(signedCommit)
 	if err != nil {
@@ -36,12 +39,12 @@ func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgCon
 			return false, nil, nil, errors.Wrap(err, "could not get msg commit data")
 		}
 
-		i.logger.Debug("$$$$$$ UponCommit start aggregate. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
+		i.logger.Debug("$$$$$$ UponCommit start aggregate.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(signedCommit.Message.Round)))
 		agg, err := aggregateCommitMsgs(commitMsgs)
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
 		}
-		i.logger.Debug("$$$$$$ UponCommit finish aggregate. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
+		i.logger.Debug("$$$$$$ UponCommit finish aggregate.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(signedCommit.Message.Round)))
 
 
 		i.logger.Debug("got commit quorum",
@@ -49,11 +52,11 @@ func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgCon
 			zap.Any("commit-signers", signedCommit.Signers),
 			zap.Any("agg-signers", agg.Signers))
 
-		i.logger.Debug("$$$$$$ UponCommit return with quorum. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
+		i.logger.Debug("$$$$$$ UponCommit return with quorum.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(signedCommit.Message.Round)))
 
 		return true, msgCommitData.Data, agg, nil
 	}
-	i.logger.Debug("$$$$$$ UponCommit return no quorum. time(micro):",zap.Int64("time(micro):",makeTimestamp()))
+	i.logger.Debug("$$$$$$ UponCommit return no quorum.",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",int(signedCommit.Message.Round)))
 	return false, nil, nil, nil
 }
 
