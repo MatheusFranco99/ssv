@@ -35,9 +35,9 @@ class Analyzer:
 if __name__ == "__main__":
     a = Analyzer()
     print(a.len())
-    a.filter('ssv-node-1')
+    # a.filter('ssv-node-1')
     print(a.len())
     a.filter('$$$$$$')
     print(a.len())
-    a.store('out2.txt')
+    a.store('out_filtered.txt')
 
