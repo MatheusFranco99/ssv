@@ -9,7 +9,7 @@ eth2:
   ### replace with your beacon node address
   BeaconNodeAddr: http://hamlet-default-consensus-node:8000
   Network: prater
-  MinGenesisTime: 1679050639
+  MinGenesisTime: 1681233919
 
 
 eth1:

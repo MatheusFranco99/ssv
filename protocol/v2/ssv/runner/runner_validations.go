@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"sort"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 )

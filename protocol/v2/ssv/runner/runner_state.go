@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 

@@ -2,7 +2,7 @@ package queue
 
 import (
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	ssvmessage "github.com/MatheusFranco99/ssv/protocol/v2/message"
 	ssvtypes "github.com/MatheusFranco99/ssv/protocol/v2/types"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2/message"
 	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
@@ -92,7 +92,7 @@ func (v *Validator) ConsumeQueue(msgID spectypes.MessageID, handler MessageHandl
 			continue
 		}
 		if err := handler(msg); err != nil {
-			v.logMsg(msg, "could not handle message", zap.Any("type", msg.SSVMessage.MsgType), zap.Error(err))
+			// v.logMsg(msg, "could not handle message", zap.Any("type", msg.SSVMessage.MsgType), zap.Error(err))
 		}
 	}
 	logger.Debug("queue consumer is closed")

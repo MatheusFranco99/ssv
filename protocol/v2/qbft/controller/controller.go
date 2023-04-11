@@ -36,6 +36,7 @@ type Controller struct {
 	config              qbft.IConfig
 	fullNode            bool
 	logger              *zap.Logger
+	// counter             int64
 }
 
 func NewController(
@@ -57,11 +58,18 @@ func NewController(
 		fullNode:            fullNode,
 		logger: logger.With(zap.String("publicKey", hex.EncodeToString(msgId.GetPubKey())),
 			zap.String("role", msgId.GetRoleType().String())),
+		// counter: 0,
 	}
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
 func (c *Controller) StartNewInstance(value []byte) error {
+	// c.counter += 1
+	// if c.counter%30 != 1 {
+	// 	c.logger.Debug("$$$$$$ Controller: quitting StartNewInstance", zap.Int64("counter", c.counter))
+	// 	return nil
+	// }
+
 	if err := c.canStartInstanceForValue(value); err != nil {
 		return errors.Wrap(err, "can't start new QBFT instance")
 	}

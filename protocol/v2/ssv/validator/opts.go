@@ -2,7 +2,7 @@ package validator
 
 import (
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/ibft/storage"
 	qbftctrl "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"

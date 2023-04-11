@@ -7,7 +7,7 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2/message"
 
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"

@@ -9,18 +9,35 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/google/uuid"
 )
-
 
 // uponProposal process proposal message
 // Assumes proposal message is valid!
 func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeMsgContainer *specqbft.MsgContainer) error {
-	
+
+	i.CheckStart()
+
 	senderID := int(signedProposal.GetSigners()[0])
 
+	newRound := signedProposal.Message.Round
+	i.State.ProposalAcceptedForCurrentRound = signedProposal
 
+	//funciton identifier
+	functionID := uuid.New().String()
 
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponProposal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(newRound)))
+	}
 
+	log("start")
+
+	if i.initTime == -1 || i.initTime == 0 {
+		i.initTime = makeTimestamp()
+	}
+
+	log("addFirstMsg")
 	addedMsg, err := proposeMsgContainer.AddFirstMsgForSignerAndRound(signedProposal)
 	if err != nil {
 		return errors.Wrap(err, "could not add proposal msg to container")
@@ -28,13 +45,6 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 	if !addedMsg {
 		return nil // uponProposal was already called
 	}
-
-
-	newRound := signedProposal.Message.Round
-	i.State.ProposalAcceptedForCurrentRound = signedProposal
-
-	i.logger.Debug("$$$$$$ UponProposal start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
-
 
 	// A future justified proposal should bump us into future round and reset timer
 	if signedProposal.Message.Round > i.State.Round {
@@ -47,25 +57,24 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 		return errors.Wrap(err, "could not get proposal data")
 	}
 
+	log("create prepare msg")
 	prepare, err := CreatePrepare(i.State, i.config, newRound, proposalData.Data)
 	if err != nil {
 		return errors.Wrap(err, "could not create prepare msg")
 	}
 
-	i.logger.Debug("got proposal, broadcasting prepare message",
-		zap.Uint64("round", uint64(i.State.Round)),
-		zap.Any("proposal-signers", signedProposal.Signers),
-		zap.Any("prepare-signers", prepare.Signers))
+	// i.logger.Debug("got proposal, broadcasting prepare message",
+	// 	zap.Uint64("round", uint64(i.State.Round)),
+	// 	zap.Any("proposal-signers", signedProposal.Signers),
+	// 	zap.Any("prepare-signers", prepare.Signers))
 
-	i.logger.Debug("$$$$$$ UponProposal broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
-
+	log("broadcast start")
 	if err := i.Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
-	i.logger.Debug("$$$$$$ UponProposal broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
-	
-	i.logger.Debug("$$$$$$ UponProposal return. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID), zap.Int("round",int(newRound)))
+	log("broadcast finish")
 
+	log("finish")
 	return nil
 }
 

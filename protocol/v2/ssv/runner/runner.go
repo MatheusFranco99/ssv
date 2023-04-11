@@ -4,15 +4,17 @@ import (
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"time"
 )
 
 var logger = logging.Logger("ssv/protocol/ssv/runner").Desugar()
@@ -58,11 +60,18 @@ type BaseRunner struct {
 
 	// implementation vars
 	TimeoutF TimeoutF `json:"-"`
+
+	// counter int
+}
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
 func NewBaseRunner(logger *zap.Logger) *BaseRunner {
 	return &BaseRunner{
 		logger: logger,
+		// counter: 0,
 	}
 }
 
@@ -213,6 +222,22 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 		return errors.Wrap(err, "input data invalid")
 	}
 
+	// if b.counter < 2 {
+	// 	b.counter += 1
+	// }
+	// if b.counter >= 2 {
+	// 	return errors.New("$$$$$$ Runner: counter > 2 $$$$$$")
+	// }
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		b.logger.Debug("$$$$$$ UponBaseRunnerDecide "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start new instance")
 	if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}

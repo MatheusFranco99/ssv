@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests/messages"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests/runner/duties/newduty"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests/runner/duties/synccommitteeaggregator"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests/valcheck"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"

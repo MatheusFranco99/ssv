@@ -2,7 +2,7 @@ package testing
 
 import (
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"

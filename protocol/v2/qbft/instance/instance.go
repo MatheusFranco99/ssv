@@ -12,11 +12,12 @@ import (
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
 func makeTimestamp() int64 {
-    return time.Now().UnixNano() / int64(time.Microsecond)
+	return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
 var logger = logging.Logger("ssv/protocol/qbft/instance").Desugar()
@@ -32,6 +33,9 @@ type Instance struct {
 	StartValue  []byte
 
 	logger *zap.Logger
+
+	initTime  int64
+	finalTime int64
 }
 
 func NewInstance(
@@ -57,22 +61,43 @@ func NewInstance(
 		processMsgF: spectypes.NewThreadSafeF(),
 		logger: logger.With(zap.String("publicKey", hex.EncodeToString(msgId.GetPubKey())), zap.String("role", msgId.GetRoleType().String()),
 			zap.Uint64("height", uint64(height))),
+		initTime:  -1,
+		finalTime: -1,
 	}
+}
+
+func (i *Instance) CheckStart() {
+	// if !i.alreadyStarted {
+
+	// }
 }
 
 // Start is an interface implementation
 func (i *Instance) Start(value []byte, height specqbft.Height) {
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("preStartOnce")
+
 	i.startOnce.Do(func() {
 		i.StartValue = value
 		i.State.Round = specqbft.FirstRound
 		i.State.Height = height
 
+		i.initTime = makeTimestamp()
+
 		i.config.GetTimer().TimeoutForRound(specqbft.FirstRound)
 
-		i.logger.Debug("$$$$$$ starting QBFT instance. time(micro):",zap.Int64("time(micro)",makeTimestamp()))
+		log("start qbft instance")
 
 		// propose if this node is the proposer
 		if proposer(i.State, i.GetConfig(), specqbft.FirstRound) == i.State.Share.OperatorID {
+			log("create proposal")
 			proposal, err := CreateProposal(i.State, i.config, i.StartValue, nil, nil)
 			// nolint
 			if err != nil {
@@ -80,11 +105,13 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 				// TODO align spec to add else to avoid broadcast errored proposal
 			} else {
 				// nolint
+				log("broadcast start")
 				if err := i.Broadcast(proposal); err != nil {
 					i.logger.Warn("failed to broadcast proposal", zap.Error(err))
 				}
 			}
 		}
+		log("finish")
 	})
 }
 
@@ -122,7 +149,7 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 			if decided {
 				i.State.Decided = decided
 				i.State.DecidedValue = decidedValue
-				i.logger.Debug("$$$$$$ Decided on value with commit.",zap.Int64("time(micro)",makeTimestamp()))
+				i.logger.Debug("$$$$$$ Decided on value with commit.", zap.Int64("time(micro)", makeTimestamp()))
 			}
 			return err
 		case specqbft.RoundChangeMsgType:

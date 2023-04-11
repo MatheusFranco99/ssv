@@ -12,10 +12,10 @@ import (
 
 	"github.com/MatheusFranco99/ssv/protocol/v2/sync/handlers"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/async/event"
 	"go.uber.org/zap"
