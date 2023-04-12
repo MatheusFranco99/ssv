@@ -1,14 +1,15 @@
 package controller
 
 import (
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
-func (c *Controller) UponFutureMsg(msg *specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
+func (c *Controller) UponFutureMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
 	if err := ValidateFutureMsg(c.GetConfig(), msg, c.Share.Committee); err != nil {
 		return nil, errors.Wrap(err, "invalid future msg")
 	}
@@ -26,7 +27,7 @@ func (c *Controller) UponFutureMsg(msg *specqbft.SignedMessage) (*specqbft.Signe
 
 func ValidateFutureMsg(
 	config qbft.IConfig,
-	msg *specqbft.SignedMessage,
+	msg *messages.SignedMessage,
 	operators []*spectypes.Operator,
 ) error {
 	if err := msg.Validate(); err != nil {
@@ -46,9 +47,9 @@ func ValidateFutureMsg(
 }
 
 // addHigherHeightMsg verifies msg, cleanup queue and adds the message if unique signer
-func (c *Controller) addHigherHeightMsg(msg *specqbft.SignedMessage) bool {
+func (c *Controller) addHigherHeightMsg(msg *messages.SignedMessage) bool {
 	// cleanup lower height msgs
-	cleanedQueue := make(map[spectypes.OperatorID]specqbft.Height)
+	cleanedQueue := make(map[spectypes.OperatorID]specalea.Height)
 	signerExists := false
 	for signer, height := range c.FutureMsgsContainer {
 		if height <= c.Height {

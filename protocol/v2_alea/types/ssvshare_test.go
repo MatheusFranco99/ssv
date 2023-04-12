@@ -6,7 +6,7 @@ import (
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/stretchr/testify/require"
 
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 func TestSSVShareMetadata_BelongsToOperatorID(t *testing.T) {

@@ -20,13 +20,13 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
-	qbfttesting "github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
-	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2/ssv/testing"
-	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2/testing"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
+	qbfttesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/testing"
+	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 

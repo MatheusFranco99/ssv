@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -14,10 +14,10 @@ import (
 	"github.com/MatheusFranco99/ssv/operator/slot_ticker"
 	"github.com/MatheusFranco99/ssv/operator/validator"
 	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 )
 
 //go:generate mockgen -package=mocks -destination=./mocks/controller.go -source=./controller.go

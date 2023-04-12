@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/sync/handlers"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/sync/handlers"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/async/event"
 	"go.uber.org/zap"
@@ -26,15 +26,15 @@ import (
 	"github.com/MatheusFranco99/ssv/network"
 	forksfactory "github.com/MatheusFranco99/ssv/network/forks/factory"
 	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
-	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/roundtimer"
-	utilsprotocol "github.com/MatheusFranco99/ssv/protocol/v2/queue"
-	"github.com/MatheusFranco99/ssv/protocol/v2/queue/worker"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft/roundtimer"
+	utilsprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/queue/worker"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	registrystorage "github.com/MatheusFranco99/ssv/registry/storage"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/MatheusFranco99/ssv/utils/tasks"
@@ -105,7 +105,7 @@ type controller struct {
 	context        context.Context
 	collection     ICollection
 	storage        registrystorage.OperatorsCollection
-	ibftStorageMap *storage.QBFTStores
+	ibftStorageMap *storage.ALEAStores
 	logger         *zap.Logger
 	beacon         beaconprotocol.Beacon
 	keyManager     spectypes.KeyManager
@@ -664,14 +664,14 @@ func SetupRunners(ctx context.Context, logger *zap.Logger, options validator.Opt
 	}
 
 	domainType := types.GetDefaultDomain()
-	buildController := func(role spectypes.BeaconRole, valueCheckF specqbft.ProposedValueCheckF) *qbftcontroller.Controller {
-		config := &qbft.Config{
+	buildController := func(role spectypes.BeaconRole, valueCheckF specalea.ProposedValueCheckF) *qbftcontroller.Controller {
+		config := &alea.Config{
 			Signer:      options.Signer,
 			SigningPK:   options.SSVShare.ValidatorPubKey, // TODO right val?
 			Domain:      domainType,
 			ValueCheckF: nil, // sets per role type
-			ProposerF: func(state *specqbft.State, round specqbft.Round) spectypes.OperatorID {
-				leader := specqbft.RoundRobinProposer(state, round)
+			ProposerF: func(state *specalea.State, round specalea.Round) spectypes.OperatorID {
+				leader := specalea.RoundRobinProposer(state, round)
 				//logger.Debug("leader", zap.Int("operator_id", int(leader)))
 				return leader
 			},

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
@@ -19,7 +19,8 @@ import (
 	"github.com/MatheusFranco99/ssv/network"
 	forksfactory "github.com/MatheusFranco99/ssv/network/forks/factory"
 	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
-	protcolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	protcolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 )
 
 func TestGetMaxPeers(t *testing.T) {
@@ -119,13 +120,13 @@ func TestP2pNetwork_Stream(t *testing.T) {
 	pk, err := hex.DecodeString(pkHex)
 	require.NoError(t, err)
 	mid := spectypes.NewMsgID(pk, spectypes.BNRoleAttester)
-	rounds := []specqbft.Round{
+	rounds := []specalea.Round{
 		1, 1, 1,
 		1, 2, 2,
 		3, 3, 1,
 		1, 1, 1,
 	}
-	heights := []specqbft.Height{
+	heights := []specalea.Height{
 		0, 0, 2,
 		10, 20, 20,
 		23, 23, 1,
@@ -146,16 +147,16 @@ func TestP2pNetwork_Stream(t *testing.T) {
 	require.GreaterOrEqual(t, msgCounter, int64(2))
 }
 
-func registerHandler(node network.P2PNetwork, mid spectypes.MessageID, height specqbft.Height, round specqbft.Round, counter *int64) {
+func registerHandler(node network.P2PNetwork, mid spectypes.MessageID, height specalea.Height, round specalea.Round, counter *int64) {
 	node.RegisterHandlers(&protcolp2p.SyncHandler{
 		Protocol: protcolp2p.LastDecidedProtocol,
 		Handler: func(message *spectypes.SSVMessage) (*spectypes.SSVMessage, error) {
 			atomic.AddInt64(counter, 1)
-			sm := specqbft.SignedMessage{
+			sm := messages.SignedMessage{
 				Signature: []byte("xxx"),
 				Signers:   []spectypes.OperatorID{1, 2, 3},
-				Message: &specqbft.Message{
-					MsgType:    specqbft.CommitMsgType,
+				Message: &specalea.Message{
+					MsgType:    specalea.CommitMsgType,
 					Height:     height,
 					Round:      round,
 					Identifier: mid[:],
@@ -259,12 +260,12 @@ func dummyMsg(pkHex string, height int) (*spectypes.SSVMessage, error) {
 		return nil, err
 	}
 	id := spectypes.NewMsgID(pk, spectypes.BNRoleAttester)
-	signedMsg := &specqbft.SignedMessage{
-		Message: &specqbft.Message{
-			MsgType:    specqbft.CommitMsgType,
+	signedMsg := &messages.SignedMessage{
+		Message: &specalea.Message{
+			MsgType:    specalea.CommitMsgType,
 			Round:      2,
 			Identifier: id[:],
-			Height:     specqbft.Height(height),
+			Height:     specalea.Height(height),
 			Data:       []byte("bk0iAAAAAAACAAAAAAAAAAbYXFSt2H7SQd5q5u+N0bp6PbbPTQjU25H1QnkbzTECahIBAAAAAADmi+NJfvXZ3iXp2cfs0vYVW+EgGD7DTTvr5EkLtiWq8WsSAQAAAAAAIC8dZTEdD3EvE38B9kDVWkSLy40j0T+TtSrrrBqVjo4="),
 		},
 		Signature: []byte("sVV0fsvqQlqliKv/ussGIatxpe8LDWhc9uoaM5WpjbiYvvxUr1eCpz0ja7UT1PGNDdmoGi6xbMC1g/ozhAt4uCdpy0Xdfqbv2hMf2iRL5ZPKOSmMifHbd8yg4PeeceyN"),

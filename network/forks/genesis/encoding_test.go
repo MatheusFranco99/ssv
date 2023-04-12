@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +13,7 @@ import (
 func TestForkV1_Encoding(t *testing.T) {
 	msg := &spectypes.SSVMessage{
 		MsgType: spectypes.SSVConsensusMsgType,
-		MsgID:   specqbft.ControllerIdToMessageID([]byte("xxxxxxxxxxx_ATTESTER")),
+		MsgID:   specalea.ControllerIdToMessageID([]byte("xxxxxxxxxxx_ATTESTER")),
 		Data:    []byte("data"),
 	}
 	f := &ForkGenesis{}

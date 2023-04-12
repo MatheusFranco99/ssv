@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	ssvpeers "github.com/MatheusFranco99/ssv/network/peers"
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 )
 
 // ReportValidation reports the result for the given message

@@ -1,14 +1,19 @@
 package instance
 
 import (
+	"fmt"
+
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
-func (i *Instance) uponVCBCSend(signedMessage *specalea.SignedMessage) error {
+func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	// get Data
 	vcbcSendData, err := signedMessage.Message.GetVCBCSendData()
@@ -16,51 +21,74 @@ func (i *Instance) uponVCBCSend(signedMessage *specalea.SignedMessage) error {
 		errors.New("uponVCBCSend: could not get vcbcSendData data from signedMessage")
 	}
 
-	// check if it was already received. If not -> store
-	if !i.State.VCBCState.HasM(vcbcSendData.Author, vcbcSendData.Priority) {
-		i.State.VCBCState.SetM(vcbcSendData.Author, vcbcSendData.Priority, vcbcSendData.Proposals)
+	// sender
+	sender := signedMessage.GetSigners()[0]
+	author := vcbcSendData.Author
+	priority := vcbcSendData.Priority
+	data := vcbcSendData.Data
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(sender)))
 	}
 
-	// get sender of the message
-	senderID := signedMessage.GetSigners()[0]
+	log("start")
 
-	// if it's the sender and the author, just add the ready signature
-	if senderID == i.State.Share.OperatorID && senderID == vcbcSendData.Author {
-		i.AddOwnVCBCReady(vcbcSendData.Proposals, vcbcSendData.Priority)
+	log(fmt.Sprintf("i.initTime status: %v", i.initTime))
+	if i.initTime == -1 || i.initTime == 0 {
+		i.initTime = makeTimestamp()
+	}
+	log(fmt.Sprintf("i.initTime new: %v", i.initTime))
+
+	// check if it was already received. If not -> store
+	log(fmt.Sprintf("has author, priority: %v", i.State.VCBCState.Has(author, priority)))
+	if !i.State.VCBCState.Has(author, priority) {
+		log("add")
+
+		i.State.VCBCState.Add(author, priority, data)
+	}
+
+	if sender != author {
+		log("sender != author, quitting.")
 		return nil
 	}
 
-	// if the Author of the VCBC is the same as the sender of the message -> sign and answer with READY
-	if senderID == vcbcSendData.Author {
-
-		hash, err := GetProposalsHash(vcbcSendData.Proposals)
-		if err != nil {
-			return errors.New("uponVCBCSend: could not get hash of proposals")
-		}
-
-		// create VCBCReady message with proof
-		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, vcbcSendData.Priority, vcbcSendData.Author)
-		if err != nil {
-			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
-		}
-
-		// FIX ME : send specifically to author
-		i.Broadcast(vcbcReadyMsg)
+	log("get hash")
+	hash, err := GetDataHash(data)
+	if err != nil {
+		return errors.New("uponVCBCSend: could not get hash of proposals")
 	}
+
+	// create VCBCReady message with proof
+	log("create vcbc ready")
+
+	vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, priority, author)
+	if err != nil {
+		return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
+	}
+	// FIX ME : send specifically to author
+	log("broadcast start")
+	i.Broadcast(vcbcReadyMsg)
+	log("broadcast finish")
+
+	log("finish")
 
 	return nil
 }
 
 func isValidVCBCSend(
-	state *specalea.State,
+	state *messages.State,
 	config alea.IConfig,
-	signedMsg *specalea.SignedMessage,
+	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
 ) error {
-	if signedMsg.Message.MsgType != specalea.VCBCSendMsgType {
-		return errors.New("msg type is not VCBCSend")
-	}
+	// if signedMsg.Message.MsgType != specalea.VCBCSendMsgType {
+	// 	return errors.New("msg type is not VCBCSend")
+	// }
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
@@ -96,28 +124,28 @@ func isValidVCBCSend(
 	}
 
 	// priority
-	priority := VCBCSendData.Priority
-	if state.VCBCState.HasM(author, priority) {
-		if !state.VCBCState.EqualM(author, priority, VCBCSendData.Proposals) {
-			return errors.New("existing (priority,author) with different proposals")
-		}
-	}
+	// priority := VCBCSendData.Priority
+	// if state.VCBCState.HasM(author, priority) {
+	// 	if !state.VCBCState.EqualM(author, priority, VCBCSendData.Proposals) {
+	// 		return errors.New("existing (priority,author) with different proposals")
+	// 	}
+	// }
 
 	return nil
 }
 
-func CreateVCBCSend(state *specalea.State, config alea.IConfig, proposals []*specalea.ProposalData, priority specalea.Priority, author types.OperatorID) (*specalea.SignedMessage, error) {
-	vcbcSendData := &specalea.VCBCSendData{
-		Proposals: proposals,
-		Priority:  priority,
-		Author:    author,
+func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte, priority specalea.Priority, author types.OperatorID) (*messages.SignedMessage, error) {
+	vcbcSendData := &messages.VCBCSendData{
+		Data:     data,
+		Priority: priority,
+		Author:   author,
 	}
 	dataByts, err := vcbcSendData.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "CreateVCBCSend: could not encode vcbcSendData")
 	}
-	msg := &specalea.Message{
-		MsgType:    specalea.VCBCSendMsgType,
+	msg := &messages.Message{
+		MsgType:    messages.VCBCSendMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
@@ -128,7 +156,7 @@ func CreateVCBCSend(state *specalea.State, config alea.IConfig, proposals []*spe
 		return nil, errors.Wrap(err, "CreateVCBCSend: failed signing filler msg")
 	}
 
-	signedMsg := &specalea.SignedMessage{
+	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []types.OperatorID{state.Share.OperatorID},
 		Message:   msg,

@@ -8,7 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -17,14 +19,14 @@ import (
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
 
-	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	aleastorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/MatheusFranco99/ssv/storage/kv"
 )
 
 var (
-	specModule   = "github.com/bloxapp/ssv-spec"
+	specModule   = "github.com/MatheusFranco99/ssv-spec"
 	specTestPath = "spectest/generate/tests.json"
 )
 
@@ -52,16 +54,16 @@ func GenerateBLSKeys(oids ...spectypes.OperatorID) (map[spectypes.OperatorID]*bl
 }
 
 // MsgGenerator represents a message generator
-type MsgGenerator func(height specqbft.Height) ([]spectypes.OperatorID, *specqbft.Message)
+type MsgGenerator func(height specalea.Height) ([]spectypes.OperatorID, *specalea.Message)
 
 // CreateMultipleStoredInstances enables to create multiple stored instances (with decided messages).
 func CreateMultipleStoredInstances(
 	sks map[spectypes.OperatorID]*bls.SecretKey,
-	start specqbft.Height,
-	end specqbft.Height,
+	start specalea.Height,
+	end specalea.Height,
 	generator MsgGenerator,
-) ([]*qbftstorage.StoredInstance, error) {
-	results := make([]*qbftstorage.StoredInstance, 0)
+) ([]*aleastorage.StoredInstance, error) {
+	results := make([]*aleastorage.StoredInstance, 0)
 	for i := start; i <= end; i++ {
 		signers, msg := generator(i)
 		if msg == nil {
@@ -71,8 +73,8 @@ func CreateMultipleStoredInstances(
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, &qbftstorage.StoredInstance{
-			State: &specqbft.State{
+		results = append(results, &aleastorage.StoredInstance{
+			State: &specalea.State{
 				ID:                   sm.Message.Identifier,
 				Round:                sm.Message.Round,
 				Height:               sm.Message.Height,
@@ -80,10 +82,10 @@ func CreateMultipleStoredInstances(
 				LastPreparedValue:    sm.Message.Data,
 				Decided:              true,
 				DecidedValue:         sm.Message.Data,
-				ProposeContainer:     specqbft.NewMsgContainer(),
-				PrepareContainer:     specqbft.NewMsgContainer(),
-				CommitContainer:      specqbft.NewMsgContainer(),
-				RoundChangeContainer: specqbft.NewMsgContainer(),
+				ProposeContainer:     specalea.NewMsgContainer(),
+				PrepareContainer:     specalea.NewMsgContainer(),
+				CommitContainer:      specalea.NewMsgContainer(),
+				RoundChangeContainer: specalea.NewMsgContainer(),
 			},
 			DecidedMessage: sm,
 		})
@@ -91,7 +93,7 @@ func CreateMultipleStoredInstances(
 	return results, nil
 }
 
-func signMessage(msg *specqbft.Message, sk *bls.SecretKey) (*bls.Sign, error) {
+func signMessage(msg *specalea.Message, sk *bls.SecretKey) (*bls.Sign, error) {
 	signatureDomain := spectypes.ComputeSignatureDomain(types.GetDefaultDomain(), spectypes.QBFTSignatureType)
 	root, err := spectypes.ComputeSigningRoot(msg, signatureDomain)
 	if err != nil {
@@ -101,7 +103,7 @@ func signMessage(msg *specqbft.Message, sk *bls.SecretKey) (*bls.Sign, error) {
 }
 
 // MultiSignMsg signs a msg with multiple signers
-func MultiSignMsg(sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectypes.OperatorID, msg *specqbft.Message) (*specqbft.SignedMessage, error) {
+func MultiSignMsg(sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectypes.OperatorID, msg *specalea.Message) (*messages.SignedMessage, error) {
 	_ = bls.Init(bls.BLS12_381)
 
 	var operators = make([]spectypes.OperatorID, 0)
@@ -119,30 +121,30 @@ func MultiSignMsg(sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectyp
 		}
 	}
 
-	return &specqbft.SignedMessage{
+	return &messages.SignedMessage{
 		Message:   msg,
 		Signature: agg.Serialize(),
 		Signers:   operators,
 	}, nil
 }
 
-// SignMsg handle MultiSignMsg error and return just specqbft.SignedMessage
-func SignMsg(t *testing.T, sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectypes.OperatorID, msg *specqbft.Message) *specqbft.SignedMessage {
+// SignMsg handle MultiSignMsg error and return just messages.SignedMessage
+func SignMsg(t *testing.T, sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectypes.OperatorID, msg *specalea.Message) *messages.SignedMessage {
 	res, err := MultiSignMsg(sks, signers, msg)
 	require.NoError(t, err)
 	return res
 }
 
-// AggregateSign sign specqbft.Message and then aggregate
-func AggregateSign(t *testing.T, sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectypes.OperatorID, consensusMessage *specqbft.Message) *specqbft.SignedMessage {
+// AggregateSign sign specalea.Message and then aggregate
+func AggregateSign(t *testing.T, sks map[spectypes.OperatorID]*bls.SecretKey, signers []spectypes.OperatorID, consensusMessage *specalea.Message) *messages.SignedMessage {
 	signedMsg := SignMsg(t, sks, signers, consensusMessage)
 	// TODO: use SignMsg instead of AggregateSign
 	// require.NoError(t, sigSignMsgnedMsg.Aggregate(signedMsg))
 	return signedMsg
 }
 
-// AggregateInvalidSign sign specqbft.Message and then change the signer id to mock invalid sig
-func AggregateInvalidSign(t *testing.T, sks map[spectypes.OperatorID]*bls.SecretKey, consensusMessage *specqbft.Message) *specqbft.SignedMessage {
+// AggregateInvalidSign sign specalea.Message and then change the signer id to mock invalid sig
+func AggregateInvalidSign(t *testing.T, sks map[spectypes.OperatorID]*bls.SecretKey, consensusMessage *specalea.Message) *messages.SignedMessage {
 	sigend := SignMsg(t, sks, []spectypes.OperatorID{1}, consensusMessage)
 	sigend.Signers = []spectypes.OperatorID{2}
 	return sigend
@@ -159,7 +161,7 @@ func NewInMemDb() basedb.IDb {
 }
 
 // CommitDataToBytes encode commit data and handle error if exist
-func CommitDataToBytes(t *testing.T, input *specqbft.CommitData) []byte {
+func CommitDataToBytes(t *testing.T, input *specalea.CommitData) []byte {
 	ret, err := json.Marshal(input)
 	require.NoError(t, err)
 	return ret

@@ -3,14 +3,14 @@ package testing
 import (
 	"context"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/testing"
 
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 )
 
 var BaseValidator = func(keySet *spectestingutils.TestKeySet) *validator.Validator {

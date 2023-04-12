@@ -5,17 +5,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"go.uber.org/zap"
 
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
 )
 
 type AttesterRunner struct {
@@ -24,7 +25,7 @@ type AttesterRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck specqbft.ProposedValueCheckF
+	valCheck specalea.ProposedValueCheckF
 	logger   *zap.Logger
 }
 
@@ -35,7 +36,7 @@ func NewAttesterRunnner(
 	beacon specssv.BeaconNode,
 	network specssv.Network,
 	signer spectypes.KeyManager,
-	valCheck specqbft.ProposedValueCheckF,
+	valCheck specalea.ProposedValueCheckF,
 ) Runner {
 	logger := logger.With(zap.String("validator", hex.EncodeToString(share.ValidatorPubKey)))
 	return &AttesterRunner{
@@ -69,7 +70,7 @@ func (r *AttesterRunner) ProcessPreConsensus(signedMsg *specssv.SignedPartialSig
 	return errors.New("no pre consensus sigs required for attester role")
 }
 
-func (r *AttesterRunner) ProcessConsensus(signedMsg *specqbft.SignedMessage) error {
+func (r *AttesterRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
 	decided, decidedValue, err := r.BaseRunner.baseConsensusMsgProcessing(r, signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -216,7 +217,7 @@ func (r *AttesterRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *AttesterRunner) GetValCheckF() specqbft.ProposedValueCheckF {
+func (r *AttesterRunner) GetValCheckF() specalea.ProposedValueCheckF {
 	return r.valCheck
 }
 

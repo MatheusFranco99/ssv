@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
@@ -61,8 +61,8 @@ func (o OperationSyncHighestDecided) String() string {
 
 type OperationSyncDecidedByRange struct {
 	ID      spectypes.MessageID
-	From    specqbft.Height
-	To      specqbft.Height
+	From    specalea.Height
+	To      specalea.Height
 	Handler MessageHandler
 }
 
@@ -172,7 +172,7 @@ func (s *ConcurrentSyncer) SyncHighestDecided(
 func (s *ConcurrentSyncer) SyncDecidedByRange(
 	ctx context.Context,
 	id spectypes.MessageID,
-	from, to specqbft.Height,
+	from, to specalea.Height,
 	handler MessageHandler,
 ) error {
 	s.jobs <- OperationSyncDecidedByRange{

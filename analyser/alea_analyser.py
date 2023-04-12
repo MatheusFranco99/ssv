@@ -191,15 +191,15 @@ class GeneralProtocol:
     def hasDecidedTime(self):
         # if self.ssv_node_num != 1:
         #     return None
-        if self.logTag != 'UponCommit':
+        if self.logTag != 'UponABAFinish':
             return None
         
         for tag in self.tags:
             if 'comment' not in self.tags[tag]:
                 continue
-            if 'return decided, total time:' in self.tags[tag]['comment']:
+            if 'set decided, set priority. Total time:' in self.tags[tag]['comment']:
                 txt = self.tags[tag]['comment']
-                return int(txt.split("return decided, total time: ")[1])
+                return int(txt.split("set decided, set priority. Total time: ")[1])
 
         return None
     
@@ -217,7 +217,7 @@ class GeneralProtocolController:
     def __init__(self,logger):
         self.logger = logger
         self.protocols = []
-        self.tags = ['UponStart','UponProposal','UponPrepare','UponCommit','UponRoundChange','UponRoundTimeout']
+        self.tags = ['UponVCBCSend','UponVCBCReady','UponVCBCFinal','UponABAInit','UponABAAux','UponABAConf','UponABAFinish','UponStart','UponVCBCStart']
         self.protocols_dict = {tag:{} for tag in self.tags}
 
     def lenMessages(self):
@@ -257,99 +257,209 @@ class GeneralProtocolController:
         
     def createProtocol(self,tag,diffTag):
         p = None
-        if tag == 'UponStart':
+        if tag == 'UponVCBCSend':
+            p = self.createVCBCSend()
+        elif tag == 'UponVCBCReady':
+            p = self.createVCBCReady()
+        elif tag == 'UponVCBCFinal':
+            p = self.createVCBCFinal()
+        elif tag == 'UponABAInit':
+            p = self.createABAInit()
+        elif tag == 'UponABAAux':
+            p = self.createABAAux()
+        elif tag == 'UponABAConf':
+            p = self.createABAConf()
+        elif tag == 'UponABAFinish':
+            p = self.createABAFinish()
+        elif tag == 'UponStart':
             p = self.createStart()
-        # elif tag == 'UponBaseRunnerDecide':
-        #     p = self.createBaseRunner()
-        elif tag == 'UponProposal':
-            p = self.createProposal()
-        elif tag == 'UponPrepare':
-            p = self.createPrepare()
-        elif tag == 'UponCommit':
-            p = self.createCommit()
-        elif tag == 'UponRoundChange':
-            p = self.createRoundChange()
-        elif tag == 'UponRoundTimeout':
-            p = self.createTimeout()
+        elif tag == 'UponVCBCStart':
+            p = self.createVCBCStart()
+        
         p.setDiffTag(diffTag)
         return p
 
-    # def createBaseRunner(self):
-    #     return GeneralProtocol(self.logger,'BaseRunner','UponBaseRunnerDecide',
-    #                     ['start new instance'],
-    #                      ['time(micro)'])
+
+    def createVCBCSend(self):
+        return GeneralProtocol(self.logger,'VCBCSend','UponVCBCSend',
+                        ['start',
+                         'i.initTime status:',
+                         'i.initTime new:',
+                         'has author, priority',
+                         'add',
+                         'sender != author, quitting.',
+                         'get hash',
+                         'create vcbc ready',
+                         'broadcast start',
+                         'broadcast finish',
+                         'finish'],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender'])
+    
+    def createVCBCReady(self):
+        return GeneralProtocol(self.logger,'VCBCReady','UponVCBCReady',
+                        ['start',
+                         'already has quorum',
+                         'added.',
+                         'len, quorum',
+                         'len >= quorum',
+                         'creating vcbc final',
+                         'broadcast start',
+                         'broadcast finish',
+                         'finish'],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender'])
+    
+    def createVCBCFinal(self):
+        return GeneralProtocol(self.logger,'VCBCFinal','UponVCBCFinal',
+                        ['start',
+                         'has sent init:',
+                         'creating aba init',
+                         'broadcast start abainit',
+                         'broadcast finish abainit',
+                         'finish'],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender'])
+    
+    
+    def createABAInit(self):
+        return GeneralProtocol(self.logger,'ABAInit','UponABAInit',
+                        ['start',
+                         'finish old priority',
+                         'finish old round',
+                         'add init',
+                         'has sent aux:',
+                         'finish has already sent aux',
+                         'len init, quorum:',
+                         'creating aba aux',
+                         'set sent aux',
+                         'broadcast start aux',
+                         'broadcast finish aux',
+                         'has sent init:',
+                         'finish has already sent this init',
+                         'len init, partial quorum:',
+                         'creating aba init',
+                         'set sent init',
+                         'broadcast start init',
+                         'broadcast finish init',
+                         'finish'
+                         ],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender',
+                          'round',
+                          'vote'])
+
+    def createABAAux(self):
+        return GeneralProtocol(self.logger,'ABAAux','UponABAAux',
+                        ['start',
+                         'finish old priority',
+                         'finish old round',
+                         'add aux',
+                         'has sent conf:',
+                         'finish already sent conf',
+                         'len aux, quorum:',
+                         'conf values:',
+                         'creating aba conf',
+                         'broadcast start',
+                         'broadcast finish',
+                         'set sent conf',
+                         'finish'
+                         ],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender',
+                          'round',
+                          'vote'])
+
+    def createABAConf(self):
+        return GeneralProtocol(self.logger,'ABAConf','UponABAConf',
+                        ['start',
+                         'finish old priority',
+                         'finish old round',
+                         'add conf',
+                         'len conf, quorum:',
+                         'will get coin',
+                         'coin:',
+                         'conf values:',
+                         'init vote',
+                         'has sent init:',
+                         'create aba init',
+                         'broadcast start abainit',
+                         'broadcast finish abainit',
+                         'set sent init and inc round',
+                         'len conf values == 1 and conf_values[0] == coin:',
+                         'has sent finish:',
+                         'create aba finish',
+                         'broadcast start abafinish',
+                         'broadcast finish abafinish',
+                         'set sent finish',
+                         'finish'
+                         ],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender',
+                          'round',
+                          'votes'])
+
+    def createABAFinish(self):
+        return GeneralProtocol(self.logger,'ABAFinish','UponABAFinish',
+                        ['start',
+                         'finish old priority',
+                         'add finish',
+                         'len finish, partial quorum:',
+                         'has sent finish:',
+                         'create aba finish',
+                         'broadcast start abafinish',
+                         'broadcast finish abafinish',
+                         'set sent finish',
+                         'len finish, quorum, is decided:',
+                         'set decided, set priority. Total time:',
+                         'terminated aba',
+                         'finish'
+                         ],
+                         ['time(micro)',
+                          'author',
+                          'priority',
+                          'sender',
+                          'vote'])
 
     def createStart(self):
         return GeneralProtocol(self.logger,'Start','UponStart',
-                        ['start qbft instance',
-                         'create proposal',
-                         'broadcast start',
-                         'finish'],
-                         ['time(micro)'])
+                        ['start',
+                         'set values',
+                         'create node ids list',
+                         'Reinit VCBCState and ACState',
+                         'i.initTime:',
+                         'own operator id == 2',
+                         'call vcbc',
+                         'finish vcbc'
+                         ],
+                         ['time(micro)',
+                          'own operator id'])
 
-    def createProposal(self):
-        return GeneralProtocol(self.logger,'Proposal','UponProposal',
+    def createVCBCStart(self):
+        return GeneralProtocol(self.logger,'VCBCStart','UponVCBCStart',
                         ['start',
-                         'addFirstMsg',
-                         'create prepare msg',
+                         'create vcbc send',
                          'broadcast start',
                          'broadcast finish',
-                         'finish'],
+                         'finish'
+                         ],
                          ['time(micro)',
-                          'round',
-                          'sender'])
+                          'priority',
+                          'vcbcNum'])
 
-    def createPrepare(self):
-        return GeneralProtocol(self.logger,'Prepare','UponPrepare',
-                        ['start',
-                         'get proposal data',
-                         'add signed msg',
-                         'check if havent quorum',
-                         'check if sent commit for height and round',
-                         'create commit msg',
-                         'broadcast start',
-                         'broadcast finish',
-                         'finish'],
-                         ['time(micro)',
-                          'round',
-                          'sender'])
-    
-    def createCommit(self):
-        return GeneralProtocol(self.logger,'Commit','UponCommit',
-                        ['start',
-                         'add signed message',
-                         'calculate commit',
-                         'got quorum. Getting commit data',
-                         'aggregate commit',
-                         'return decided, total time:',
-                         'finish no quorum'],
-                         ['time(micro)',
-                          'round',
-                          'sender'])
-    
-    def createRoundChange(self):
-        return GeneralProtocol(self.logger,'RoundChange','UponRoundChange',
-                        ['start',
-                         'add signed message',
-                         'check proposal justification',
-                         'create proposal',
-                         'broadcast start',
-                         'broadcast finish',
-                         'round change partial quorum',
-                         'finish'],
-                         ['time(micro)',
-                          'round',
-                          'sender'])
 
-    def createTimeout(self):
-        return GeneralProtocol(self.logger,'Timeout','UponRoundTimeout',
-                        ['start',
-                         'create round change msg',
-                         'broadcast start',
-                         'broadcast finish',
-                         'finish'],
-                         ['time(micro)',
-                          'round'])
 
 
 

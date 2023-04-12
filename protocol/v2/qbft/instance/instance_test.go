@@ -1,13 +1,14 @@
 package instance
 
 import (
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInstance_Marshaling(t *testing.T) {
-	i := qbft.TestingInstanceStruct
+	i := alea.TestingInstanceStruct
 
 	byts, err := i.Encode()
 	require.NoError(t, err)

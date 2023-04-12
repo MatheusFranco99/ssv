@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/exporter/api"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 // NewStreamPublisher handles incoming newly decided messages.
@@ -19,7 +19,7 @@ func NewStreamPublisher(logger *zap.Logger, ws api.WebSocketServer) controller.N
 	logger = logger.With(zap.String("who", "NewDecidedHandler"))
 	c := cache.New(time.Minute, time.Minute*3/2)
 	feed := ws.BroadcastFeed()
-	return func(msg *specqbft.SignedMessage) {
+	return func(msg *messages.SignedMessage) {
 		identifier := hex.EncodeToString(msg.Message.Identifier)
 		key := fmt.Sprintf("%s:%d:%d", identifier, msg.Message.Height, len(msg.Signers))
 		_, ok := c.Get(key)

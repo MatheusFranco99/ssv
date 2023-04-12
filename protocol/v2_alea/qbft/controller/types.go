@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 // InstanceContainer is a fixed-capacity container for instances.
 type InstanceContainer []*instance.Instance
 
-func (i InstanceContainer) FindInstance(height specqbft.Height) *instance.Instance {
+func (i InstanceContainer) FindInstance(height specalea.Height) *instance.Instance {
 	for _, inst := range i {
 		if inst != nil {
 			if inst.GetHeight() == height {

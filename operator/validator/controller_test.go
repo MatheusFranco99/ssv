@@ -6,17 +6,18 @@ import (
 	"testing"
 	"time"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/network/forks/genesis"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	"github.com/MatheusFranco99/ssv/protocol/v2/queue/worker"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/queue/worker"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 
@@ -175,18 +176,18 @@ func newValidator(metaData *beacon.ValidatorMetadata) *validator.Validator {
 }
 
 func generateChangeRoundMsg(t *testing.T, identifier spectypes.MessageID) []byte {
-	crd := specqbft.RoundChangeData{
+	crd := specalea.RoundChangeData{
 		PreparedValue:            nil,
 		PreparedRound:            0,
 		RoundChangeJustification: nil,
 	}
 	encoded, err := crd.Encode()
 	require.NoError(t, err)
-	sm := specqbft.SignedMessage{
+	sm := messages.SignedMessage{
 		Signature: []byte("sig"),
 		Signers:   []spectypes.OperatorID{1},
-		Message: &specqbft.Message{
-			MsgType:    specqbft.RoundChangeMsgType,
+		Message: &specalea.Message{
+			MsgType:    specalea.RoundChangeMsgType,
 			Height:     0,
 			Round:      1,
 			Identifier: identifier[:],
@@ -199,16 +200,16 @@ func generateChangeRoundMsg(t *testing.T, identifier spectypes.MessageID) []byte
 }
 
 func generateDecidedMessage(t *testing.T, identifier spectypes.MessageID) []byte {
-	cd := specqbft.CommitData{
+	cd := specalea.CommitData{
 		Data: []byte("data"),
 	}
 	encoded, err := cd.Encode()
 	require.NoError(t, err)
-	sm := specqbft.SignedMessage{
+	sm := messages.SignedMessage{
 		Signature: []byte("sig"),
 		Signers:   []spectypes.OperatorID{1, 2, 3},
-		Message: &specqbft.Message{
-			MsgType:    specqbft.CommitMsgType,
+		Message: &specalea.Message{
+			MsgType:    specalea.CommitMsgType,
 			Height:     0,
 			Round:      1,
 			Identifier: identifier[:],

@@ -1,12 +1,13 @@
 package queue
 
 import (
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	ssvmessage "github.com/MatheusFranco99/ssv/protocol/v2/message"
-	ssvtypes "github.com/MatheusFranco99/ssv/protocol/v2/types"
+	ssvmessage "github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	ssvtypes "github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/pkg/errors"
+
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 // DecodedSSVMessage is a bundle of SSVMessage and it's decoding.
@@ -22,7 +23,7 @@ func DecodeSSVMessage(m *types.SSVMessage) (*DecodedSSVMessage, error) {
 	var body interface{}
 	switch m.MsgType {
 	case types.SSVConsensusMsgType: // TODO: Or message.SSVDecidedMsgType?
-		sm := &qbft.SignedMessage{}
+		sm := &messages.SignedMessage{}
 		if err := sm.Decode(m.Data); err != nil {
 			return nil, errors.Wrap(err, "failed to decode SignedMessage")
 		}
@@ -49,7 +50,7 @@ func DecodeSSVMessage(m *types.SSVMessage) (*DecodedSSVMessage, error) {
 // compareHeightOrSlot returns an integer comparing the message's height/slot to the current.
 // The reuslt will be 0 if equal, -1 if lower, 1 if higher.
 func compareHeightOrSlot(state *State, m *DecodedSSVMessage) int {
-	if mm, ok := m.Body.(*qbft.SignedMessage); ok {
+	if mm, ok := m.Body.(*messages.SignedMessage); ok {
 		if mm.Message.Height == state.Height {
 			return 0
 		}
@@ -71,7 +72,7 @@ func compareHeightOrSlot(state *State, m *DecodedSSVMessage) int {
 // compareRound returns an integer comparing the message's round (if exist) to the current.
 // The reuslt will be 0 if equal, -1 if lower, 1 if higher.
 func compareRound(state *State, m *DecodedSSVMessage) int {
-	if mm, ok := m.Body.(*qbft.SignedMessage); ok {
+	if mm, ok := m.Body.(*messages.SignedMessage); ok {
 		if mm.Message.Round == state.Round {
 			return 2
 		}
@@ -113,9 +114,10 @@ func messageTypeScore(state *State, m *DecodedSSVMessage, relativeHeight int) in
 	}
 
 	// Lower.
-	return scoreByPrecedence(state, m,
-		isDecidedMesssage, isMessageOfType(qbft.CommitMsgType),
-	)
+	// return scoreByPrecedence(state, m,
+	// 	isDecidedMesssage, isMessageOfType(qbft.CommitMsgType),
+	// )
+	return 0
 }
 
 // consensusTypeScore returns an integer score for the type of a consensus message.
@@ -123,8 +125,14 @@ func messageTypeScore(state *State, m *DecodedSSVMessage, relativeHeight int) in
 func consensusTypeScore(state *State, m *DecodedSSVMessage) int {
 	if isConsensusMessage(state, m) {
 		return scoreByPrecedence(state, m,
-			isMessageOfType(qbft.ProposalMsgType), isMessageOfType(qbft.PrepareMsgType),
-			isMessageOfType(qbft.CommitMsgType), isMessageOfType(qbft.RoundChangeMsgType))
+			isMessageOfType(messages.VCBCSendMsgType),
+			isMessageOfType(messages.VCBCReadyMsgType),
+			isMessageOfType(messages.VCBCFinalMsgType),
+			isMessageOfType(messages.ProposalMsgType),
+			isMessageOfType(messages.ABAInitMsgType),
+			isMessageOfType(messages.ABAAuxMsgType),
+			isMessageOfType(messages.ABAConfMsgType),
+			isMessageOfType(messages.ABAFinishMsgType))
 	}
 	return 0
 }
@@ -168,16 +176,15 @@ func isPostConsensusMessage(s *State, m *DecodedSSVMessage) bool {
 }
 
 func isDecidedMesssage(s *State, m *DecodedSSVMessage) bool {
-	if sm, ok := m.Body.(*qbft.SignedMessage); ok {
-		return sm.Message.MsgType == qbft.CommitMsgType &&
-			len(sm.Signers) > int(s.Quorum)
+	if sm, ok := m.Body.(*messages.SignedMessage); ok {
+		return len(sm.Signers) > int(s.Quorum) //&& sm.Message.MsgType == qbft.CommitMsgType
 	}
 	return false
 }
 
-func isMessageOfType(t qbft.MessageType) messageCondition {
+func isMessageOfType(t messages.MessageType) messageCondition {
 	return func(s *State, m *DecodedSSVMessage) bool {
-		if sm, ok := m.Body.(*qbft.SignedMessage); ok {
+		if sm, ok := m.Body.(*messages.SignedMessage); ok {
 			return sm.Message.MsgType == t
 		}
 		return false

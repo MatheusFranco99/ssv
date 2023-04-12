@@ -2,9 +2,12 @@ package api
 
 import (
 	"encoding/hex"
+
 	"github.com/pkg/errors"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 )
 
 // Message represents an exporter message
@@ -19,7 +22,7 @@ type Message struct {
 
 // NewDecidedAPIMsg creates a new message from the given message
 // TODO: avoid converting to v0 once explorer is upgraded
-func NewDecidedAPIMsg(msgs ...*specqbft.SignedMessage) Message {
+func NewDecidedAPIMsg(msgs ...*messages.SignedMessage) Message {
 	data, err := DecidedAPIData(msgs...)
 	if err != nil {
 		return Message{
@@ -28,7 +31,7 @@ func NewDecidedAPIMsg(msgs ...*specqbft.SignedMessage) Message {
 		}
 	}
 
-	identifier := specqbft.ControllerIdToMessageID(msgs[0].Message.Identifier)
+	identifier := specalea.ControllerIdToMessageID(msgs[0].Message.Identifier)
 	pkv := identifier.GetPubKey()
 	role := identifier.GetRoleType()
 	return Message{
@@ -44,7 +47,7 @@ func NewDecidedAPIMsg(msgs ...*specqbft.SignedMessage) Message {
 }
 
 // DecidedAPIData creates a new message from the given message
-func DecidedAPIData(msgs ...*specqbft.SignedMessage) (interface{}, error) {
+func DecidedAPIData(msgs ...*messages.SignedMessage) (interface{}, error) {
 	if len(msgs) == 0 {
 		return nil, errors.New("no messages")
 	}

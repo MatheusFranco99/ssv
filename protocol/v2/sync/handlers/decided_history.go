@@ -3,19 +3,19 @@ package handlers
 import (
 	"fmt"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 )
 
 // HistoryHandler handler for decided history protocol
 // TODO: add msg validation and report scores
-func HistoryHandler(logger *zap.Logger, storeMap *storage.QBFTStores, reporting protocolp2p.ValidationReporting, maxBatchSize int) protocolp2p.RequestHandler {
+func HistoryHandler(logger *zap.Logger, storeMap *storage.ALEAStores, reporting protocolp2p.ValidationReporting, maxBatchSize int) protocolp2p.RequestHandler {
 	logger = logger.With(zap.String("who", "HistoryHandler"))
 	return func(msg *spectypes.SSVMessage) (*spectypes.SSVMessage, error) {
 		logger := logger.With(zap.String("msg_id", fmt.Sprintf("%x", msg.MsgID)))
@@ -32,7 +32,7 @@ func HistoryHandler(logger *zap.Logger, storeMap *storage.QBFTStores, reporting 
 		} else {
 			items := int(sm.Params.Height[1] - sm.Params.Height[0])
 			if items > maxBatchSize {
-				sm.Params.Height[1] = sm.Params.Height[0] + specqbft.Height(maxBatchSize)
+				sm.Params.Height[1] = sm.Params.Height[0] + specalea.Height(maxBatchSize)
 			}
 			msgID := msg.GetID()
 			store := storeMap.Get(msgID.GetRoleType())
@@ -40,7 +40,7 @@ func HistoryHandler(logger *zap.Logger, storeMap *storage.QBFTStores, reporting 
 				return nil, errors.New(fmt.Sprintf("not storage found for type %s", msgID.GetRoleType().String()))
 			}
 			instances, err := store.GetInstancesInRange(msgID[:], sm.Params.Height[0], sm.Params.Height[1])
-			results := make([]*specqbft.SignedMessage, 0, len(instances))
+			results := make([]*messages.SignedMessage, 0, len(instances))
 			for _, instance := range instances {
 				results = append(results, instance.DecidedMessage)
 			}

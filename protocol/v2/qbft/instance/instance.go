@@ -10,9 +10,10 @@ import (
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/pkg/errors"
 )
 
@@ -20,13 +21,13 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
-var logger = logging.Logger("ssv/protocol/qbft/instance").Desugar()
+var logger = logging.Logger("ssv/protocol/alea/instance").Desugar()
 
-// Instance is a single QBFT instance that starts with a Start call (including a value).
+// Instance is a single alea instance that starts with a Start call (including a value).
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
-	State  *specqbft.State
-	config qbft.IConfig
+	State  *specalea.State
+	config alea.IConfig
 
 	processMsgF *spectypes.ThreadSafeF
 	startOnce   sync.Once
@@ -38,23 +39,23 @@ type Instance struct {
 }
 
 func NewInstance(
-	config qbft.IConfig,
+	config alea.IConfig,
 	share *spectypes.Share,
 	identifier []byte,
-	height specqbft.Height,
+	height specalea.Height,
 ) *Instance {
 	msgId := spectypes.MessageIDFromBytes(identifier)
 	return &Instance{
-		State: &specqbft.State{
+		State: &specalea.State{
 			Share:                share,
 			ID:                   identifier,
-			Round:                specqbft.FirstRound,
+			Round:                specalea.FirstRound,
 			Height:               height,
-			LastPreparedRound:    specqbft.NoRound,
-			ProposeContainer:     specqbft.NewMsgContainer(),
-			PrepareContainer:     specqbft.NewMsgContainer(),
-			CommitContainer:      specqbft.NewMsgContainer(),
-			RoundChangeContainer: specqbft.NewMsgContainer(),
+			LastPreparedRound:    specalea.NoRound,
+			ProposeContainer:     specalea.NewMsgContainer(),
+			PrepareContainer:     specalea.NewMsgContainer(),
+			CommitContainer:      specalea.NewMsgContainer(),
+			RoundChangeContainer: specalea.NewMsgContainer(),
 		},
 		config:      config,
 		processMsgF: spectypes.NewThreadSafeF(),
@@ -66,15 +67,15 @@ func NewInstance(
 }
 
 // Start is an interface implementation
-func (i *Instance) Start(value []byte, height specqbft.Height) {
+func (i *Instance) Start(value []byte, height specalea.Height) {
 	i.startOnce.Do(func() {
 		i.StartValue = value
-		i.State.Round = specqbft.FirstRound
+		i.State.Round = specalea.FirstRound
 		i.State.Height = height
 
 		i.initTime = makeTimestamp()
 
-		i.config.GetTimer().TimeoutForRound(specqbft.FirstRound)
+		i.config.GetTimer().TimeoutForRound(specalea.FirstRound)
 
 		//funciton identifier
 		functionID := uuid.New().String()
@@ -84,12 +85,12 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 			i.logger.Debug("$$$$$$ UponStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 		}
 
-		log("start qbft instance")
+		log("start alea instance")
 
-		// i.logger.Debug("$$$$$$ starting QBFT instance. time(micro):", zap.Int64("time(micro)", makeTimestamp()))
+		// i.logger.Debug("$$$$$$ starting alea instance. time(micro):", zap.Int64("time(micro)", makeTimestamp()))
 
 		// propose if this node is the proposer
-		if proposer(i.State, i.GetConfig(), specqbft.FirstRound) == i.State.Share.OperatorID {
+		if proposer(i.State, i.GetConfig(), specalea.FirstRound) == i.State.Share.OperatorID {
 			log("create proposal")
 
 			proposal, err := CreateProposal(i.State, i.config, i.StartValue, nil, nil)
@@ -111,7 +112,7 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 	})
 }
 
-func (i *Instance) Broadcast(msg *specqbft.SignedMessage) error {
+func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
 	byts, err := msg.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode message")
@@ -129,18 +130,18 @@ func (i *Instance) Broadcast(msg *specqbft.SignedMessage) error {
 }
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
-func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *specqbft.SignedMessage, err error) {
+func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 	if err := i.BaseMsgValidation(msg); err != nil {
 		return false, nil, nil, errors.Wrap(err, "invalid signed message")
 	}
 
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
-		case specqbft.ProposalMsgType:
+		case specalea.ProposalMsgType:
 			return i.uponProposal(msg, i.State.ProposeContainer)
-		case specqbft.PrepareMsgType:
+		case specalea.PrepareMsgType:
 			return i.uponPrepare(msg, i.State.PrepareContainer, i.State.CommitContainer)
-		case specqbft.CommitMsgType:
+		case specalea.CommitMsgType:
 			decided, decidedValue, aggregatedCommit, err = i.UponCommit(msg, i.State.CommitContainer)
 			if decided {
 				i.State.Decided = decided
@@ -148,7 +149,7 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 				// i.logger.Debug("$$$$$$ Decided on value with commit.", zap.Int64("time(micro)", makeTimestamp()))
 			}
 			return err
-		case specqbft.RoundChangeMsgType:
+		case specalea.RoundChangeMsgType:
 			return i.uponRoundChange(i.StartValue, msg, i.State.RoundChangeContainer, i.config.GetValueCheckF())
 		default:
 			return errors.New("signed message type not supported")
@@ -160,7 +161,7 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 	return i.State.Decided, i.State.DecidedValue, aggregatedCommit, nil
 }
 
-func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
+func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 	if err := msg.Validate(); err != nil {
 		return errors.Wrap(err, "invalid signed message")
 	}
@@ -170,7 +171,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 	}
 
 	switch msg.Message.MsgType {
-	case specqbft.ProposalMsgType:
+	case specalea.ProposalMsgType:
 		return isValidProposal(
 			i.State,
 			i.config,
@@ -178,7 +179,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 			i.config.GetValueCheckF(),
 			i.State.Share.Committee,
 		)
-	case specqbft.PrepareMsgType:
+	case specalea.PrepareMsgType:
 		proposedMsg := i.State.ProposalAcceptedForCurrentRound
 		if proposedMsg == nil {
 			return errors.New("did not receive proposal for this round")
@@ -195,7 +196,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 			acceptedProposalData.Data,
 			i.State.Share.Committee,
 		)
-	case specqbft.CommitMsgType:
+	case specalea.CommitMsgType:
 		proposedMsg := i.State.ProposalAcceptedForCurrentRound
 		if proposedMsg == nil {
 			return errors.New("did not receive proposal for this round")
@@ -208,7 +209,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 			i.State.ProposalAcceptedForCurrentRound,
 			i.State.Share.Committee,
 		)
-	case specqbft.RoundChangeMsgType:
+	case specalea.RoundChangeMsgType:
 		return validRoundChange(i.State, i.config, msg, i.State.Height, msg.Message.Round)
 	default:
 		return errors.New("signed message type not supported")
@@ -224,17 +225,17 @@ func (i *Instance) IsDecided() (bool, []byte) {
 }
 
 // GetConfig returns the instance config
-func (i *Instance) GetConfig() qbft.IConfig {
+func (i *Instance) GetConfig() alea.IConfig {
 	return i.config
 }
 
 // SetConfig returns the instance config
-func (i *Instance) SetConfig(config qbft.IConfig) {
+func (i *Instance) SetConfig(config alea.IConfig) {
 	i.config = config
 }
 
 // GetHeight interface implementation
-func (i *Instance) GetHeight() specqbft.Height {
+func (i *Instance) GetHeight() specalea.Height {
 	return i.State.Height
 }
 

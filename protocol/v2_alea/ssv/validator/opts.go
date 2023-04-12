@@ -1,20 +1,20 @@
 package validator
 
 import (
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	qbftctrl "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	qbftctrl "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 )
 
 // Options represents options that should be passed to a new instance of Validator.
 type Options struct {
-	Network           specqbft.Network
+	Network           specalea.Network
 	Beacon            specssv.BeaconNode
-	Storage           *storage.QBFTStores
+	Storage           *storage.ALEAStores
 	SSVShare          *types.SSVShare
 	Signer            spectypes.KeyManager
 	DutyRunners       runner.DutyRunners

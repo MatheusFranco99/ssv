@@ -2,8 +2,8 @@ package spectest
 
 import (
 	"encoding/hex"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
-	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2/ssv/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/testing"
 	"testing"
 
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv/spectest/tests/runner/duties/synccommitteeaggregator"

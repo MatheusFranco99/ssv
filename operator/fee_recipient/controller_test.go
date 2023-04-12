@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/eth2-key-manager/core"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/async/event"
@@ -20,8 +20,8 @@ import (
 
 	"github.com/MatheusFranco99/ssv/operator/slot_ticker/mocks"
 	"github.com/MatheusFranco99/ssv/operator/validator"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/MatheusFranco99/ssv/storage"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/MatheusFranco99/ssv/utils/logex"

@@ -4,15 +4,17 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 type AggregatorRunner struct {
@@ -21,7 +23,7 @@ type AggregatorRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck specqbft.ProposedValueCheckF
+	valCheck specalea.ProposedValueCheckF
 	logger   *zap.Logger
 }
 
@@ -32,7 +34,7 @@ func NewAggregatorRunner(
 	beacon specssv.BeaconNode,
 	network specssv.Network,
 	signer spectypes.KeyManager,
-	valCheck specqbft.ProposedValueCheckF,
+	valCheck specalea.ProposedValueCheckF,
 ) Runner {
 	logger := logger.With(zap.String("validator", hex.EncodeToString(share.ValidatorPubKey)))
 	return &AggregatorRunner{
@@ -99,7 +101,7 @@ func (r *AggregatorRunner) ProcessPreConsensus(signedMsg *specssv.SignedPartialS
 	return nil
 }
 
-func (r *AggregatorRunner) ProcessConsensus(signedMsg *specqbft.SignedMessage) error {
+func (r *AggregatorRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
 	decided, decidedValue, err := r.BaseRunner.baseConsensusMsgProcessing(r, signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -247,7 +249,7 @@ func (r *AggregatorRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *AggregatorRunner) GetValCheckF() specqbft.ProposedValueCheckF {
+func (r *AggregatorRunner) GetValCheckF() specalea.ProposedValueCheckF {
 	return r.valCheck
 }
 

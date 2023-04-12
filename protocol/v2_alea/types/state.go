@@ -4,26 +4,27 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/pkg/errors"
 )
 
 type State struct {
 	Share                           *spectypes.Share
 	ID                              []byte // instance Identifier
-	Round                           specqbft.Round
-	Height                          specqbft.Height
-	LastPreparedRound               specqbft.Round
+	Round                           specalea.Round
+	Height                          specalea.Height
+	LastPreparedRound               specalea.Round
 	LastPreparedValue               []byte
-	ProposalAcceptedForCurrentRound *specqbft.SignedMessage
+	ProposalAcceptedForCurrentRound *messages.SignedMessage
 	Decided                         bool
 	DecidedValue                    []byte
 
-	ProposeContainer     *specqbft.MsgContainer
-	PrepareContainer     *specqbft.MsgContainer
-	CommitContainer      *specqbft.MsgContainer
-	RoundChangeContainer *specqbft.MsgContainer
+	ProposeContainer     *specalea.MsgContainer
+	PrepareContainer     *specalea.MsgContainer
+	CommitContainer      *specalea.MsgContainer
+	RoundChangeContainer *specalea.MsgContainer
 }
 
 // GetRoot returns the state's deterministic root

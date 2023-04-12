@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	eth2apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/beacon/goclient"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 //go:generate mockgen -package=mocks -destination=./mocks/fetcher.go -source=./fetcher.go

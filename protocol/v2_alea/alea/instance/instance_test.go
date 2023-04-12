@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

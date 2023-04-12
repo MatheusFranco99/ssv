@@ -3,17 +3,17 @@ package instance
 import (
 	"bytes"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
 )
 
 // uponProposal process proposal message
 // Assumes proposal message is valid!
-func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeMsgContainer *specqbft.MsgContainer) error {
+func (i *Instance) uponProposal(signedProposal *messages.SignedMessage, proposeMsgContainer *specalea.MsgContainer) error {
 	addedMsg, err := proposeMsgContainer.AddFirstMsgForSignerAndRound(signedProposal)
 	if err != nil {
 		return errors.Wrap(err, "could not add proposal msg to container")
@@ -52,13 +52,13 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 }
 
 func isValidProposal(
-	state *specqbft.State,
+	state *specalea.State,
 	config qbft.IConfig,
-	signedProposal *specqbft.SignedMessage,
-	valCheck specqbft.ProposedValueCheckF,
+	signedProposal *messages.SignedMessage,
+	valCheck specalea.ProposedValueCheckF,
 	operators []*spectypes.Operator,
 ) error {
-	if signedProposal.Message.MsgType != specqbft.ProposalMsgType {
+	if signedProposal.Message.MsgType != specalea.ProposalMsgType {
 		return errors.New("msg type is not proposal")
 	}
 	if signedProposal.Message.Height != state.Height {
@@ -104,20 +104,20 @@ func isValidProposal(
 
 // isProposalJustification returns nil if the proposal and round change messages are valid and justify a proposal message for the provided round, value and leader
 func isProposalJustification(
-	state *specqbft.State,
+	state *specalea.State,
 	config qbft.IConfig,
-	roundChangeMsgs []*specqbft.SignedMessage,
-	prepareMsgs []*specqbft.SignedMessage,
-	height specqbft.Height,
-	round specqbft.Round,
+	roundChangeMsgs []*messages.SignedMessage,
+	prepareMsgs []*messages.SignedMessage,
+	height specalea.Height,
+	round specalea.Round,
 	value []byte,
-	valCheck specqbft.ProposedValueCheckF,
+	valCheck specalea.ProposedValueCheckF,
 ) error {
 	if err := valCheck(value); err != nil {
 		return errors.Wrap(err, "proposal value invalid")
 	}
 
-	if round == specqbft.FirstRound {
+	if round == specalea.FirstRound {
 		return nil
 	} else {
 		// check all round changes are valid for height and round
@@ -130,12 +130,12 @@ func isProposalJustification(
 		}
 
 		// check there is a quorum
-		if !specqbft.HasQuorum(state.Share, roundChangeMsgs) {
+		if !specalea.HasQuorum(state.Share, roundChangeMsgs) {
 			return errors.New("change round has no quorum")
 		}
 
 		// previouslyPreparedF returns true if any on the round change messages have a prepared round and value
-		previouslyPrepared, err := func(rcMsgs []*specqbft.SignedMessage) (bool, error) {
+		previouslyPrepared, err := func(rcMsgs []*messages.SignedMessage) (bool, error) {
 			for _, rc := range rcMsgs {
 				rcData, err := rc.Message.GetRoundChangeData()
 				if err != nil {
@@ -155,7 +155,7 @@ func isProposalJustification(
 			return nil
 		} else {
 			// check prepare quorum
-			if !specqbft.HasQuorum(state.Share, prepareMsgs) {
+			if !specalea.HasQuorum(state.Share, prepareMsgs) {
 				return errors.New("prepares has no quorum")
 			}
 
@@ -195,7 +195,7 @@ func isProposalJustification(
 	}
 }
 
-func proposer(state *specqbft.State, config qbft.IConfig, round specqbft.Round) spectypes.OperatorID {
+func proposer(state *specalea.State, config qbft.IConfig, round specalea.Round) spectypes.OperatorID {
 	// TODO - https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/29ae5a44551466453a84d4d17b9e083ecf189d97/dafny/spec/L1/node_auxiliary_functions.dfy#L304-L323
 	return config.GetProposerF()(state, round)
 }
@@ -213,8 +213,8 @@ func proposer(state *specqbft.State, config qbft.IConfig, round specqbft.Round) 
                         extractSignedRoundChanges(roundChanges),
                         extractSignedPrepares(prepares));
 */
-func CreateProposal(state *specqbft.State, config qbft.IConfig, value []byte, roundChanges, prepares []*specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
-	proposalData := &specqbft.ProposalData{
+func CreateProposal(state *specalea.State, config qbft.IConfig, value []byte, roundChanges, prepares []*messages.SignedMessage) (*messages.SignedMessage, error) {
+	proposalData := &specalea.ProposalData{
 		Data:                     value,
 		RoundChangeJustification: roundChanges,
 		PrepareJustification:     prepares,
@@ -223,8 +223,8 @@ func CreateProposal(state *specqbft.State, config qbft.IConfig, value []byte, ro
 	if err != nil {
 		return nil, errors.Wrap(err, "could not encode proposal data")
 	}
-	msg := &specqbft.Message{
-		MsgType:    specqbft.ProposalMsgType,
+	msg := &specalea.Message{
+		MsgType:    specalea.ProposalMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
@@ -235,7 +235,7 @@ func CreateProposal(state *specqbft.State, config qbft.IConfig, value []byte, ro
 		return nil, errors.Wrap(err, "failed signing prepare msg")
 	}
 
-	signedMsg := &specqbft.SignedMessage{
+	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []spectypes.OperatorID{state.Share.OperatorID},
 		Message:   msg,

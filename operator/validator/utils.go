@@ -14,8 +14,8 @@ import (
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/eth1"
 	"github.com/MatheusFranco99/ssv/eth1/abiparser"
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	registrystorage "github.com/MatheusFranco99/ssv/registry/storage"
 	"github.com/MatheusFranco99/ssv/utils/rsaencryption"
 )

@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -105,7 +106,7 @@ func (v *Validator) logMsg(msg *queue.DecodedSSVMessage, logMsg string, fields .
 	}, fields...)
 	switch msg.SSVMessage.MsgType {
 	case spectypes.SSVConsensusMsgType:
-		sm := msg.Body.(*specqbft.SignedMessage)
+		sm := msg.Body.(*messages.SignedMessage)
 		fields = append(append([]zap.Field{}, zap.Int64("msg_height", int64(sm.Message.Height)),
 			zap.Int64("msg_round", int64(sm.Message.Round)),
 			zap.Int64("consensus_msg_type", int64(sm.Message.MsgType)),
@@ -118,19 +119,19 @@ func (v *Validator) logMsg(msg *queue.DecodedSSVMessage, logMsg string, fields .
 }
 
 // GetLastHeight returns the last height for the given identifier
-func (v *Validator) GetLastHeight(identifier spectypes.MessageID) specqbft.Height {
+func (v *Validator) GetLastHeight(identifier spectypes.MessageID) specalea.Height {
 	r := v.DutyRunners.DutyRunnerForMsgID(identifier)
 	if r == nil {
-		return specqbft.Height(0)
+		return specalea.Height(0)
 	}
 	return r.GetBaseRunner().QBFTController.Height
 }
 
 // GetLastRound returns the last height for the given identifier
-func (v *Validator) GetLastRound(identifier spectypes.MessageID) specqbft.Round {
+func (v *Validator) GetLastRound(identifier spectypes.MessageID) specalea.Round {
 	r := v.DutyRunners.DutyRunnerForMsgID(identifier)
 	if r == nil {
-		return specqbft.Round(1)
+		return specalea.Round(1)
 	}
 	if r != nil && r.HasRunningDuty() {
 		inst := r.GetBaseRunner().State.RunningInstance
@@ -138,5 +139,5 @@ func (v *Validator) GetLastRound(identifier spectypes.MessageID) specqbft.Round 
 			return inst.State.Round
 		}
 	}
-	return specqbft.Round(1)
+	return specalea.Round(1)
 }

@@ -1,11 +1,12 @@
 package forks
 
 import (
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	// specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 // Fork is the interface for fork
 type Fork interface {
-	EncodeSignedMsg(msg *specqbft.SignedMessage) ([]byte, error)
-	DecodeSignedMsg(data []byte) (*specqbft.SignedMessage, error)
+	EncodeSignedMsg(msg *messages.SignedMessage) ([]byte, error)
+	DecodeSignedMsg(data []byte) (*messages.SignedMessage, error)
 }

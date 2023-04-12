@@ -4,8 +4,8 @@ import (
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	ssvmessage "github.com/MatheusFranco99/ssv/protocol/v2/message"
-	ssvtypes "github.com/MatheusFranco99/ssv/protocol/v2/types"
+	ssvmessage "github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	ssvtypes "github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/pkg/errors"
 )
 

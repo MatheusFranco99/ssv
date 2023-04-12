@@ -6,13 +6,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
 	logging "github.com/ipfs/go-log"
 )
 
@@ -20,16 +21,16 @@ var logger = logging.Logger("ssv/protocol/qbft/controller").Desugar()
 
 // NewDecidedHandler handles newly saved decided messages.
 // it will be called in a new goroutine to avoid concurrency issues
-type NewDecidedHandler func(msg *specqbft.SignedMessage)
+type NewDecidedHandler func(msg *messages.SignedMessage)
 
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT InstanceContainer
 type Controller struct {
 	Identifier []byte
-	Height     specqbft.Height // incremental Height for InstanceContainer
+	Height     specalea.Height // incremental Height for InstanceContainer
 	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	StoredInstances InstanceContainer
 	// FutureMsgsContainer holds all msgs from a higher height
-	FutureMsgsContainer map[spectypes.OperatorID]specqbft.Height // maps msg signer to height of higher height received msgs
+	FutureMsgsContainer map[spectypes.OperatorID]specalea.Height // maps msg signer to height of higher height received msgs
 	Domain              spectypes.DomainType
 	Share               *spectypes.Share
 	NewDecidedHandler   NewDecidedHandler `json:"-"`
@@ -48,11 +49,11 @@ func NewController(
 	msgId := spectypes.MessageIDFromBytes(identifier)
 	return &Controller{
 		Identifier:          identifier,
-		Height:              specqbft.FirstHeight,
+		Height:              specalea.FirstHeight,
 		Domain:              domain,
 		Share:               share,
 		StoredInstances:     make(InstanceContainer, 0, InstanceContainerDefaultCapacity),
-		FutureMsgsContainer: make(map[spectypes.OperatorID]specqbft.Height),
+		FutureMsgsContainer: make(map[spectypes.OperatorID]specalea.Height),
 		config:              config,
 		fullNode:            fullNode,
 		logger: logger.With(zap.String("publicKey", hex.EncodeToString(msgId.GetPubKey())),
@@ -78,7 +79,7 @@ func (c *Controller) StartNewInstance(value []byte) error {
 }
 
 // ProcessMsg processes a new msg, returns decided message or error
-func (c *Controller) ProcessMsg(msg *specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
+func (c *Controller) ProcessMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
 	if err := c.BaseMsgValidation(msg); err != nil {
 		return nil, errors.Wrap(err, "invalid msg")
 	}
@@ -99,7 +100,7 @@ func (c *Controller) ProcessMsg(msg *specqbft.SignedMessage) (*specqbft.SignedMe
 	}
 }
 
-func (c *Controller) UponExistingInstanceMsg(msg *specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
+func (c *Controller) UponExistingInstanceMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
 	inst := c.InstanceForHeight(msg.Message.Height)
 	if inst == nil {
 		return nil, errors.New("instance not found")
@@ -136,7 +137,7 @@ func (c *Controller) UponExistingInstanceMsg(msg *specqbft.SignedMessage) (*spec
 }
 
 // BaseMsgValidation returns error if msg is invalid (base validation)
-func (c *Controller) BaseMsgValidation(msg *specqbft.SignedMessage) error {
+func (c *Controller) BaseMsgValidation(msg *messages.SignedMessage) error {
 	// verify msg belongs to controller
 	if !bytes.Equal(c.Identifier, msg.Message.Identifier) {
 		return errors.New("message doesn't belong to Identifier")
@@ -145,7 +146,7 @@ func (c *Controller) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 	return nil
 }
 
-func (c *Controller) InstanceForHeight(height specqbft.Height) *instance.Instance {
+func (c *Controller) InstanceForHeight(height specalea.Height) *instance.Instance {
 	// Search in memory.
 	if inst := c.StoredInstances.FindInstance(height); inst != nil {
 		return inst
@@ -242,7 +243,7 @@ func (c *Controller) Decode(data []byte) error {
 	return nil
 }
 
-func (c *Controller) broadcastDecided(aggregatedCommit *specqbft.SignedMessage) error {
+func (c *Controller) broadcastDecided(aggregatedCommit *messages.SignedMessage) error {
 	// Broadcast Decided msg
 	byts, err := aggregatedCommit.Encode()
 	if err != nil {
@@ -251,7 +252,7 @@ func (c *Controller) broadcastDecided(aggregatedCommit *specqbft.SignedMessage) 
 
 	msgToBroadcast := &spectypes.SSVMessage{
 		MsgType: spectypes.SSVConsensusMsgType,
-		MsgID:   specqbft.ControllerIdToMessageID(c.Identifier),
+		MsgID:   specalea.ControllerIdToMessageID(c.Identifier),
 		Data:    byts,
 	}
 	if err := c.GetConfig().GetNetwork().Broadcast(msgToBroadcast); err != nil {

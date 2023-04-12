@@ -1,19 +1,20 @@
 package validator
 
 import (
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
-	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	qbftcontroller "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"go.uber.org/zap"
 )
 
 type NonCommitteeValidator struct {
 	logger         *zap.Logger
 	Share          *types.SSVShare
-	Storage        *storage.QBFTStores
+	Storage        *storage.ALEAStores
 	qbftController *qbftcontroller.Controller
 }
 
@@ -50,7 +51,7 @@ func (ncv *NonCommitteeValidator) ProcessMessage(msg *spectypes.SSVMessage) {
 
 	switch msg.GetType() {
 	case spectypes.SSVConsensusMsgType:
-		signedMsg := &specqbft.SignedMessage{}
+		signedMsg := &messages.SignedMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
 			logger.Debug("failed to get consensus Message from network Message", zap.Error(err))
 			return
@@ -60,7 +61,7 @@ func (ncv *NonCommitteeValidator) ProcessMessage(msg *spectypes.SSVMessage) {
 			return
 		}
 		// only supports decided msg's
-		if signedMsg.Message.MsgType != specqbft.CommitMsgType || !ncv.Share.HasQuorum(len(signedMsg.Signers)) {
+		if signedMsg.Message.MsgType != specalea.CommitMsgType || !ncv.Share.HasQuorum(len(signedMsg.Signers)) {
 			return
 		}
 

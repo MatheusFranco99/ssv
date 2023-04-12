@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/eth2-key-manager/core"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/monitoring/metrics"
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 const (

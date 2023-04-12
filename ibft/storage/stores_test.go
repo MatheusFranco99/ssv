@@ -14,7 +14,7 @@ func init() {
 	logex.Build("", zapcore.DebugLevel, &logex.EncodingConfig{})
 }
 
-func TestQBFTStores(t *testing.T) {
+func TestALEAStores(t *testing.T) {
 	qbftMap := NewStores()
 
 	store, err := newTestIbftStorage(logex.GetLogger(), "", forksprotocol.GenesisForkVersion)

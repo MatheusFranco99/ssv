@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -12,11 +12,12 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	qbftstorage "github.com/MatheusFranco99/ssv/ibft/storage"
+	aleastorage "github.com/MatheusFranco99/ssv/ibft/storage"
 	"github.com/MatheusFranco99/ssv/operator/storage"
 	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
-	qbftstorageprotocol "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
-	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	aleastorageprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/testing"
 	ssvstorage "github.com/MatheusFranco99/ssv/storage"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/MatheusFranco99/ssv/utils/logex"
@@ -94,16 +95,16 @@ func TestHandleDecidedQuery(t *testing.T) {
 	}
 
 	pk := sks[1].GetPublicKey()
-	decided250Seq, err := protocoltesting.CreateMultipleStoredInstances(sks, specqbft.Height(0), specqbft.Height(250), func(height specqbft.Height) ([]spectypes.OperatorID, *specqbft.Message) {
-		commitData := specqbft.CommitData{Data: []byte(fmt.Sprintf("msg-data-%d", height))}
+	decided250Seq, err := protocoltesting.CreateMultipleStoredInstances(sks, specalea.Height(0), specalea.Height(250), func(height specalea.Height) ([]spectypes.OperatorID, *specalea.Message) {
+		commitData := specalea.CommitData{Data: []byte(fmt.Sprintf("msg-data-%d", height))}
 		commitDataBytes, err := commitData.Encode()
 		if err != nil {
 			panic(err)
 		}
 
 		id := spectypes.NewMsgID(pk.Serialize(), spectypes.BNRoleAttester)
-		return oids, &specqbft.Message{
-			MsgType:    specqbft.CommitMsgType,
+		return oids, &specalea.Message{
+			MsgType:    specalea.CommitMsgType,
 			Height:     height,
 			Round:      1,
 			Identifier: id[:],
@@ -121,7 +122,7 @@ func TestHandleDecidedQuery(t *testing.T) {
 		nm := newDecidedAPIMsg(pk.SerializeToHexStr(), 0, 250)
 		HandleDecidedQuery(l, ibftStorage, nm)
 		require.NotNil(t, nm.Msg.Data)
-		msgs, ok := nm.Msg.Data.([]*specqbft.SignedMessage)
+		msgs, ok := nm.Msg.Data.([]*messages.SignedMessage)
 		require.True(t, ok)
 		require.Equal(t, 251, len(msgs)) // seq 0 - 250
 	})
@@ -176,9 +177,9 @@ func newDBAndLoggerForTest() (basedb.IDb, *zap.Logger, func()) {
 	}
 }
 
-func newStorageForTest(db basedb.IDb, logger *zap.Logger) (storage.Storage, qbftstorageprotocol.QBFTStore) {
+func newStorageForTest(db basedb.IDb, logger *zap.Logger) (storage.Storage, aleastorageprotocol.ALEAStore) {
 	sExporter := storage.NewNodeStorage(db, logger)
-	sIbft := qbftstorage.New(db, logger, "attestation", forksprotocol.GenesisForkVersion)
+	sIbft := aleastorage.New(db, logger, "attestation", forksprotocol.GenesisForkVersion)
 	return sExporter, sIbft
 }
 

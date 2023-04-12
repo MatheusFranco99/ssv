@@ -8,7 +8,7 @@ import (
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
 )
 
 // State holds all the relevant progress the duty execution progress

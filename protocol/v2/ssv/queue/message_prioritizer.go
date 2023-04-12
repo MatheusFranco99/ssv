@@ -1,8 +1,8 @@
 package queue
 
 import (
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // State represents a portion of the the current state

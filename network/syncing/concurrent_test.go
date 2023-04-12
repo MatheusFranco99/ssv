@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/network/syncing"
 	"github.com/MatheusFranco99/ssv/network/syncing/mocks"
@@ -40,8 +40,8 @@ func TestConcurrentSyncer(t *testing.T) {
 	s.SyncHighestDecided(ctx, id, handler.handler)
 
 	// Test SyncDecidedByRange
-	from := specqbft.Height(1)
-	to := specqbft.Height(10)
+	from := specalea.Height(1)
+	to := specalea.Height(10)
 	syncer.EXPECT().SyncDecidedByRange(gomock.Any(), id, from, to, gomock.Any()).Return(nil)
 	s.SyncDecidedByRange(ctx, id, from, to, handler.handler)
 
@@ -91,8 +91,8 @@ func TestConcurrentSyncerMemoryUsage(t *testing.T) {
 			s.SyncHighestDecided(ctx, id, handler.handler)
 
 			// Test SyncDecidedByRange
-			from := specqbft.Height(1)
-			to := specqbft.Height(10)
+			from := specalea.Height(1)
+			to := specalea.Height(10)
 			s.SyncDecidedByRange(ctx, id, from, to, handler.handler)
 		}
 
@@ -130,8 +130,8 @@ func BenchmarkConcurrentSyncer(b *testing.B) {
 			s.SyncHighestDecided(ctx, id, handler.handler)
 
 			// Test SyncDecidedByRange
-			from := specqbft.Height(1)
-			to := specqbft.Height(10)
+			from := specalea.Height(1)
+			to := specalea.Height(10)
 			s.SyncDecidedByRange(ctx, id, from, to, handler.handler)
 		}
 

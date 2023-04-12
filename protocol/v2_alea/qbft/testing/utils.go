@@ -3,11 +3,11 @@ package testing
 import (
 	"bytes"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +27,7 @@ var TestingConfig = func(keySet *testingutils.TestKeySet, role types.BeaconRole)
 			}
 			return nil
 		},
-		ProposerF: func(state *specqbft.State, round specqbft.Round) types.OperatorID {
+		ProposerF: func(state *specalea.State, round specalea.Round) types.OperatorID {
 			return 1
 		},
 		Storage: TestingStores().Get(role),
@@ -50,24 +50,24 @@ var TestingShare = func(keysSet *testingutils.TestKeySet) *types.Share {
 	}
 }
 
-var BaseInstance = func() *specqbft.Instance {
+var BaseInstance = func() *specalea.Instance {
 	return baseInstance(TestingShare(testingutils.Testing4SharesSet()), testingutils.Testing4SharesSet(), []byte{1, 2, 3, 4})
 }
 
-var SevenOperatorsInstance = func() *specqbft.Instance {
+var SevenOperatorsInstance = func() *specalea.Instance {
 	return baseInstance(TestingShare(testingutils.Testing7SharesSet()), testingutils.Testing7SharesSet(), []byte{1, 2, 3, 4})
 }
 
-var TenOperatorsInstance = func() *specqbft.Instance {
+var TenOperatorsInstance = func() *specalea.Instance {
 	return baseInstance(TestingShare(testingutils.Testing10SharesSet()), testingutils.Testing10SharesSet(), []byte{1, 2, 3, 4})
 }
 
-var ThirteenOperatorsInstance = func() *specqbft.Instance {
+var ThirteenOperatorsInstance = func() *specalea.Instance {
 	return baseInstance(TestingShare(testingutils.Testing13SharesSet()), testingutils.Testing13SharesSet(), []byte{1, 2, 3, 4})
 }
 
-var baseInstance = func(share *types.Share, keySet *testingutils.TestKeySet, identifier []byte) *specqbft.Instance {
-	ret := specqbft.NewInstance(testingutils.TestingConfig(keySet), share, identifier, specqbft.FirstHeight)
+var baseInstance = func(share *types.Share, keySet *testingutils.TestKeySet, identifier []byte) *specalea.Instance {
+	ret := specalea.NewInstance(testingutils.TestingConfig(keySet), share, identifier, specalea.FirstHeight)
 	ret.StartValue = []byte{1, 2, 3, 4}
 	return ret
 }

@@ -9,28 +9,28 @@ import (
 	"sync"
 	"time"
 
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
-	"github.com/MatheusFranco99/ssv/protocol/v2/sync/handlers"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/sync/handlers"
 	"github.com/MatheusFranco99/ssv/storage"
 	"github.com/pkg/errors"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	qbftstorage "github.com/MatheusFranco99/ssv/ibft/storage"
+	aleastorage "github.com/MatheusFranco99/ssv/ibft/storage"
 	"github.com/MatheusFranco99/ssv/network"
 	p2pv1 "github.com/MatheusFranco99/ssv/network/p2p"
 	"github.com/MatheusFranco99/ssv/network/testing"
 	"github.com/MatheusFranco99/ssv/operator/validator"
 	protocolforks "github.com/MatheusFranco99/ssv/protocol/forks"
-	protocolbeacon "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	protocolstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
-	protocolvalidator "github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	protocolstorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	protocolbeacon "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	protocolvalidator "github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/validator"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/MatheusFranco99/ssv/utils/logex"
 	"github.com/MatheusFranco99/ssv/utils/rsaencryption"
@@ -60,7 +60,7 @@ type scenarioContext struct {
 	operatorIDs []spectypes.OperatorID
 	nodes       map[spectypes.OperatorID]network.P2PNetwork      // 1 per operator, pass same to each instance
 	nodeKeys    map[spectypes.OperatorID]testing.NodeKeys        // 1 per operator, pass same to each instance
-	stores      map[spectypes.OperatorID]*qbftstorage.QBFTStores // 1 store per operator, pass same store to each instance
+	stores      map[spectypes.OperatorID]*aleastorage.ALEAStores // 1 store per operator, pass same store to each instance
 	keyManagers map[spectypes.OperatorID]spectypes.KeyManager    // 1 per operator, pass same to each instance
 	dbs         map[spectypes.OperatorID]basedb.IDb              // 1 per operator, pass same to each instance
 }
@@ -360,9 +360,9 @@ func validateByRoot(expected, actual spectypes.Root) error {
 	return nil
 }
 
-func validateSignedMessage(expected, actual *specqbft.SignedMessage) error {
+func validateSignedMessage(expected, actual *messages.SignedMessage) error {
 	for i := range expected.Signers {
-		//TODO: add also specqbft.SignedMessage.Signature check
+		//TODO: add also messages.SignedMessage.Signature check
 		if expected.Signers[i] != actual.Signers[i] {
 			return fmt.Errorf("signers not matching. expected = %+v, actual = %+v", expected.Signers, actual.Signers)
 		}
@@ -420,12 +420,12 @@ func Bootstrap(ctx context.Context, operatorIDs []spectypes.OperatorID) (*scenar
 		nodeKeys[operatorID] = localNet.NodeKeys[i]
 	}
 
-	stores := make(map[spectypes.OperatorID]*qbftstorage.QBFTStores)
+	stores := make(map[spectypes.OperatorID]*aleastorage.ALEAStores)
 	kms := make(map[spectypes.OperatorID]spectypes.KeyManager)
 	for _, operatorID := range operatorIDs {
-		store := qbftstorage.New(dbs[operatorID], loggerFactory(fmt.Sprintf("qbft-store-%d", operatorID)), "attestations", protocolforks.GenesisForkVersion)
+		store := aleastorage.New(dbs[operatorID], loggerFactory(fmt.Sprintf("qbft-store-%d", operatorID)), "attestations", protocolforks.GenesisForkVersion)
 
-		storageMap := qbftstorage.NewStores()
+		storageMap := aleastorage.NewStores()
 		storageMap.Add(spectypes.BNRoleAttester, store)
 		storageMap.Add(spectypes.BNRoleProposer, store)
 		storageMap.Add(spectypes.BNRoleAggregator, store)

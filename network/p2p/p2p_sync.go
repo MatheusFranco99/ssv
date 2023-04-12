@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 	"math/rand"
 
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/multiformats/go-multistream"
 
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	libp2pnetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 )
 
 // extremeLowPeerCount is the maximum number of peers considered as too low
@@ -30,7 +30,7 @@ func (n *p2pNetwork) SyncHighestDecided(mid spectypes.MessageID) error {
 	})
 }
 
-func (n *p2pNetwork) SyncDecidedByRange(mid spectypes.MessageID, from, to qbft.Height) {
+func (n *p2pNetwork) SyncDecidedByRange(mid spectypes.MessageID, from, to alea.Height) {
 	if !n.cfg.FullNode {
 		return
 	}
@@ -78,7 +78,7 @@ func (n *p2pNetwork) LastDecided(mid spectypes.MessageID) ([]p2pprotocol.SyncRes
 }
 
 // GetHistory sync the given range from a set of peers that supports history for the given identifier
-func (n *p2pNetwork) GetHistory(mid spectypes.MessageID, from, to specqbft.Height, targets ...string) ([]p2pprotocol.SyncResult, specqbft.Height, error) {
+func (n *p2pNetwork) GetHistory(mid spectypes.MessageID, from, to specalea.Height, targets ...string) ([]p2pprotocol.SyncResult, specalea.Height, error) {
 	if from >= to {
 		return nil, 0, nil
 	}
@@ -103,7 +103,7 @@ func (n *p2pNetwork) GetHistory(mid spectypes.MessageID, from, to specqbft.Heigh
 		}
 		peers = random
 	}
-	maxBatchRes := specqbft.Height(n.cfg.MaxBatchResponse)
+	maxBatchRes := specalea.Height(n.cfg.MaxBatchResponse)
 
 	var results []p2pprotocol.SyncResult
 	var err error
@@ -113,7 +113,7 @@ func (n *p2pNetwork) GetHistory(mid spectypes.MessageID, from, to specqbft.Heigh
 	}
 	results, err = n.makeSyncRequest(peers, mid, protocolID, &message.SyncMessage{
 		Params: &message.SyncParams{
-			Height:     []specqbft.Height{from, currentEnd},
+			Height:     []specalea.Height{from, currentEnd},
 			Identifier: mid,
 		},
 		Protocol: message.DecidedHistoryType,

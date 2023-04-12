@@ -3,8 +3,9 @@ package types
 import (
 	"testing"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,9 +27,9 @@ func TestState_Decoding(t *testing.T) {
 		Height:            2,
 		LastPreparedRound: 3,
 		LastPreparedValue: []byte{1, 2, 3, 4},
-		ProposalAcceptedForCurrentRound: &specqbft.SignedMessage{
-			Message: &specqbft.Message{
-				MsgType:    specqbft.CommitMsgType,
+		ProposalAcceptedForCurrentRound: &messages.SignedMessage{
+			Message: &specalea.Message{
+				MsgType:    specalea.CommitMsgType,
 				Height:     1,
 				Round:      2,
 				Identifier: []byte{1, 2, 3, 4},
@@ -59,7 +60,7 @@ func TestState_Decoding(t *testing.T) {
 
 	require.EqualValues(t, []byte{1, 2, 3, 4}, decodedState.ProposalAcceptedForCurrentRound.Signature)
 	require.EqualValues(t, []spectypes.OperatorID{1}, decodedState.ProposalAcceptedForCurrentRound.Signers)
-	require.EqualValues(t, specqbft.CommitMsgType, decodedState.ProposalAcceptedForCurrentRound.Message.MsgType)
+	require.EqualValues(t, specalea.CommitMsgType, decodedState.ProposalAcceptedForCurrentRound.Message.MsgType)
 	require.EqualValues(t, 1, decodedState.ProposalAcceptedForCurrentRound.Message.Height)
 	require.EqualValues(t, 2, decodedState.ProposalAcceptedForCurrentRound.Message.Round)
 	require.EqualValues(t, []byte{1, 2, 3, 4}, decodedState.ProposalAcceptedForCurrentRound.Message.Identifier)

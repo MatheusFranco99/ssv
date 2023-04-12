@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	logging "github.com/ipfs/go-log"
@@ -14,9 +15,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 )
 
 var logger = logging.Logger("ssv/protocol/ssv/validator").Desugar()
@@ -30,12 +31,12 @@ type Validator struct {
 	logger *zap.Logger
 
 	DutyRunners runner.DutyRunners
-	Network     specqbft.Network
+	Network     specalea.Network
 	Beacon      specssv.BeaconNode
 	Share       *types.SSVShare
 	Signer      spectypes.KeyManager
 
-	Storage *storage.QBFTStores
+	Storage *storage.ALEAStores
 	Queues  map[spectypes.BeaconRole]queueContainer
 
 	state uint32
@@ -100,7 +101,7 @@ func (v *Validator) ProcessMessage(msg *queue.DecodedSSVMessage) error {
 
 	switch msg.GetType() {
 	case spectypes.SSVConsensusMsgType:
-		signedMsg, ok := msg.Body.(*specqbft.SignedMessage)
+		signedMsg, ok := msg.Body.(*messages.SignedMessage)
 		if !ok {
 			return errors.New("could not decode consensus message from network message")
 		}

@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/network"
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 )
 
 const (
@@ -210,7 +210,7 @@ func (n *p2pNetwork) handlePubsubMessages(topic string, msg *pubsub.Message) err
 // 		if err == nil {
 // 			logger = logger.With(zap.String("msgFrom", from.String()))
 // 		}
-// 		var sm specqbft.SignedMessage
+// 		var sm messages.SignedMessage
 // 		err = sm.Decode(ssvMsg.Data)
 // 		if err == nil && sm.Message != nil {
 // 			logger = logger.With(zap.Int64("height", int64(sm.Message.Height)),

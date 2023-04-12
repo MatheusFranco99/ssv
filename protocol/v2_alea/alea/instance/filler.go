@@ -1,59 +1,68 @@
 package instance
 
 import (
-	"bytes"
+	// "bytes"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 
 	"github.com/pkg/errors"
+	// "go.uber.org/zap"
 )
 
-func (i *Instance) uponFiller(signedFiller *specalea.SignedMessage, fillerMsgContainer *specalea.MsgContainer) error {
+func (i *Instance) uponFiller(signedFiller *messages.SignedMessage, fillerMsgContainer *specalea.MsgContainer) error {
 
-	// get data
-	fillerData, err := signedFiller.Message.GetFillerData()
-	if err != nil {
-		return errors.Wrap(err, "uponFiller: could not get filler data from signedFiller")
-	}
+	// // get data
+	// fillerData, err := signedFiller.Message.GetFillerData()
+	// if err != nil {
+	// 	return errors.Wrap(err, "uponFiller: could not get filler data from signedFiller")
+	// }
 
-	// Add message to container
-	fillerMsgContainer.AddMsg(signedFiller)
+	// // get sender ID
+	// senderID := signedFiller.GetSigners()[0]
 
-	// get values from structure
-	entries := fillerData.Entries
-	priorities := fillerData.Priorities
-	// proofs := fillerData.Proofs
-	operatorID := fillerData.OperatorID
+	// i.logger.Debug("$$$$$$ UponFiller start", zap.Any("entries", fillerData.Entries), zap.Int("operatorid", int(fillerData.OperatorID)), zap.Any("prioritieis", fillerData.Priorities), zap.Int("sender", int(senderID)))
 
-	// get queue of the node to which the filler message intends to add entries
-	queue := i.State.VCBCState.Queues[operatorID]
+	// // Add message to container
+	// fillerMsgContainer.AddMsg(signedFiller)
 
-	// get local highest priority value
-	_, localLastPriority := queue.PeekLast()
+	// // get values from structure
+	// entries := fillerData.Entries
+	// priorities := fillerData.Priorities
+	// // proofs := fillerData.Proofs
+	// operatorID := fillerData.OperatorID
 
-	// if message has entries with higher priority, store value
-	for idx, priority := range priorities {
-		if priority > localLastPriority {
-			queue.Enqueue(entries[idx], priority)
-		}
-	}
+	// // get queue of the node to which the filler message intends to add entries
+	// queue := i.State.VCBCState.Queues[operatorID]
 
-	// signal that filler message was received (used for node to stop waiting in the recovery mechanism part)
-	i.State.FillerMsgReceived += 1
+	// // get local highest priority value
+	// _, localLastPriority := queue.PeekLast()
+
+	// // if message has entries with higher priority, store value
+	// for idx, priority := range priorities {
+	// 	if priority > localLastPriority {
+	// 		queue.Enqueue(entries[idx], priority)
+	// 	}
+	// }
+
+	// // signal that filler message was received (used for node to stop waiting in the recovery mechanism part)
+	// i.State.FillerMsgReceived += 1
+
+	// i.logger.Debug("$$$$$$ UponFiller finish", zap.Any("entries", fillerData.Entries), zap.Int("operatorid", int(fillerData.OperatorID)), zap.Any("prioritieis", fillerData.Priorities), zap.Int("sender", int(senderID)))
 
 	return nil
 }
 
 func isValidFiller(
-	state *specalea.State,
+	state *messages.State,
 	config alea.IConfig,
-	signedMsg *specalea.SignedMessage,
+	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
 ) error {
-	if signedMsg.Message.MsgType != specalea.FillerMsgType {
+	if signedMsg.Message.MsgType != messages.FillerMsgType {
 		return errors.New("msg type is not FillerMsgType")
 	}
 	if signedMsg.Message.Height != state.Height {
@@ -87,52 +96,52 @@ func isValidFiller(
 	}
 
 	// priority
-	priorities := FillerData.Priorities
-	for idx, priority := range priorities {
-		if state.VCBCState.HasM(operatorID, priority) {
-			if !state.VCBCState.EqualM(operatorID, priority, FillerData.Entries[idx]) {
-				return errors.New("existing (priority,author) with different proposals")
-			}
-		}
-	}
+	// priorities := FillerData.Priorities
+	// for idx, priority := range priorities {
+	// 	if state.VCBCState.HasM(operatorID, priority) {
+	// 		if !state.VCBCState.EqualM(operatorID, priority, FillerData.Entries[idx]) {
+	// 			return errors.New("existing (priority,author) with different proposals")
+	// 		}
+	// 	}
+	// }
 
-	// AggregatedMsg
-	aggregatedMsgs := FillerData.AggregatedMsgs
-	for idx, aggregatedMsg := range aggregatedMsgs {
+	// // AggregatedMsg
+	// aggregatedMsgs := FillerData.AggregatedMsgs
+	// for idx, aggregatedMsg := range aggregatedMsgs {
 
-		signedAggregatedMessage := &specalea.SignedMessage{}
-		signedAggregatedMessage.Decode(aggregatedMsg)
+	// 	signedAggregatedMessage := &messages.SignedMessage{}
+	// 	signedAggregatedMessage.Decode(aggregatedMsg)
 
-		if err := signedAggregatedMessage.Signature.VerifyByOperators(signedAggregatedMessage, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-			return errors.Wrap(err, "aggregatedMsg signature invalid")
-		}
-		if len(signedAggregatedMessage.GetSigners()) < int(state.Share.Quorum) {
-			return errors.New("aggregatedMsg signers don't reach quorum")
-		}
+	// 	if err := signedAggregatedMessage.Signature.VerifyByOperators(signedAggregatedMessage, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+	// 		return errors.Wrap(err, "aggregatedMsg signature invalid")
+	// 	}
+	// 	if len(signedAggregatedMessage.GetSigners()) < int(state.Share.Quorum) {
+	// 		return errors.New("aggregatedMsg signers don't reach quorum")
+	// 	}
 
-		vcbcReadyData, err := signedAggregatedMessage.Message.GetVCBCReadyData()
-		if err != nil {
-			return errors.Wrap(err, "could not get VCBCReadyData from given aggregated message")
-		}
-		givenHash, err := GetProposalsHash(FillerData.Entries[idx])
-		if err != nil {
-			return errors.Wrap(err, "could not get hash from given proposals")
-		}
-		if !bytes.Equal(givenHash, vcbcReadyData.Hash) {
-			return errors.New("hash of proposals given doesn't match hash in the VCBCReadyData of the aggregated message")
-		}
-		if vcbcReadyData.Author != FillerData.OperatorID {
-			return errors.New("author given doesn't match author in the VCBCReadyData of the aggregated message")
-		}
-		if vcbcReadyData.Priority != FillerData.Priorities[idx] {
-			return errors.New("priority given doesn't match priority in the VCBCReadyData of the aggregated message")
-		}
-	}
+	// 	vcbcReadyData, err := signedAggregatedMessage.Message.GetVCBCReadyData()
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "could not get VCBCReadyData from given aggregated message")
+	// 	}
+	// 	givenHash, err := GetProposalsHash(FillerData.Entries[idx])
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "could not get hash from given proposals")
+	// 	}
+	// 	if !bytes.Equal(givenHash, vcbcReadyData.Hash) {
+	// 		return errors.New("hash of proposals given doesn't match hash in the VCBCReadyData of the aggregated message")
+	// 	}
+	// 	if vcbcReadyData.Author != FillerData.OperatorID {
+	// 		return errors.New("author given doesn't match author in the VCBCReadyData of the aggregated message")
+	// 	}
+	// 	if vcbcReadyData.Priority != FillerData.Priorities[idx] {
+	// 		return errors.New("priority given doesn't match priority in the VCBCReadyData of the aggregated message")
+	// 	}
+	// }
 
 	return nil
 }
 
-func CreateFiller(state *specalea.State, config alea.IConfig, entries [][]*specalea.ProposalData, priorities []specalea.Priority, aggregatedMsgs [][]byte, operatorID types.OperatorID) (*specalea.SignedMessage, error) {
+func CreateFiller(state *messages.State, config alea.IConfig, entries [][]*specalea.ProposalData, priorities []specalea.Priority, aggregatedMsgs [][]byte, operatorID types.OperatorID) (*messages.SignedMessage, error) {
 	fillerData := &specalea.FillerData{
 		Entries:        entries,
 		Priorities:     priorities,
@@ -143,8 +152,8 @@ func CreateFiller(state *specalea.State, config alea.IConfig, entries [][]*speca
 	if err != nil {
 		return nil, errors.Wrap(err, "CreateFiller: could not encode filler data")
 	}
-	msg := &specalea.Message{
-		MsgType:    specalea.FillerMsgType,
+	msg := &messages.Message{
+		MsgType:    messages.FillerMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
@@ -155,7 +164,7 @@ func CreateFiller(state *specalea.State, config alea.IConfig, entries [][]*speca
 		return nil, errors.Wrap(err, "CreateFiller: failed signing filler msg")
 	}
 
-	signedMsg := &specalea.SignedMessage{
+	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []types.OperatorID{state.Share.OperatorID},
 		Message:   msg,

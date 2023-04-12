@@ -2,18 +2,19 @@ package spectest
 
 import (
 	"encoding/hex"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
-	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2/ssv/testing"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
 	"testing"
+
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	ssvtesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/validator"
 
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
 )
 
 type MsgProcessingSpecTest struct {

@@ -1,22 +1,24 @@
 package ekm
 
 import (
+	"testing"
+
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/prysmaticlabs/go-bitfield"
 	"go.uber.org/zap"
-	"testing"
 
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/eth2-key-manager/core"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zapcore"
 
-	beacon2 "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	beacon2 "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/MatheusFranco99/ssv/utils/logex"
 	"github.com/MatheusFranco99/ssv/utils/threshold"
 )
@@ -204,13 +206,13 @@ func TestSignRoot(t *testing.T) {
 		pk := &bls.PublicKey{}
 		require.NoError(t, pk.Deserialize(_byteArray(pk1Str)))
 
-		commitData, err := (&specqbft.CommitData{Data: []byte("value1")}).Encode()
+		commitData, err := (&specalea.CommitData{Data: []byte("value1")}).Encode()
 		require.NoError(t, err)
 
-		msg := &specqbft.Message{
-			MsgType:    specqbft.CommitMsgType,
-			Height:     specqbft.Height(3),
-			Round:      specqbft.Round(2),
+		msg := &specalea.Message{
+			MsgType:    specalea.CommitMsgType,
+			Height:     specalea.Height(3),
+			Round:      specalea.Round(2),
 			Identifier: []byte("identifier1"),
 			Data:       commitData,
 		}
@@ -220,7 +222,7 @@ func TestSignRoot(t *testing.T) {
 		require.NoError(t, err)
 
 		// verify
-		signed := &specqbft.SignedMessage{
+		signed := &messages.SignedMessage{
 			Signature: sig,
 			Signers:   []spectypes.OperatorID{1},
 			Message:   msg,
@@ -236,13 +238,13 @@ func TestSignRoot(t *testing.T) {
 		pk := &bls.PublicKey{}
 		require.NoError(t, pk.Deserialize(_byteArray(pk2Str)))
 
-		commitData, err := (&specqbft.CommitData{Data: []byte("value2")}).Encode()
+		commitData, err := (&specalea.CommitData{Data: []byte("value2")}).Encode()
 		require.NoError(t, err)
 
-		msg := &specqbft.Message{
-			MsgType:    specqbft.CommitMsgType,
-			Height:     specqbft.Height(1),
-			Round:      specqbft.Round(3),
+		msg := &specalea.Message{
+			MsgType:    specalea.CommitMsgType,
+			Height:     specalea.Height(1),
+			Round:      specalea.Round(3),
 			Identifier: []byte("identifier2"),
 			Data:       commitData,
 		}
@@ -252,7 +254,7 @@ func TestSignRoot(t *testing.T) {
 		require.NoError(t, err)
 
 		// verify
-		signed := &specqbft.SignedMessage{
+		signed := &messages.SignedMessage{
 			Signature: sig,
 			Signers:   []spectypes.OperatorID{1},
 			Message:   msg,

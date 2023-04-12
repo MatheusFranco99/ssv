@@ -3,20 +3,20 @@ package instance
 import (
 	"bytes"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
 )
 
 // uponPrepare process prepare message
 // Assumes prepare message is valid!
 func (i *Instance) uponPrepare(
-	signedPrepare *specqbft.SignedMessage,
+	signedPrepare *messages.SignedMessage,
 	prepareMsgContainer,
-	commitMsgContainer *specqbft.MsgContainer) error {
+	commitMsgContainer *specalea.MsgContainer) error {
 	acceptedProposalData, err := i.State.ProposalAcceptedForCurrentRound.Message.GetProposalData()
 	if err != nil {
 		return errors.Wrap(err, "could not get accepted proposal data")
@@ -28,7 +28,7 @@ func (i *Instance) uponPrepare(
 	if !addedMsg {
 		return nil // uponPrepare was already called
 	}
-	if !specqbft.HasQuorum(i.State.Share, prepareMsgContainer.MessagesForRound(i.State.Round)) {
+	if !specalea.HasQuorum(i.State.Share, prepareMsgContainer.MessagesForRound(i.State.Round)) {
 		return nil // no quorum yet
 	}
 
@@ -58,13 +58,13 @@ func (i *Instance) uponPrepare(
 	return nil
 }
 
-func getRoundChangeJustification(state *specqbft.State, config qbft.IConfig, prepareMsgContainer *specqbft.MsgContainer) []*specqbft.SignedMessage {
+func getRoundChangeJustification(state *specalea.State, config qbft.IConfig, prepareMsgContainer *specalea.MsgContainer) []*messages.SignedMessage {
 	if state.LastPreparedValue == nil {
 		return nil
 	}
 
 	prepareMsgs := prepareMsgContainer.MessagesForRound(state.LastPreparedRound)
-	ret := make([]*specqbft.SignedMessage, 0)
+	ret := make([]*messages.SignedMessage, 0)
 	for _, msg := range prepareMsgs {
 		if err := validSignedPrepareForHeightRoundAndValue(config, msg, state.Height, state.LastPreparedRound, state.LastPreparedValue, state.Share.Committee); err == nil {
 			ret = append(ret, msg)
@@ -100,12 +100,12 @@ func getRoundChangeJustification(state *specqbft.State, config qbft.IConfig, pre
 // https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
 func validSignedPrepareForHeightRoundAndValue(
 	config qbft.IConfig,
-	signedPrepare *specqbft.SignedMessage,
-	height specqbft.Height,
-	round specqbft.Round,
+	signedPrepare *messages.SignedMessage,
+	height specalea.Height,
+	round specalea.Round,
 	value []byte,
 	operators []*spectypes.Operator) error {
-	if signedPrepare.Message.MsgType != specqbft.PrepareMsgType {
+	if signedPrepare.Message.MsgType != specalea.PrepareMsgType {
 		return errors.New("prepare msg type is wrong")
 	}
 	if signedPrepare.Message.Height != height {
@@ -150,16 +150,16 @@ Prepare(
                         )
                 );
 */
-func CreatePrepare(state *specqbft.State, config qbft.IConfig, newRound specqbft.Round, value []byte) (*specqbft.SignedMessage, error) {
-	prepareData := &specqbft.PrepareData{
+func CreatePrepare(state *specalea.State, config qbft.IConfig, newRound specalea.Round, value []byte) (*messages.SignedMessage, error) {
+	prepareData := &specalea.PrepareData{
 		Data: value,
 	}
 	dataByts, err := prepareData.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed encoding prepare data")
 	}
-	msg := &specqbft.Message{
-		MsgType:    specqbft.PrepareMsgType,
+	msg := &specalea.Message{
+		MsgType:    specalea.PrepareMsgType,
 		Height:     state.Height,
 		Round:      newRound,
 		Identifier: state.ID,
@@ -170,7 +170,7 @@ func CreatePrepare(state *specqbft.State, config qbft.IConfig, newRound specqbft
 		return nil, errors.Wrap(err, "failed signing prepare msg")
 	}
 
-	signedMsg := &specqbft.SignedMessage{
+	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []spectypes.OperatorID{state.Share.OperatorID},
 		Message:   msg,

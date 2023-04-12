@@ -1,7 +1,7 @@
 package validator
 
 import (
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

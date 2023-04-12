@@ -2,16 +2,17 @@ package validator
 
 import (
 	"encoding/json"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
-func (v *Validator) onTimeout(identifier spectypes.MessageID, height specqbft.Height) func() {
+func (v *Validator) onTimeout(identifier spectypes.MessageID, height specalea.Height) func() {
 	return func() {
 		dr := v.DutyRunners[identifier.GetRoleType()]
 		hasDuty := dr.HasRunningDuty()
@@ -33,7 +34,7 @@ func (v *Validator) onTimeout(identifier spectypes.MessageID, height specqbft.He
 	}
 }
 
-func (v *Validator) createTimerMessage(identifier spectypes.MessageID, height specqbft.Height) (*spectypes.SSVMessage, error) {
+func (v *Validator) createTimerMessage(identifier spectypes.MessageID, height specalea.Height) (*spectypes.SSVMessage, error) {
 	td := types.TimeoutData{Height: height}
 	data, err := json.Marshal(td)
 	if err != nil {

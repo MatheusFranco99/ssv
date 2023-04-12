@@ -1,9 +1,10 @@
 package instance
 
 import (
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -13,9 +14,9 @@ import (
 // Assumes round change message is valid!
 func (i *Instance) uponRoundChange(
 	instanceStartValue []byte,
-	signedRoundChange *specqbft.SignedMessage,
-	roundChangeMsgContainer *specqbft.MsgContainer,
-	valCheck specqbft.ProposedValueCheckF,
+	signedRoundChange *messages.SignedMessage,
+	roundChangeMsgContainer *specalea.MsgContainer,
+	valCheck specalea.ProposedValueCheckF,
 ) error {
 
 	senderID := int(signedRoundChange.GetSigners()[0])
@@ -113,7 +114,7 @@ func (i *Instance) uponRoundChange(
 	return nil
 }
 
-func (i *Instance) uponChangeRoundPartialQuorum(newRound specqbft.Round, instanceStartValue []byte) error {
+func (i *Instance) uponChangeRoundPartialQuorum(newRound specalea.Round, instanceStartValue []byte) error {
 	i.State.Round = newRound
 	i.State.ProposalAcceptedForCurrentRound = nil
 	i.config.GetTimer().TimeoutForRound(i.State.Round)
@@ -129,17 +130,17 @@ func (i *Instance) uponChangeRoundPartialQuorum(newRound specqbft.Round, instanc
 	return nil
 }
 
-func hasReceivedPartialQuorum(state *specqbft.State, roundChangeMsgContainer *specqbft.MsgContainer) (bool, []*specqbft.SignedMessage) {
+func hasReceivedPartialQuorum(state *specalea.State, roundChangeMsgContainer *specalea.MsgContainer) (bool, []*messages.SignedMessage) {
 	all := roundChangeMsgContainer.AllMessaged()
 
-	rc := make([]*specqbft.SignedMessage, 0)
+	rc := make([]*messages.SignedMessage, 0)
 	for _, msg := range all {
 		if msg.Message.Round > state.Round {
 			rc = append(rc, msg)
 		}
 	}
 
-	return specqbft.HasPartialQuorum(state.Share, rc), rc
+	return specalea.HasPartialQuorum(state.Share, rc), rc
 }
 
 // hasReceivedProposalJustificationForLeadingRound returns
@@ -147,16 +148,16 @@ func hasReceivedPartialQuorum(state *specqbft.State, roundChangeMsgContainer *sp
 // if received round change msgs with prepare justification - returns the highest prepare justification round change msg and value to propose
 // (all the above considering the operator is a leader for the round
 func hasReceivedProposalJustificationForLeadingRound(
-	state *specqbft.State,
+	state *specalea.State,
 	config qbft.IConfig,
 	instanceStartValue []byte,
-	signedRoundChange *specqbft.SignedMessage,
-	roundChangeMsgContainer *specqbft.MsgContainer,
-	valCheck specqbft.ProposedValueCheckF,
-) (*specqbft.SignedMessage, []byte, error) {
+	signedRoundChange *messages.SignedMessage,
+	roundChangeMsgContainer *specalea.MsgContainer,
+	valCheck specalea.ProposedValueCheckF,
+) (*messages.SignedMessage, []byte, error) {
 	roundChanges := roundChangeMsgContainer.MessagesForRound(signedRoundChange.Message.Round)
 	// optimization, if no round change quorum can return false
-	if !specqbft.HasQuorum(state.Share, roundChanges) {
+	if !specalea.HasQuorum(state.Share, roundChanges) {
 		return nil, nil, nil
 	}
 
@@ -193,14 +194,14 @@ func hasReceivedProposalJustificationForLeadingRound(
 
 // isProposalJustificationForLeadingRound - returns nil if we have a quorum of round change msgs and highest justified value for leading round
 func isProposalJustificationForLeadingRound(
-	state *specqbft.State,
+	state *specalea.State,
 	config qbft.IConfig,
-	roundChangeMsg *specqbft.SignedMessage,
-	roundChanges []*specqbft.SignedMessage,
-	roundChangeJustifications []*specqbft.SignedMessage,
+	roundChangeMsg *messages.SignedMessage,
+	roundChanges []*messages.SignedMessage,
+	roundChangeJustifications []*messages.SignedMessage,
 	value []byte,
-	valCheck specqbft.ProposedValueCheckF,
-	newRound specqbft.Round,
+	valCheck specalea.ProposedValueCheckF,
+	newRound specalea.Round,
 ) error {
 	if err := isReceivedProposalJustification(
 		state,
@@ -229,12 +230,12 @@ func isProposalJustificationForLeadingRound(
 
 // isReceivedProposalJustification - returns nil if we have a quorum of round change msgs and highest justified value
 func isReceivedProposalJustification(
-	state *specqbft.State,
+	state *specalea.State,
 	config qbft.IConfig,
-	roundChanges, prepares []*specqbft.SignedMessage,
-	newRound specqbft.Round,
+	roundChanges, prepares []*messages.SignedMessage,
+	newRound specalea.Round,
 	value []byte,
-	valCheck specqbft.ProposedValueCheckF,
+	valCheck specalea.ProposedValueCheckF,
 ) error {
 	if err := isProposalJustification(
 		state,
@@ -251,8 +252,8 @@ func isReceivedProposalJustification(
 	return nil
 }
 
-func validRoundChange(state *specqbft.State, config qbft.IConfig, signedMsg *specqbft.SignedMessage, height specqbft.Height, round specqbft.Round) error {
-	if signedMsg.Message.MsgType != specqbft.RoundChangeMsgType {
+func validRoundChange(state *specalea.State, config qbft.IConfig, signedMsg *messages.SignedMessage, height specalea.Height, round specalea.Round) error {
+	if signedMsg.Message.MsgType != specalea.RoundChangeMsgType {
 		return errors.New("round change msg type is wrong")
 	}
 	if signedMsg.Message.Height != height {
@@ -294,7 +295,7 @@ func validRoundChange(state *specqbft.State, config qbft.IConfig, signedMsg *spe
 			}
 		}
 
-		if !specqbft.HasQuorum(state.Share, prepareMsgs) {
+		if !specalea.HasQuorum(state.Share, prepareMsgs) {
 			return errors.New("no justifications quorum")
 		}
 
@@ -308,8 +309,8 @@ func validRoundChange(state *specqbft.State, config qbft.IConfig, signedMsg *spe
 }
 
 // highestPrepared returns a round change message with the highest prepared round, returns nil if none found
-func highestPrepared(roundChanges []*specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
-	var ret *specqbft.SignedMessage
+func highestPrepared(roundChanges []*messages.SignedMessage) (*messages.SignedMessage, error) {
+	var ret *messages.SignedMessage
 	for _, rc := range roundChanges {
 		rcData, err := rc.Message.GetRoundChangeData()
 		if err != nil {
@@ -336,27 +337,27 @@ func highestPrepared(roundChanges []*specqbft.SignedMessage) (*specqbft.SignedMe
 }
 
 // returns the min round number out of the signed round change messages and the current round
-func minRound(roundChangeMsgs []*specqbft.SignedMessage) specqbft.Round {
-	ret := specqbft.NoRound
+func minRound(roundChangeMsgs []*messages.SignedMessage) specalea.Round {
+	ret := specalea.NoRound
 	for _, msg := range roundChangeMsgs {
-		if ret == specqbft.NoRound || ret > msg.Message.Round {
+		if ret == specalea.NoRound || ret > msg.Message.Round {
 			ret = msg.Message.Round
 		}
 	}
 	return ret
 }
 
-func getRoundChangeData(state *specqbft.State, config qbft.IConfig, instanceStartValue []byte) (*specqbft.RoundChangeData, error) {
-	if state.LastPreparedRound != specqbft.NoRound && state.LastPreparedValue != nil {
+func getRoundChangeData(state *specalea.State, config qbft.IConfig, instanceStartValue []byte) (*specalea.RoundChangeData, error) {
+	if state.LastPreparedRound != specalea.NoRound && state.LastPreparedValue != nil {
 		justifications := getRoundChangeJustification(state, config, state.PrepareContainer)
-		return &specqbft.RoundChangeData{
+		return &specalea.RoundChangeData{
 			PreparedRound:            state.LastPreparedRound,
 			PreparedValue:            state.LastPreparedValue,
 			RoundChangeJustification: justifications,
 		}, nil
 	}
-	return &specqbft.RoundChangeData{
-		PreparedRound: specqbft.NoRound,
+	return &specalea.RoundChangeData{
+		PreparedRound: specalea.NoRound,
 	}, nil
 }
 
@@ -374,7 +375,7 @@ RoundChange(
            getRoundChangeJustification(current)
        )
 */
-func CreateRoundChange(state *specqbft.State, config qbft.IConfig, newRound specqbft.Round, instanceStartValue []byte) (*specqbft.SignedMessage, error) {
+func CreateRoundChange(state *specalea.State, config qbft.IConfig, newRound specalea.Round, instanceStartValue []byte) (*messages.SignedMessage, error) {
 	rcData, err := getRoundChangeData(state, config, instanceStartValue)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not generate round change data")
@@ -384,8 +385,8 @@ func CreateRoundChange(state *specqbft.State, config qbft.IConfig, newRound spec
 		return nil, errors.Wrap(err, "could not encode round change data")
 	}
 
-	msg := &specqbft.Message{
-		MsgType:    specqbft.RoundChangeMsgType,
+	msg := &specalea.Message{
+		MsgType:    specalea.RoundChangeMsgType,
 		Height:     state.Height,
 		Round:      newRound,
 		Identifier: state.ID,
@@ -396,7 +397,7 @@ func CreateRoundChange(state *specqbft.State, config qbft.IConfig, newRound spec
 		return nil, errors.Wrap(err, "failed signing prepare msg")
 	}
 
-	signedMsg := &specqbft.SignedMessage{
+	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []spectypes.OperatorID{state.Share.OperatorID},
 		Message:   msg,

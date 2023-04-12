@@ -15,8 +15,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	registry "github.com/bloxapp/ssv/protocol/v2/blockchain/eth1"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	registry "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/eth1"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 

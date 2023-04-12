@@ -8,10 +8,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	qbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	qbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	types "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	syncing "github.com/MatheusFranco99/ssv/network/syncing"
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 	gomock "github.com/golang/mock/gomock"
 )
 
