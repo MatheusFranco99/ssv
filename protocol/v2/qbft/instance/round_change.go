@@ -4,10 +4,10 @@ import (
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
-
 
 // uponRoundChange process round change messages.
 // Assumes round change message is valid!
@@ -21,7 +21,18 @@ func (i *Instance) uponRoundChange(
 	senderID := int(signedRoundChange.GetSigners()[0])
 	roundForDebug := int(i.State.Round)
 
-	i.logger.Debug("$$$$$$ UponRoundChange start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponRoundChange "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(roundForDebug)))
+	}
+
+	log("start")
+
+	// i.logger.Debug("$$$$$$ UponRoundChange start. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
+	log("add signed message")
 
 	addedMsg, err := roundChangeMsgContainer.AddFirstMsgForSignerAndRound(signedRoundChange)
 	if err != nil {
@@ -31,10 +42,11 @@ func (i *Instance) uponRoundChange(
 		return nil // UponCommit was already called
 	}
 
-	i.logger.Debug("got change round",
-		zap.Uint64("round", uint64(i.State.Round)),
-		zap.Uint64("height", uint64(i.State.Height)),
-		zap.Any("round-change-signers", signedRoundChange.Signers))
+	// i.logger.Debug("got change round",
+	// 	zap.Uint64("round", uint64(i.State.Round)),
+	// 	zap.Uint64("height", uint64(i.State.Height)),
+	// 	zap.Any("round-change-signers", signedRoundChange.Signers))
+	// log("check proposal justification")
 
 	justifiedRoundChangeMsg, valueToPropose, err := hasReceivedProposalJustificationForLeadingRound(
 		i.State,
@@ -44,7 +56,7 @@ func (i *Instance) uponRoundChange(
 		roundChangeMsgContainer,
 		valCheck)
 	if err != nil {
-		i.logger.Debug("$$$$$$ UponRoundChange return couldn't get proposal justification. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+		// i.logger.Debug("$$$$$$ UponRoundChange return couldn't get proposal justification. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
 		return errors.Wrap(err, "could not get proposal justification for leading round")
 	}
@@ -53,6 +65,7 @@ func (i *Instance) uponRoundChange(
 		if err != nil {
 			return errors.Wrap(err, "could not round change data from highestJustifiedRoundChangeMsg")
 		}
+		log("create proposal")
 
 		proposal, err := CreateProposal(
 			i.State,
@@ -65,30 +78,37 @@ func (i *Instance) uponRoundChange(
 			return errors.Wrap(err, "failed to create proposal")
 		}
 
-		i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+		// i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
-		i.logger.Debug("got justified change round, broadcasting proposal message",
-			zap.Uint64("round", uint64(i.State.Round)))
-			
-		i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast start. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+		// i.logger.Debug("got justified change round, broadcasting proposal message",
+		// 	zap.Uint64("round", uint64(i.State.Round)))
+
+		// i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast start. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
+		log("broadcast start")
 
 		if err := i.Broadcast(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
-		i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast finish. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+		log("broadcast finish")
+
+		// i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast finish. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
 	} else if partialQuorum, rcs := hasReceivedPartialQuorum(i.State, roundChangeMsgContainer); partialQuorum {
 		newRound := minRound(rcs)
 		if newRound <= i.State.Round {
 			return nil // no need to advance round
 		}
+		log("round change partial quorum")
+
 		err := i.uponChangeRoundPartialQuorum(newRound, instanceStartValue)
-		i.logger.Debug("$$$$$$ UponRoundChange return upon change round with partial quorum. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+		// i.logger.Debug("$$$$$$ UponRoundChange return upon change round with partial quorum. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 		if err != nil {
 			return err
 		}
 	}
-	i.logger.Debug("$$$$$$ UponRoundChange return. time(micro):",zap.Int64("time(micro)",makeTimestamp()),zap.Int("sender",senderID),zap.Int("round",roundForDebug))
+	log("finish")
+
+	// i.logger.Debug("$$$$$$ UponRoundChange return. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
 	return nil
 }

@@ -31,13 +31,17 @@ class Analyzer:
     
 
 
+import sys
 
 if __name__ == "__main__":
-    a = Analyzer()
+    a = Analyzer(filename = sys.argv[1])
     print(a.len())
     # a.filter('ssv-node-1')
     print(a.len())
-    a.filter('$$$$$$')
+    a.filter('$$$$$')
+    # a.filter('starting')
+    # a.filter('QBFT')
+    # a.filter('instance')
+    # a.filter(""""publicKey": "b3abb58d18a587ff17cdbd85be687622eb2add07e80ca5190745badb03a216f8969b59405c85bd5a188008bcdf5a58c5", "role": "SYNC_COMMITTEE", "height": 1050""")
     print(a.len())
-    a.store('out_filtered.txt')
-
+    a.store(sys.argv[2])

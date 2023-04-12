@@ -8,7 +8,6 @@ require (
 	github.com/attestantio/go-eth2-client v0.15.2
 	github.com/bloxapp/eth2-key-manager v1.2.0
 	github.com/bloxapp/ssv v0.4.0
-	github.com/bloxapp/ssv-spec v0.2.8-0.20230118104749-37a78c8e8a93
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/ethereum/go-ethereum v1.10.23
@@ -49,6 +48,7 @@ require (
 	github.com/aristanetworks/goarista v0.0.0-20200805130819-fd197cf57d96 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bloxapp/ssv-spec v0.2.8-0.20230118104749-37a78c8e8a93 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
