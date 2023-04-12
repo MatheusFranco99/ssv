@@ -9,6 +9,8 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/google/uuid"
 
+	"math/rand"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -59,7 +61,8 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 
 		log("will get coin")
 		// coin := i.config.GetCoinF()(round)
-		coin := byte(1)
+		// coin := byte(1)
+		coin := Coin(int(round), int(author), int(priority))
 		log(fmt.Sprintf("coin: %v", coin))
 
 		conf_values := i.State.ACState.GetConfValues(author, priority, round)
@@ -76,7 +79,7 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 		if !i.State.ACState.HasSentInit(author, priority, round+1, init_vote) {
 
 			log("create aba init")
-			initMsg, err := CreateABAInit(i.State, i.config, init_vote, round, author, priority)
+			initMsg, err := CreateABAInit(i.State, i.config, init_vote, round+1, author, priority)
 			if err != nil {
 				return errors.Wrap(err, "uponABAConf: failed to create ABA Init message")
 			}
@@ -211,6 +214,16 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 	// i.logger.Debug("$$$$$$ UponABAConf finish", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(ABAConfData.ACRound)), zap.Int("round", int(ABAConfData.Round)), zap.Int("sender", int(senderID)), zap.Binary("votes", ABAConfData.Votes))
 
 	// return nil
+}
+
+func Coin(round int, author int, priority int) byte {
+	// Set the seed
+	rand.Seed(int64(round + author + priority))
+
+	// Generate a random integer between 0 and 1
+	result := byte(rand.Intn(2))
+
+	return result
 }
 
 func isValidABAConf(
