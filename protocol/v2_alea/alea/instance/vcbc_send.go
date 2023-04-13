@@ -37,29 +37,35 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
-	log(fmt.Sprintf("i.initTime status: %v", i.initTime))
-	if i.initTime == -1 || i.initTime == 0 {
-		i.initTime = makeTimestamp()
-	}
-	log(fmt.Sprintf("i.initTime new: %v", i.initTime))
-
-	// check if it was already received. If not -> store
-	log(fmt.Sprintf("has author, priority: %v", i.State.VCBCState.Has(author, priority)))
-	if !i.State.VCBCState.Has(author, priority) {
-		log("add")
-
-		i.State.VCBCState.Add(author, priority, data)
-	}
-
 	if sender != author {
 		log("sender != author, quitting.")
 		return nil
 	}
 
-	log("get hash")
-	hash, err := GetDataHash(data)
-	if err != nil {
-		return errors.New("uponVCBCSend: could not get hash of proposals")
+	// log(fmt.Sprintf("i.initTime status: %v", i.initTime))
+	// if i.initTime == -1 || i.initTime == 0 {
+	// 	i.initTime = makeTimestamp()
+	// }
+	// log(fmt.Sprintf("i.initTime new: %v", i.initTime))
+
+	// check if it was already received. If not -> store
+	log(fmt.Sprintf("has author, priority: %v", i.State.VCBCState.Has(author, priority)))
+	var hash []byte
+	if !i.State.VCBCState.Has(author, priority) {
+		log("add data to vcbcstate")
+
+		i.State.VCBCState.Add(author, priority, data)
+
+		log("get hash")
+		hash, err = GetDataHash(data)
+		if err != nil {
+			return errors.New("uponVCBCSend: could not get hash of proposals")
+		}
+		log("add hash to vcbcstate")
+		i.State.VCBCState.AddHash(author, priority, hash)
+	} else {
+		log("get local hash")
+		hash = i.State.VCBCState.GetHash(author, priority)
 	}
 
 	// create VCBCReady message with proof

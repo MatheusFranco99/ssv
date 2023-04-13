@@ -31,6 +31,16 @@ func (i *Instance) StartVCBC(data []byte) error {
 		return errors.Wrap(err, "StartVCBC: failed to create VCBCSend message")
 	}
 
+	log("add to vcbcstate")
+	i.State.VCBCState.Add(i.State.Share.OperatorID, i.priority, data)
+
+	log("add hash to vcbcstate")
+	hash, err := GetDataHash(data)
+	if err != nil {
+		return errors.Wrap(err, "Error: VCBC: hash calculation error.")
+	}
+	i.State.VCBCState.AddHash(i.State.Share.OperatorID, i.priority, hash)
+
 	i.priority += 1
 
 	log("broadcast start")

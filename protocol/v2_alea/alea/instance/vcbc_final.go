@@ -9,6 +9,8 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/google/uuid"
 
+	"bytes"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -25,6 +27,8 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	senderID := signedMessage.GetSigners()[0]
 	priority := vcbcFinalData.Priority
 	author := vcbcFinalData.Author
+	hash := vcbcFinalData.Hash
+	aggregatedMsgs := vcbcFinalData.AggregatedMsg
 
 	//funciton identifier
 	functionID := uuid.New().String()
@@ -36,8 +40,31 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
-	if i.initTime == -1 || i.initTime == 0 {
-		i.initTime = makeTimestamp()
+	// if i.initTime == -1 || i.initTime == 0 {
+	// 	i.initTime = makeTimestamp()
+	// }
+
+	log("check if has data")
+	if !i.State.VCBCState.Has(author, priority) {
+		return errors.New("Error: UponVCBCFinal: received vcbc final but don't have data to compare hashes.")
+	}
+
+	log("check hash")
+	ownHash := i.State.VCBCState.GetHash(author, priority)
+	if !bytes.Equal(ownHash, hash) {
+		return errors.New("Error: UponVCBCFinal: hash different from local.")
+	}
+
+	log("check aggregated signature")
+	// AggregatedMsg
+	signedAggregatedMessage := &messages.SignedMessage{}
+	signedAggregatedMessage.Decode(aggregatedMsgs)
+
+	if err := signedAggregatedMessage.Signature.VerifyByOperators(signedAggregatedMessage, i.config.GetSignatureDomainType(), types.QBFTSignatureType, i.State.Share.Committee); err != nil {
+		return errors.Wrap(err, "Error: UponVCBCFinal: aggregatedMsg signature invalid.")
+	}
+	if len(signedAggregatedMessage.GetSigners()) < int(i.State.Share.Quorum) {
+		return errors.New("Error: UponVCBCFinal: aggregatedMsg signers length don't reach quorum.")
 	}
 
 	hasSentInit := i.State.ACState.HasSentInit(author, priority, specalea.FirstRound, byte(1))

@@ -128,28 +128,28 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))
 		// Create Proposal
-		// if int(i.State.Share.OperatorID) == 2 {
-		// log("own operator id == 2")
-		// proposalMsg, err := CreateProposal(i.State, i.config, value)
-		// if err != nil {
-		// 	fmt.Println("Error creating proposal on Alea.Instance.Start")
-		// } else {
-		// 	// i.uponProposal(proposalMsg,i.State.ProposeContainer)
-		// 	i.onStartValue(proposalMsg)
-		// }
+		if int(i.State.Share.OperatorID) == 2 {
+			log("own operator id == 2")
+			// proposalMsg, err := CreateProposal(i.State, i.config, value)
+			// if err != nil {
+			// 	fmt.Println("Error creating proposal on Alea.Instance.Start")
+			// } else {
+			// 	// i.uponProposal(proposalMsg,i.State.ProposeContainer)
+			// 	i.onStartValue(proposalMsg)
+			// }
 
-		log("call vcbc")
-		i.StartVCBC(value)
+			log("call vcbc")
+			i.StartVCBC(value)
 
-		log("finish vcbc")
+			log("finish vcbc")
 
-		// msgId := spectypesalea.MessageIDFromBytes(i.State.ID)
-		// i.timer.startTime(fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(height)))
+			// msgId := spectypesalea.MessageIDFromBytes(i.State.ID)
+			// i.timer.startTime(fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(height)))
 
-		// i.mu.Lock()
-		// i.timeMap[fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height))] = makeTimestamp()
-		// i.mu.Unlock()
-		// }
+			// i.mu.Lock()
+			// i.timeMap[fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height))] = makeTimestamp()
+			// i.mu.Unlock()
+		}
 
 		// go i.StartAgreementComponent()
 	})
@@ -179,9 +179,9 @@ func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
 func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-	// if err := i.BaseMsgValidation(msg); err != nil {
-	// 	return false, nil, nil, errors.Wrap(err, "invalid signed message")
-	// }
+	if err := i.BaseMsgValidation(msg); err != nil {
+		return false, nil, nil, errors.Wrap(err, "invalid signed message")
+	}
 
 	decided = false
 	decidedValue = nil
@@ -235,38 +235,38 @@ func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decide
 
 func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 
-	// if err := msg.Validate(); err != nil {
-	// 	return errors.Wrap(err, "invalid signed message")
-	// }
+	if err := msg.Validate(); err != nil {
+		return errors.Wrap(err, "invalid signed message")
+	}
 
-	// if msg.Message.Round < i.State.Round {
-	// 	return errors.New("past round")
-	// }
+	if msg.Message.Round < i.State.Round {
+		return errors.New("past round")
+	}
 
-	// switch msg.Message.MsgType {
-	// // case specalea.ProposalMsgType:
-	// // 	return isValidProposal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// // case specalea.FillGapMsgType:
-	// // 	return isValidFillGap(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// // case specalea.FillerMsgType:
-	// // 	return isValidFiller(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.VCBCSendMsgType:
-	// 	return isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.VCBCReadyMsgType:
-	// 	return isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.VCBCFinalMsgType:
-	// 	return isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.ABAInitMsgType:
-	// 	return isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.ABAAuxMsgType:
-	// 	return isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.ABAConfMsgType:
-	// 	return isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.ABAFinishMsgType:
-	// 	return isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// default:
-	// 	return errors.New("signed message type not supported")
-	// }
+	switch msg.Message.MsgType {
+	// case messages.ProposalMsgType:
+	// 	return isValidProposal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.FillGapMsgType:
+	// 	return isValidFillGap(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.FillerMsgType:
+	// 	return isValidFiller(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	case messages.VCBCSendMsgType:
+		return isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	case messages.VCBCReadyMsgType:
+		return isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	case messages.VCBCFinalMsgType:
+		return isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		// case messages.ABAInitMsgType:
+		// 	return isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		// case messages.ABAAuxMsgType:
+		// 	return isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		// case messages.ABAConfMsgType:
+		// 	return isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		// case messages.ABAFinishMsgType:
+		// 	return isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		// default:
+		// 	return errors.New("signed message type not supported")
+	}
 	return nil
 }
 

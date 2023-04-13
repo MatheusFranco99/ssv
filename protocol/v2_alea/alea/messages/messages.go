@@ -318,6 +318,9 @@ func (d *VCBCSendData) Decode(data []byte) error {
 // Validate returns error if msg validation doesn't pass.
 // Msg validation checks the msg, it's variables for validity.
 func (d *VCBCSendData) Validate() error {
+	if len(d.Data) == 0 {
+		return errors.New("VCBCSendData: empty data")
+	}
 	return nil
 }
 

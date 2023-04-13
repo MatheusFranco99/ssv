@@ -1,6 +1,8 @@
 package instance
 
 import (
+	"bytes"
+
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
@@ -22,7 +24,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	}
 
 	// get attributes
-	// hash := vcbcReadyData.Hash
+	hash := vcbcReadyData.Hash
 	author := vcbcReadyData.Author
 	if author != i.State.Share.OperatorID {
 		return nil
@@ -44,17 +46,27 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	// 	return nil
 	// }
 
-	if i.initTime == -1 || i.initTime == 0 {
-		i.initTime = makeTimestamp()
+	// if i.initTime == -1 || i.initTime == 0 {
+	// 	i.initTime = makeTimestamp()
+	// }
+
+	log("check if has data")
+	if !i.State.VCBCState.Has(i.State.Share.OperatorID, priority) {
+		return errors.New("Error: UponVCBCReady: received ready but don't have data for own priority.")
+	}
+
+	log("compare hash")
+	ownHash := i.State.VCBCState.GetHash(i.State.Share.OperatorID, priority)
+	if !bytes.Equal(hash, ownHash[:]) {
+		return errors.New("Error: UponVCBCReady: wrong hah.")
 	}
 
 	already_has_quorum := (i.State.ReadyState.GetLen(priority) >= int(i.State.Share.Quorum))
 
 	log(fmt.Sprintf("already has quorum %v", already_has_quorum))
 
+	log("add signedMessage to ready state")
 	i.State.ReadyState.Add(priority, senderID, signedMessage)
-
-	log("added.")
 
 	if already_has_quorum {
 		return nil
@@ -66,20 +78,20 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 		log("len >= quorum")
 
-		// log("will aggregate msgs")
-		// aggregatedMessage, err := AggregateMsgs(i.State.ReadyState.GetMessages(priority))
-		// if err != nil {
-		// 	return errors.Wrap(err, "uponVCBCReady: unable to aggregate messages to produce VCBCFinal")
-		// }
+		log("will aggregate msgs")
+		aggregatedMessage, err := AggregateMsgs(i.State.ReadyState.GetMessages(priority))
+		if err != nil {
+			return errors.Wrap(err, "uponVCBCReady: unable to aggregate messages to produce VCBCFinal")
+		}
 
-		// log("will encode aggregated messages")
-		// aggregatedMsgEncoded, err := aggregatedMessage.Encode()
-		// if err != nil {
-		// 	return errors.Wrap(err, "uponVCBCReady: could not encode aggregated msg")
-		// }
+		log("will encode aggregated messages")
+		aggregatedMsgEncoded, err := aggregatedMessage.Encode()
+		if err != nil {
+			return errors.Wrap(err, "uponVCBCReady: could not encode aggregated msg")
+		}
 
 		log("creating vcbc final")
-		vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, vcbcReadyData.Hash, vcbcReadyData.Priority, make([]byte, 0), vcbcReadyData.Author)
+		vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, vcbcReadyData.Hash, vcbcReadyData.Priority, aggregatedMsgEncoded, vcbcReadyData.Author)
 		if err != nil {
 			return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
 		}
