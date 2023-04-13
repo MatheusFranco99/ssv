@@ -255,12 +255,12 @@ func isValidABAConf(
 	}
 
 	// vote
-	votes := ABAConfData.Votes
-	for _, vote := range votes {
-		if vote != 0 && vote != 1 {
-			return errors.New("vote different than 0 and 1")
-		}
-	}
+	// votes := ABAConfData.Votes
+	// for _, vote := range votes {
+	// 	if vote != 0 && vote != 1 {
+	// 		return errors.New("vote different than 0 and 1")
+	// 	}
+	// }
 
 	return nil
 }

@@ -113,10 +113,10 @@ func isValidABAAux(
 	}
 
 	// vote
-	vote := ABAAuxData.Vote
-	if vote != 0 && vote != 1 {
-		return errors.New("vote different than 0 and 1")
-	}
+	// vote := ABAAuxData.Vote
+	// if vote != 0 && vote != 1 {
+	// 	return errors.New("vote different than 0 and 1")
+	// }
 
 	return nil
 }

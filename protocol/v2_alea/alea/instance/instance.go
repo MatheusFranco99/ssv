@@ -243,30 +243,30 @@ func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 		return errors.New("past round")
 	}
 
-	switch msg.Message.MsgType {
-	// case messages.ProposalMsgType:
-	// 	return isValidProposal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.FillGapMsgType:
-	// 	return isValidFillGap(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	// case messages.FillerMsgType:
-	// 	return isValidFiller(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	case messages.VCBCSendMsgType:
-		return isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	case messages.VCBCReadyMsgType:
-		return isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-	case messages.VCBCFinalMsgType:
-		return isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-		// case messages.ABAInitMsgType:
-		// 	return isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-		// case messages.ABAAuxMsgType:
-		// 	return isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-		// case messages.ABAConfMsgType:
-		// 	return isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-		// case messages.ABAFinishMsgType:
-		// 	return isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
-		// default:
-		// 	return errors.New("signed message type not supported")
-	}
+	// switch msg.Message.MsgType {
+	// // case messages.ProposalMsgType:
+	// // 	return isValidProposal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// // case messages.FillGapMsgType:
+	// // 	return isValidFillGap(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// // case messages.FillerMsgType:
+	// // 	return isValidFiller(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.VCBCSendMsgType:
+	// 	return isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.VCBCReadyMsgType:
+	// 	return isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.VCBCFinalMsgType:
+	// 	return isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.ABAInitMsgType:
+	// 	return isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.ABAAuxMsgType:
+	// 	return isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.ABAConfMsgType:
+	// 	return isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// case messages.ABAFinishMsgType:
+	// 	return isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+	// 	// default:
+	// 	// 	return errors.New("signed message type not supported")
+	// }
 	return nil
 }
 

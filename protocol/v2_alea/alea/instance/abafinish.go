@@ -193,10 +193,10 @@ func isValidABAFinish(
 	}
 
 	// vote
-	vote := ABAFinishData.Vote
-	if vote != 0 && vote != 1 {
-		return errors.New("vote different than 0 and 1")
-	}
+	// vote := ABAFinishData.Vote
+	// if vote != 0 && vote != 1 {
+	// 	return errors.New("vote different than 0 and 1")
+	// }
 
 	return nil
 }
