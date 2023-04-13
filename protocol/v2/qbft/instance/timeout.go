@@ -44,7 +44,7 @@ func (i *Instance) UponRoundTimeout() error {
 
 	// i.logger.Debug("$$$$$$ UponRoundTimeout broadcast finish. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("round", round))
 
-	i.logger.Debug("$$$$$$ UponRoundTimeout return. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("round", round))
+	// i.logger.Debug("$$$$$$ UponRoundTimeout return. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("round", round))
 
 	return nil
 }

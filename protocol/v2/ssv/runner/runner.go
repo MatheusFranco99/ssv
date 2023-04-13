@@ -4,10 +4,10 @@ import (
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 
 	"github.com/pkg/errors"
@@ -224,6 +224,28 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 	runner.GetBaseRunner().State.RunningInstance = newInstance
 
 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
+
+	idx := 0
+	for idx < 30 {
+		// byts_modified := []byte{}
+		// copy(byts_modified, byts)
+		// byts_modified[0] += 1
+
+		if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
+			return errors.Wrap(err, "could not start new QBFT instance")
+		}
+
+		newInstance := runner.GetBaseRunner().QBFTController.InstanceForHeight(runner.GetBaseRunner().QBFTController.Height)
+		if newInstance == nil {
+			return errors.New("could not find newly created QBFT instance")
+		}
+
+		runner.GetBaseRunner().State.RunningInstance = newInstance
+
+		b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
+
+		idx += 1
+	}
 
 	return nil
 }

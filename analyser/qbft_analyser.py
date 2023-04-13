@@ -217,7 +217,12 @@ class GeneralProtocolController:
     def __init__(self,logger):
         self.logger = logger
         self.protocols = []
-        self.tags = ['UponStart','UponProposal','UponPrepare','UponCommit','UponRoundChange','UponRoundTimeout']
+        self.tags = ['UponStart',
+                     'UponProposal',
+                     'UponPrepare',
+                     'UponCommit',
+                     'UponRoundChange',
+                     'UponRoundTimeout']
         self.protocols_dict = {tag:{} for tag in self.tags}
 
     def lenMessages(self):
