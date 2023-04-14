@@ -62,9 +62,9 @@ func NewController(
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
 func (c *Controller) StartNewInstance(value []byte) error {
-	if err := c.canStartInstanceForValue(value); err != nil {
-		return errors.Wrap(err, "can't start new QBFT instance")
-	}
+	// if err := c.canStartInstanceForValue(value); err != nil {
+	// 	return errors.Wrap(err, "can't start new QBFT instance")
+	// }
 
 	// only if current height's instance exists (and decided since passed can start instance) bump
 	if c.StoredInstances.FindInstance(c.Height) != nil {
@@ -203,9 +203,9 @@ func (c *Controller) CanStartInstance() error {
 	if inst == nil {
 		return nil
 	}
-	if decided, _ := inst.IsDecided(); !decided {
-		return errors.New("previous instance hasn't Decided")
-	}
+	// if decided, _ := inst.IsDecided(); !decided {
+	// 	return errors.New("previous instance hasn't Decided")
+	// }
 
 	return nil
 }
