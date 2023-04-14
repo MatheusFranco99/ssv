@@ -226,6 +226,26 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 
 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
 
+	idx := 0
+	for idx < 63 {
+		// size_byts := len(byts)
+		// byts_modified := make([]byte, size_byts)
+		// copy(byts_modified, byts)
+		// byts_modified[0] += 1
+		// byts_modified[2*3%size_byts] = byts_modified[idx%size_byts]
+
+		if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
+			return errors.Wrap(err, "could not start new QBFT instance")
+		}
+		newInstance := runner.GetBaseRunner().QBFTController.InstanceForHeight(runner.GetBaseRunner().QBFTController.Height)
+		if newInstance == nil {
+			return errors.New("could not find newly created QBFT instance")
+		}
+		runner.GetBaseRunner().State.RunningInstance = newInstance
+		b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
+		idx += 1
+	}
+
 	return nil
 }
 
