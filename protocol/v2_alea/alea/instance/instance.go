@@ -128,28 +128,28 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))
 		// Create Proposal
-		if int(i.State.Share.OperatorID) == 2 {
-			log("own operator id == 2")
-			// proposalMsg, err := CreateProposal(i.State, i.config, value)
-			// if err != nil {
-			// 	fmt.Println("Error creating proposal on Alea.Instance.Start")
-			// } else {
-			// 	// i.uponProposal(proposalMsg,i.State.ProposeContainer)
-			// 	i.onStartValue(proposalMsg)
-			// }
+		// if int(i.State.Share.OperatorID) == 2 {
+		// log("own operator id == 2")
+		// proposalMsg, err := CreateProposal(i.State, i.config, value)
+		// if err != nil {
+		// 	fmt.Println("Error creating proposal on Alea.Instance.Start")
+		// } else {
+		// 	// i.uponProposal(proposalMsg,i.State.ProposeContainer)
+		// 	i.onStartValue(proposalMsg)
+		// }
 
-			log("call vcbc")
-			i.StartVCBC(value)
+		log("call vcbc")
+		i.StartVCBC(value)
 
-			log("finish vcbc")
+		log("finish vcbc")
 
-			// msgId := spectypesalea.MessageIDFromBytes(i.State.ID)
-			// i.timer.startTime(fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(height)))
+		// msgId := spectypesalea.MessageIDFromBytes(i.State.ID)
+		// i.timer.startTime(fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(height)))
 
-			// i.mu.Lock()
-			// i.timeMap[fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height))] = makeTimestamp()
-			// i.mu.Unlock()
-		}
+		// i.mu.Lock()
+		// i.timeMap[fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height))] = makeTimestamp()
+		// i.mu.Unlock()
+		// }
 
 		// go i.StartAgreementComponent()
 	})

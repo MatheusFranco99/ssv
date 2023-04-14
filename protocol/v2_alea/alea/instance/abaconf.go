@@ -61,8 +61,8 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 
 		log("will get coin")
 		// coin := i.config.GetCoinF()(round)
-		coin := byte(1)
-		// coin := Coin(int(round), int(author), int(priority))
+		// coin := byte(1)
+		coin := Coin(int(round), int(author), int(priority))
 		log(fmt.Sprintf("coin: %v", coin))
 
 		conf_values := i.State.ACState.GetConfValues(author, priority, round)
