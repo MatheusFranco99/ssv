@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"fmt"
+	// "fmt"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -24,7 +24,6 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 	// sender
 	sender := signedMessage.GetSigners()[0]
 	author := vcbcSendData.Author
-	priority := vcbcSendData.Priority
 	data := vcbcSendData.Data
 
 	//funciton identifier
@@ -32,7 +31,7 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(sender)))
+		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(sender)))
 	}
 
 	log("start")
@@ -42,45 +41,30 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 		return nil
 	}
 
-	// log(fmt.Sprintf("i.initTime status: %v", i.initTime))
-	// if i.initTime == -1 || i.initTime == 0 {
-	// 	i.initTime = makeTimestamp()
-	// }
-	// log(fmt.Sprintf("i.initTime new: %v", i.initTime))
+	has_sent := i.State.SentReadys.Has(author)
 
-	// check if it was already received. If not -> store
-	log(fmt.Sprintf("has author, priority: %v", i.State.VCBCState.Has(author, priority)))
-	var hash []byte
-	if !i.State.VCBCState.Has(author, priority) {
-		log("add data to vcbcstate")
+	if ((has_sent && i.State.SentReadys.EqualData(author,data)) || !has_sent) {
+		i.State.SentReadys.Add(author,data)
+		// create VCBCReady message with proof
+		log("create vcbc ready")
 
-		i.State.VCBCState.Add(author, priority, data)
 
-		log("get hash")
-		hash, err = GetDataHash(data)
+		
+		hash,err := GetDataHash(data)
 		if err != nil {
-			return errors.New("uponVCBCSend: could not get hash of proposals")
+			log("error getting hash")
+			return err
 		}
-		log("add hash to vcbcstate")
-		i.State.VCBCState.AddHash(author, priority, hash)
-	} else {
-		log("get local hash")
-		hash = i.State.VCBCState.GetHash(author, priority)
+
+		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, author, []byte{})
+		if err != nil {
+			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
+		}
+		// FIX ME : send specifically to author
+		log("broadcast start")
+		i.Broadcast(vcbcReadyMsg)
+		log("broadcast finish")
 	}
-
-	// create VCBCReady message with proof
-	log("create vcbc ready")
-
-	vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, priority, author)
-	if err != nil {
-		return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
-	}
-	// FIX ME : send specifically to author
-	log("broadcast start")
-	i.Broadcast(vcbcReadyMsg)
-	log("broadcast finish")
-
-	log("finish")
 
 	return nil
 }
@@ -140,10 +124,9 @@ func isValidVCBCSend(
 	return nil
 }
 
-func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte, priority specalea.Priority, author types.OperatorID) (*messages.SignedMessage, error) {
+func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte, author types.OperatorID) (*messages.SignedMessage, error) {
 	vcbcSendData := &messages.VCBCSendData{
 		Data:     data,
-		Priority: priority,
 		Author:   author,
 	}
 	dataByts, err := vcbcSendData.Encode()

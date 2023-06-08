@@ -77,9 +77,12 @@ func NewInstance(
 			StopAgreement:    false,
 			// ACState:           specalea.NewACState(),
 			VCBCState:         messages.NewVCBCState(nodeIDs),
-			ReadyState:        messages.NewReadyState(),
+			ReceivedReadys:    messages.NewReceivedReadys(),
+			SentReadys:        messages.NewSentReadys(),
 			ACState:           messages.NewACState(nodeIDs),
 			FillerMsgReceived: 0,
+			StartedCV: false,
+			CVState: messages.NewCVState(),
 		},
 		priority:    specalea.FirstPriority,
 		config:      config,
@@ -113,45 +116,13 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 
 		i.vcbcNum = 0
 
-		// log("create node ids list")
-		// nodeIDs := make([]types.OperatorID, len(i.State.Share.Committee))
-		// for i, op := range i.State.Share.Committee {
-		// 	nodeIDs[i] = types.OperatorID(op.OperatorID)
-		// }
-
-		// log("Reinit VCBCState and ACState")
-		// i.State.ACState.ReInit(nodeIDs)
-		// i.State.VCBCState.ReInit(nodeIDs)
-		// i.State.ReadyState.ReInit()
-		// i.timeMap = make(map[string]int64)
-
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))
-		// Create Proposal
-		// if int(i.State.Share.OperatorID) == 2 {
-		// log("own operator id == 2")
-		// proposalMsg, err := CreateProposal(i.State, i.config, value)
-		// if err != nil {
-		// 	fmt.Println("Error creating proposal on Alea.Instance.Start")
-		// } else {
-		// 	// i.uponProposal(proposalMsg,i.State.ProposeContainer)
-		// 	i.onStartValue(proposalMsg)
-		// }
 
 		log("call vcbc")
 		i.StartVCBC(value)
 
 		log("finish vcbc")
-
-		// msgId := spectypesalea.MessageIDFromBytes(i.State.ID)
-		// i.timer.startTime(fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(height)))
-
-		// i.mu.Lock()
-		// i.timeMap[fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height))] = makeTimestamp()
-		// i.mu.Unlock()
-		// }
-
-		// go i.StartAgreementComponent()
 	})
 }
 
@@ -223,6 +194,9 @@ func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decide
 		case messages.VCBCFinalMsgType:
 			// i.logger.Debug("$$$$$$ ProcessMsg: uponVCBCFinal")
 			return i.uponVCBCFinal(msg)
+		case messages.CVVoteMsgType:
+			// i.logger.Debug("$$$$$$ ProcessMsg: uponVCBCFinal")
+			return i.uponCVVote(msg)
 		default:
 			return errors.New("signed message type not supported")
 		}

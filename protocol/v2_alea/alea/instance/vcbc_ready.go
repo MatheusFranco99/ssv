@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"bytes"
+	// "bytes"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -29,7 +29,8 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	if author != i.State.Share.OperatorID {
 		return nil
 	}
-	priority := vcbcReadyData.Priority
+	signature := vcbcReadyData.Signature
+	// priority := vcbcReadyData.Priority
 	senderID := signedMessage.GetSigners()[0]
 
 	//funciton identifier
@@ -37,61 +38,24 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponVCBCReady "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$ UponVCBCReady "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
-	// if author != i.State.Share.OperatorID {
-	// 	i.logger.Debug("$$$$$$ UponVCBCReady finish (self.OperatorID != author)", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(senderID)))
-	// 	return nil
-	// }
 
-	// if i.initTime == -1 || i.initTime == 0 {
-	// 	i.initTime = makeTimestamp()
-	// }
+	i.State.ReceivedReadys.Add(senderID,signature)
+	log(fmt.Sprintf("len, quorum: %v %v", i.State.ReceivedReadys.GetLen(), int(i.State.Share.Quorum)))
 
-	log("check if has data")
-	if !i.State.VCBCState.Has(i.State.Share.OperatorID, priority) {
-		return errors.New("Error: UponVCBCReady: received ready but don't have data for own priority.")
-	}
 
-	log("compare hash")
-	ownHash := i.State.VCBCState.GetHash(i.State.Share.OperatorID, priority)
-	if !bytes.Equal(hash, ownHash[:]) {
-		return errors.New("Error: UponVCBCReady: wrong hah.")
-	}
-
-	already_has_quorum := (i.State.ReadyState.GetLen(priority) >= int(i.State.Share.Quorum))
+	already_has_quorum := (i.State.ReceivedReadys.GetLen() >= int(i.State.Share.Quorum))
 
 	log(fmt.Sprintf("already has quorum %v", already_has_quorum))
+	log(fmt.Sprintf("Has sent final %v",i.State.ReceivedReadys.HasSentFinal()))
 
-	log("add signedMessage to ready state")
-	i.State.ReadyState.Add(priority, senderID, signedMessage)
-
-	if already_has_quorum {
-		return nil
-	}
-
-	log(fmt.Sprintf("len, quorum: %v %v", i.State.ReadyState.GetLen(priority), int(i.State.Share.Quorum)))
-
-	if i.State.ReadyState.GetLen(priority) >= int(i.State.Share.Quorum) {
-
-		log("len >= quorum")
-
-		log("will aggregate msgs")
-		aggregatedMessage, err := AggregateMsgs(i.State.ReadyState.GetMessages(priority))
-		if err != nil {
-			return errors.Wrap(err, "uponVCBCReady: unable to aggregate messages to produce VCBCFinal")
-		}
-
-		log("will encode aggregated messages")
-		aggregatedMsgEncoded, err := aggregatedMessage.Encode()
-		if err != nil {
-			return errors.Wrap(err, "uponVCBCReady: could not encode aggregated msg")
-		}
+	if (already_has_quorum && !i.State.ReceivedReadys.HasSentFinal())  {
 
 		log("creating vcbc final")
-		vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, vcbcReadyData.Hash, vcbcReadyData.Priority, aggregatedMsgEncoded, vcbcReadyData.Author)
+		vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, i.StartValue, hash, author, []byte{}, i.State.ReceivedReadys.GetNodeIDs())
 		if err != nil {
 			return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
 		}
@@ -179,12 +143,13 @@ func isValidVCBCReady(
 	return nil
 }
 
-func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, priority specalea.Priority, author types.OperatorID) (*messages.SignedMessage, error) {
-	vcbcReadyData := &specalea.VCBCReadyData{
+func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, author types.OperatorID, signature []byte) (*messages.SignedMessage, error) {
+	vcbcReadyData := &messages.VCBCReadyData{
 		Hash:     hash,
-		Priority: priority,
+		// Priority: priority,
 		// Proof:			proof,
 		Author: author,
+		Signature: signature,
 	}
 	dataByts, err := vcbcReadyData.Encode()
 	if err != nil {

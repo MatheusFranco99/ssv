@@ -1,183 +1,198 @@
 package messages
 
 import (
-	"fmt"
+	// "fmt"
 
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	// "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"bytes"
 )
 
 /*
  * ReadyState
  */
 
-type ReadyState struct {
-	readys map[alea.Priority]map[types.OperatorID]*SignedMessage
+type ReceivedReadys struct {
+	readys map[types.OperatorID][]byte
+	sentFinal bool
 }
 
-func NewReadyState() *ReadyState {
+func NewReceivedReadys() *ReceivedReadys {
 
-	readyState := &ReadyState{
-		readys: make(map[alea.Priority]map[types.OperatorID]*SignedMessage),
+	return &ReceivedReadys{
+		readys: make(map[types.OperatorID][]byte),
+		sentFinal: false,
 	}
-	return readyState
 }
 
-func (rs *ReadyState) ReInit() {
-	rs.readys = make(map[alea.Priority]map[types.OperatorID]*SignedMessage)
+func (rs *ReceivedReadys) HasSentFinal() bool {
+	return rs.sentFinal
 }
 
-func (rs *ReadyState) Add(priority alea.Priority, id types.OperatorID, msg *SignedMessage) {
-	if rs.readys == nil {
-		rs.readys = make(map[alea.Priority]map[types.OperatorID]*SignedMessage)
-	}
-	if _, ok := rs.readys[priority]; !ok {
-		rs.readys[priority] = make(map[types.OperatorID]*SignedMessage)
-	}
-	rs.readys[priority][id] = msg
+func (rs *ReceivedReadys) SetSentFinal() {
+	rs.sentFinal = true;
 }
 
-func (rs *ReadyState) GetLen(priority alea.Priority) int {
-	if rs.readys == nil {
-		rs.readys = make(map[alea.Priority]map[types.OperatorID]*SignedMessage)
-	}
-	if _, ok := rs.readys[priority]; !ok {
-		return 0
-	}
-	return len(rs.readys[priority])
+func (rs *ReceivedReadys) Add(opID types.OperatorID, signature []byte) {
+	rs.readys[opID] = signature
 }
 
-func (rs *ReadyState) GetMessages(priority alea.Priority) []*SignedMessage {
-	if _, ok := rs.readys[priority]; !ok {
-		rs.readys[priority] = make(map[types.OperatorID]*SignedMessage)
-	}
-	var ans []*SignedMessage
-	for _, msg := range rs.readys[priority] {
-		ans = append(ans, msg)
+func (rs *ReceivedReadys) GetLen() int {
+	return len(rs.readys)
+}
+
+func (rs *ReceivedReadys) GetSignatureMap() map[types.OperatorID][]byte {
+	return rs.readys
+}
+
+func (rs *ReceivedReadys) GetNodeIDs() []types.OperatorID {
+	ans := make([]types.OperatorID,len(rs.readys))
+	idx := 0
+	for key, _ := range rs.readys {
+		ans[idx] = key
+		idx += 1
 	}
 	return ans
 }
 
+
+type SentReadys struct {
+	data map[types.OperatorID][]byte
+}
+
+func NewSentReadys() *SentReadys {
+
+	return &SentReadys{
+		data: make(map[types.OperatorID][]byte),
+	}
+}
+
+
+func (rs *SentReadys) Has(opID types.OperatorID) bool {
+	_, ok := rs.data[opID]
+	return ok
+}
+
+func (rs *SentReadys) EqualData(opID types.OperatorID, data []byte) bool {
+	d, ok := rs.data[opID]
+	if !ok {
+		return false;
+	}
+
+	if len(data) != len(d) {
+		return false;
+	}
+	return bytes.Equal(data,d)
+}
+
+func (rs *SentReadys) Add(opID types.OperatorID, data []byte) {
+	if _, ok := rs.data[opID]; !ok {
+		rs.data[opID] = data
+	}
+}
+
+
+
+type VCBCData struct {
+	Data []byte
+	Author types.OperatorID
+	Hash []byte
+	AggregatedSignature []byte
+	NodeIDs []types.OperatorID
+}
+
 type VCBCState struct {
 	numNodes int
-	data     map[types.OperatorID]map[alea.Priority][]byte
-	hash     map[types.OperatorID]map[alea.Priority][]byte
+	data	 map[types.OperatorID]*VCBCData
 }
+
+
 
 func NewVCBCState(nodeIDs []types.OperatorID) *VCBCState {
 
 	vcbcState := &VCBCState{
 		numNodes: 0,
-		data:     make(map[types.OperatorID]map[alea.Priority][]byte),
-		hash:     make(map[types.OperatorID]map[alea.Priority][]byte),
+		data: make(map[types.OperatorID]*VCBCData),
 	}
 	vcbcState.numNodes = len(nodeIDs)
 
-	for _, id := range nodeIDs {
-		vcbcState.data[id] = make(map[alea.Priority][]byte)
-		vcbcState.hash[id] = make(map[alea.Priority][]byte)
-	}
+	// for _, id := range nodeIDs {
+	// 	vcbcState.data[id] = make(map[alea.Priority][]byte)
+	// 	vcbcState.hash[id] = make(map[alea.Priority][]byte)
+	// }
 
 	return vcbcState
 }
 
 func (v *VCBCState) ReInit(nodeIDs []types.OperatorID) {
-	v.data = make(map[types.OperatorID]map[alea.Priority][]byte)
-	v.hash = make(map[types.OperatorID]map[alea.Priority][]byte)
-	for _, id := range nodeIDs {
-		v.data[id] = make(map[alea.Priority][]byte)
-		v.hash[id] = make(map[alea.Priority][]byte)
-	}
+	v.data = make(map[types.OperatorID]*VCBCData)
+	// v.data = make(map[types.OperatorID]map[alea.Priority][]byte)
+	// v.hash = make(map[types.OperatorID]map[alea.Priority][]byte)
+	// for _, id := range nodeIDs {
+	// 	v.data[id] = make(map[alea.Priority][]byte)
+	// 	v.hash[id] = make(map[alea.Priority][]byte)
+	// }
 }
 
-func (v *VCBCState) GetData() map[types.OperatorID]map[alea.Priority][]byte {
+func (v *VCBCState) GetDataMap() map[types.OperatorID]*VCBCData {
 	return v.data
 }
 
-func (v *VCBCState) initAuthor(id types.OperatorID) {
-	if v.data == nil {
-		v.data = make(map[types.OperatorID]map[alea.Priority][]byte)
-	}
-	if _, ok := v.data[id]; !ok {
-		v.data[id] = make(map[alea.Priority][]byte)
-	}
-}
-
-func (v *VCBCState) Add(id types.OperatorID, priority alea.Priority, data []byte) {
-	v.initAuthor(id)
-	if _, ok := v.data[id][priority]; ok {
-		fmt.Println("VCBCState: Trying to add to already existing priority")
-	} else {
-		v.data[id][priority] = data
-	}
-}
-func (v *VCBCState) AddHash(id types.OperatorID, priority alea.Priority, hash []byte) {
-	v.initAuthor(id)
-	if _, ok := v.hash[id][priority]; ok {
-		fmt.Println("VCBCState: Trying to add hash to already existing priority")
-	} else {
-		v.hash[id][priority] = hash
+func (v *VCBCState) SetVCBCData(author types.OperatorID, data []byte, hash []byte, aggregatedSignature []byte, nodeIDs []types.OperatorID) {
+	if _, ok := v.data[author]; !ok {
+		vcbcData := &VCBCData{
+			Data: data,
+			Author: author,
+			Hash: hash,
+			AggregatedSignature: aggregatedSignature,
+			NodeIDs: nodeIDs,
+		}
+		v.data[author] = vcbcData
 	}
 }
 
-func (v *VCBCState) Has(id types.OperatorID, priority alea.Priority) bool {
-	_, ok := v.data[id][priority]
-	return ok
+func (v *VCBCState) GetVCBCData(author types.OperatorID) *VCBCData {
+	if _, ok := v.data[author]; !ok {
+		return nil;
+	}
+	return v.data[author]
 }
 
-func (v *VCBCState) Get(id types.OperatorID, priority alea.Priority) []byte {
-	if data, ok := v.data[id][priority]; ok {
-		return data
+func (v *VCBCState) GetVCBCDataByData(data []byte) *VCBCData {
+	// if _, ok := v.data[author]; !ok {
+	// 	return nil;
+	// }
+	// return v.data[author]
+
+	for _, vcbcData := range v.data {
+		if bytes.Equal(vcbcData.Data,data) {
+			return vcbcData
+		}
 	}
 	return nil
 }
-
-func (v *VCBCState) GetHash(id types.OperatorID, priority alea.Priority) []byte {
-	if hash, ok := v.hash[id][priority]; ok {
-		return hash
-	}
-	return nil
+func (v *VCBCState) GetLen() int {
+	return len(v.data)
 }
 
-func (v *VCBCState) Peek(id types.OperatorID) []byte {
-	v.initAuthor(id)
-	if len(v.data[id]) == 0 {
-		return nil
+func (v *VCBCState) GetMaxValueOccurences() ([]byte,int) {
+	countMap := make(map[string]int)
+
+	for _, vcbcData := range v.data {
+		str := string(vcbcData.Data)
+		countMap[str]++
 	}
 
-	minKey := -1
-	for key := range v.data[id] {
-		if minKey == -1 || int(key) < minKey {
-			minKey = int(key)
-		}
-	}
-	if minKey == -1 {
-		return nil
-	}
-	return v.data[id][alea.Priority(minKey)]
-}
 
-func (v *VCBCState) Pop(id types.OperatorID) interface{} {
-	if len(v.data[id]) == 0 {
-		return nil
-	}
+    maxCount := 0
+    maxBytes := []byte{}
 
-	minKey := -1
-	for key := range v.data[id] {
-		if minKey == 0 || int(key) < minKey {
-			minKey = int(key)
-		}
-	}
-	if minKey == 0 {
-		return nil
-	}
-	data := v.data[id][alea.Priority(minKey)]
-	delete(v.data[id], alea.Priority(minKey))
-	return data
-}
+    for data, count := range countMap {
+        if count > maxCount {
+            maxCount = count
+            maxBytes = []byte(data)
+        }
+    }
 
-func (v *VCBCState) Remove(id types.OperatorID, priority alea.Priority) {
-	if _, ok := v.data[id][priority]; ok {
-		delete(v.data[id], priority)
-	}
+	return maxBytes, maxCount
 }

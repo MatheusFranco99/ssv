@@ -1,5 +1,13 @@
 package instance
 
+
+
+func (i *Instance) StartAlea() {
+	
+}
+
+
+
 // import (
 // 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 // 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"

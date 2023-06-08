@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"fmt"
+	// "fmt"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -9,7 +9,7 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/google/uuid"
 
-	"bytes"
+	// "bytes"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -25,61 +25,38 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	// get sender ID
 	senderID := signedMessage.GetSigners()[0]
-	priority := vcbcFinalData.Priority
+	data := vcbcFinalData.Data
 	author := vcbcFinalData.Author
 	hash := vcbcFinalData.Hash
-	aggregatedMsgs := vcbcFinalData.AggregatedMsg
+	aggregatedSignature := vcbcFinalData.AggregatedSignature
+	nodeIDs := vcbcFinalData.NodesIds
 
 	//funciton identifier
 	functionID := uuid.New().String()
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponVCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$ UponVCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
 
-	// if i.initTime == -1 || i.initTime == 0 {
-	// 	i.initTime = makeTimestamp()
-	// }
+	log("set vcbc data")
+	i.State.VCBCState.SetVCBCData(author,data,hash,aggregatedSignature,nodeIDs)
 
-	log("check if has data")
-	if !i.State.VCBCState.Has(author, priority) {
-		return errors.New("Error: UponVCBCFinal: received vcbc final but don't have data to compare hashes.")
-	}
 
-	log("check hash")
-	ownHash := i.State.VCBCState.GetHash(author, priority)
-	if !bytes.Equal(ownHash, hash) {
-		return errors.New("Error: UponVCBCFinal: hash different from local.")
-	}
+	log("check conditions to start cv")
+	if (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum) && !i.State.StartedCV) {
 
-	log("check aggregated signature")
-	// AggregatedMsg
-	signedAggregatedMessage := &messages.SignedMessage{}
-	signedAggregatedMessage.Decode(aggregatedMsgs)
-
-	if err := signedAggregatedMessage.Signature.VerifyByOperators(signedAggregatedMessage, i.config.GetSignatureDomainType(), types.QBFTSignatureType, i.State.Share.Committee); err != nil {
-		return errors.Wrap(err, "Error: UponVCBCFinal: aggregatedMsg signature invalid.")
-	}
-	if len(signedAggregatedMessage.GetSigners()) < int(i.State.Share.Quorum) {
-		return errors.New("Error: UponVCBCFinal: aggregatedMsg signers length don't reach quorum.")
-	}
-
-	hasSentInit := i.State.ACState.HasSentInit(author, priority, specalea.FirstRound, byte(1))
-	log(fmt.Sprintf("has sent init: %v", hasSentInit))
-	if !hasSentInit {
-
-		log("creating aba init")
-		initMsg, err := CreateABAInit(i.State, i.config, byte(1), specalea.FirstRound, author, priority)
+		log("starting cv")
+		i.State.StartedCV = true
+		err := i.StartCV()
 		if err != nil {
-			return errors.Wrap(err, "uponABAConf: failed to create ABA Init message")
+			return err
 		}
-		log("broadcast start abainit")
-		i.Broadcast(initMsg)
-		log("broadcast finish abainit")
+
 	}
+
 	log("finish")
 
 	return nil
@@ -168,12 +145,14 @@ func isValidVCBCFinal(
 	return nil
 }
 
-func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, priority specalea.Priority, aggregatedMsg []byte, author types.OperatorID) (*messages.SignedMessage, error) {
-	vcbcFinalData := &specalea.VCBCFinalData{
-		Hash:          hash,
-		Priority:      priority,
-		AggregatedMsg: aggregatedMsg,
-		Author:        author,
+func CreateVCBCFinal(state *messages.State, config alea.IConfig, data []byte, hash []byte, author types.OperatorID, aggSign []byte, nodeIDs []types.OperatorID) (*messages.SignedMessage, error) {
+	
+	vcbcFinalData := &messages.VCBCFinalData{
+		Data: data,
+		Hash: hash,
+		Author: author,
+		AggregatedSignature: aggSign,
+		NodesIds: nodeIDs,
 	}
 	dataByts, err := vcbcFinalData.Encode()
 	if err != nil {

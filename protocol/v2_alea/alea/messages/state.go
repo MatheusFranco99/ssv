@@ -103,7 +103,8 @@ type State struct {
 	BatchSize        int
 
 	VCBCState  *VCBCState
-	ReadyState *ReadyState
+	ReceivedReadys *ReceivedReadys
+	SentReadys *SentReadys
 
 	StopAgreement bool
 	ACState       *ACState
@@ -111,6 +112,9 @@ type State struct {
 	FillerMsgReceived int
 	FillGapContainer  *alea.MsgContainer
 	FillerContainer   *alea.MsgContainer
+
+	StartedCV bool
+	CVState *CVState
 }
 
 // GetRoot returns the state's deterministic root

@@ -12,12 +12,10 @@ func (i *Instance) StartVCBC(data []byte) error {
 
 	//funciton identifier
 	functionID := uuid.New().String()
-	priority := i.priority
-	vcbcNum := i.vcbcNum
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponVCBCStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("priority", int(priority)), zap.Int("vcbcNum", int(vcbcNum)))
+		i.logger.Debug("$$$$$$ UponVCBCStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -26,30 +24,15 @@ func (i *Instance) StartVCBC(data []byte) error {
 
 	log("create vcbc send")
 	// create VCBCSend message and broadcasts
-	msgToBroadcast, err := CreateVCBCSend(i.State, i.config, data, i.priority, author)
+	msgToBroadcast, err := CreateVCBCSend(i.State, i.config, data, author)
 	if err != nil {
 		return errors.Wrap(err, "StartVCBC: failed to create VCBCSend message")
 	}
 
-	log("add to vcbcstate")
-	i.State.VCBCState.Add(i.State.Share.OperatorID, i.priority, data)
-
-	log("add hash to vcbcstate")
-	hash, err := GetDataHash(data)
-	if err != nil {
-		return errors.Wrap(err, "Error: VCBC: hash calculation error.")
-	}
-	i.State.VCBCState.AddHash(i.State.Share.OperatorID, i.priority, hash)
-
-	i.priority += 1
 
 	log("broadcast start")
 	i.Broadcast(msgToBroadcast)
 	log("broadcast finish")
-
-	i.vcbcNum += 1
-
-	log("finish")
 
 	return nil
 }
