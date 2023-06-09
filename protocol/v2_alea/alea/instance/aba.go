@@ -1,9 +1,52 @@
 package instance
 
+import (
+	"fmt"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	"github.com/pkg/errors"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+)
+
+func (i *Instance) StartAlea() error {
 
 
-func (i *Instance) StartAlea() {
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponStartAlea "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("ACRound", int(i.State.ACState.ACRound)))
+	}
 	
+
+	log("start")
+
+	acround := int(i.State.ACState.ACRound)
+	opIDList := make([]types.OperatorID, len(i.State.Share.Committee))
+	for idx, op := range i.State.Share.Committee {
+		opIDList[idx] = op.OperatorID
+	}
+	leader := opIDList[(acround)%len(opIDList)]
+	// i.config.GetProposerF()(i.State, specalea.Round(i.State.ACState.ACRound))
+
+	log(fmt.Sprintf("leader: %v",int(leader)))
+
+	vote := byte(0)
+	if i.State.VCBCState.HasData(leader) {
+		vote = byte(1)
+	}
+
+	log(fmt.Sprintf("vote: %v",int(vote)))
+
+
+	// start ABA protocol
+	err := i.StartABA(vote,leader)
+	if err != nil {
+		return errors.Wrap(err, "failed to start ABA and get result")
+	}
+	return nil
 }
 
 
@@ -148,32 +191,30 @@ func (i *Instance) StartAlea() {
 // 	}
 // }
 
-// func (i *Instance) StartABA(vote byte) (byte, error) {
-// 	// set ABA's input value
-// 	i.State.ACState.GetCurrentABAState().SetVInput(i.State.ACState.GetCurrentABAState().Round, vote)
+func (i *Instance) StartABA(vote byte, leader types.OperatorID) error {
 
-// 	// broadcast INIT message with input vote
-// 	initMsg, err := CreateABAInit(i.State, i.config, vote, i.State.ACState.GetCurrentABAState().Round, i.State.ACState.ACRound)
-// 	if err != nil {
-// 		return byte(2), errors.Wrap(err, "StartABA: failed to create ABA Init message")
-// 	}
-// 	i.Broadcast(initMsg)
+	//funciton identifier
+	functionID := uuid.New().String()
 
-// 	// update sent flag
-// 	i.State.ACState.GetCurrentABAState().SetSentInit(i.State.ACState.GetCurrentABAState().Round, vote, true)
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponStartABA "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("vote", int(vote)), zap.Int("leader", int(leader)))
+	}
+	
 
-// 	// process own init msg
-// 	// i.uponABAInit(initMsg)
+	log("start")
 
-// 	// wait until channel Terminate receives a signal
-// 	for {
-// 		if i.State.ACState.GetCurrentABAState().Terminate || i.State.StopAgreement {
-// 			break
-// 		}
-// 	}
+	priority := i.State.ACState.CurrentPriority(leader)
+	log(fmt.Sprintf("priority: %v",int(priority)))
 
-// 	// i.State.ACState.GetCurrentABAState().Terminate = false
 
-// 	// returns the decided value
-// 	return i.State.ACState.GetCurrentABAState().Vdecided, nil
-// }
+	initMsg, err := CreateABAInit(i.State, i.config, vote, specalea.FirstRound, leader, priority)
+	if err != nil {
+		return errors.Wrap(err, "UponStartABA: failed to create ABA Init message")
+	}
+	log("broadcast start abainit")
+	i.Broadcast(initMsg)
+	log("broadcast finish abainit")
+
+	return nil
+}

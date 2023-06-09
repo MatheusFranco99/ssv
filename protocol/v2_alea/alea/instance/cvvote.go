@@ -115,7 +115,10 @@ func (i *Instance) uponCVVote(signedMsg *messages.SignedMessage) error {
 				i.State.CVState.SetTerminated()
 				i.State.CVState.SetEmptyDecision()
 				log("Terminating CV with no consensus. Jumping to Alea.")
-				i.StartAlea()
+				err := i.StartAlea()
+				if err != nil {
+					return err
+				}
 			}
 		}
 

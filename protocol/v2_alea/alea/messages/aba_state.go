@@ -195,6 +195,7 @@ type ACState struct {
 	abas     map[types.OperatorID]map[alea.Priority]*ABA
 	priority map[types.OperatorID]alea.Priority
 	decided  map[types.OperatorID]map[alea.Priority]byte
+	ACRound alea.ACRound
 }
 
 func NewACState(node_ids []types.OperatorID) *ACState {
@@ -202,6 +203,7 @@ func NewACState(node_ids []types.OperatorID) *ACState {
 		abas:     make(map[types.OperatorID]map[alea.Priority]*ABA),
 		priority: make(map[types.OperatorID]alea.Priority),
 		decided:  make(map[types.OperatorID]map[alea.Priority]byte),
+		ACRound: alea.FirstACRound,
 	}
 	for _, opID := range node_ids {
 		acstate.abas[opID] = make(map[alea.Priority]*ABA)
@@ -214,6 +216,10 @@ func NewACState(node_ids []types.OperatorID) *ACState {
 	}
 
 	return acstate
+}
+
+func (s *ACState) IncrementRound() {
+	s.ACRound += 1
 }
 
 func (s *ACState) ReInit(node_ids []types.OperatorID) {

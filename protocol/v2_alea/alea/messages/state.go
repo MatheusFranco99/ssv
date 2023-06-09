@@ -115,6 +115,9 @@ type State struct {
 
 	StartedCV bool
 	CVState *CVState
+
+	WaitForVCBCAfterDecided bool
+	WaitForVCBCAfterDecided_Author types.OperatorID
 }
 
 // GetRoot returns the state's deterministic root

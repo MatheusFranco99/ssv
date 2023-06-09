@@ -74,94 +74,47 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 	log(fmt.Sprintf("len finish, quorum, is decided: %v %v %v", i.State.ACState.LenFinish(author, priority, vote), int(i.State.Share.Quorum), i.State.ACState.IsDecided(author, priority)))
 	if i.State.ACState.LenFinish(author, priority, vote) >= int(i.State.Share.Quorum) && !i.State.ACState.IsDecided(author, priority) {
 
-		// msgId := spectypesalea.MessageIDFromBytes(i.State.ID)
-		// diff := i.timer.endTime(fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height)))
-		i.finalTime = makeTimestamp()
-
-		diff := i.finalTime - i.initTime
-		// i.mu.Lock()
-		// if val, ok := i.timeMap[fmt.Sprintf("%s%s%v", hex.EncodeToString(msgId.GetPubKey()), msgId.GetRoleType().String(), int(i.State.Height))]; ok {
-		// 	// delete(timeMap, key) // remove the key from the map
-		// 	diff = makeTimestamp() - val
-		// }
-		// i.mu.Unlock()
-
-		log(fmt.Sprintf("set decided, set priority. Total time: %v", diff))
 		i.State.ACState.SetDecided(author, priority, vote)
 		i.State.ACState.SetPriority(author, priority+1)
 		log("terminated aba")
-		return nil
 
-		// if author == i.State.Share.OperatorID {
-		// i.logger.Debug("$$$$$$ UponABAFinish terminated aba", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)), zap.Int("vote", int(ABAFinishData.Vote)))
-		// }
+
+		log(fmt.Sprintf("result: %v",int(vote)))
+		
+		if int(vote) == 1 {
+
+			acround := int(i.State.ACState.ACRound)
+			opIDList := make([]types.OperatorID, len(i.State.Share.Committee))
+			for idx, op := range i.State.Share.Committee {
+				opIDList[idx] = op.OperatorID
+			}
+			leader := opIDList[(acround)%len(opIDList)]
+
+			has_vcbc_final := i.State.VCBCState.HasData(leader)
+			if (!has_vcbc_final) {
+				i.State.WaitForVCBCAfterDecided = true
+				i.State.WaitForVCBCAfterDecided_Author = leader
+			} else {
+				i.finalTime = makeTimestamp()
+				diff := i.finalTime - i.initTime
+				log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+			}
+
+		} else {
+			i.State.ACState.IncrementRound()
+			err := i.StartAlea()
+			if err != nil {
+				return err
+			}
+		}
+
+
+		return nil
 	}
+
 	log("finish")
 
 	return nil
-
-	// // old message -> ignore
-	// if ABAFinishData.ACRound < i.State.ACState.ACRound {
-	// 	return nil
-	// }
-	// // if future round -> intialize future state
-	// if ABAFinishData.ACRound > i.State.ACState.ACRound {
-	// 	i.State.ACState.InitializeRound(ABAFinishData.ACRound)
-	// }
-
-	// abaState := i.State.ACState.GetABAState(ABAFinishData.ACRound)
-
-	// // add the message to the container
-	// abaState.ABAFinishContainer.AddMsg(signedABAFinish)
-
-	// alreadyReceived := abaState.HasFinish(senderID)
-	// // if never received this msg, update
-	// if !alreadyReceived {
-
-	// 	// get vote from FINISH message
-	// 	vote := ABAFinishData.Vote
-
-	// 	// increment counter
-	// 	abaState.SetFinish(senderID, vote)
-	// }
-
-	// // if FINISH(b) reached partial quorum and never broadcasted FINISH(b), broadcast
-	// if !abaState.SentFinish(byte(0)) && !abaState.SentFinish(byte(1)) {
-	// 	for _, vote := range []byte{0, 1} {
-
-	// 		if abaState.CountFinish(vote) >= i.State.Share.PartialQuorum {
-	// 			// broadcast FINISH
-	// 			finishMsg, err := CreateABAFinish(i.State, i.config, vote, ABAFinishData.ACRound)
-	// 			if err != nil {
-	// 				return errors.Wrap(err, "uponABAFinish: failed to create ABA Finish message")
-	// 			}
-
-	// 			i.logger.Debug("$$$$$$ UponABAFinish broadcast start", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(ABAFinishData.ACRound)), zap.Int("sender", int(senderID)), zap.Int("vote", int(ABAFinishData.Vote)))
-
-	// 			i.Broadcast(finishMsg)
-	// 			i.logger.Debug("$$$$$$ UponABAFinish broadcast finish", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(ABAFinishData.ACRound)), zap.Int("sender", int(senderID)), zap.Int("vote", int(ABAFinishData.Vote)))
-
-	// 			// update sent flag
-	// 			abaState.SetSentFinish(vote, true)
-	// 			// process own finish msg
-	// 			// i.uponABAFinish(finishMsg)
-	// 		}
-	// 	}
-	// }
-
-	// // if FINISH(b) reached Quorum, decide for b and send termination signal
-	// for _, vote := range []byte{0, 1} {
-	// 	if abaState.CountFinish(vote) >= i.State.Share.Quorum {
-	// 		abaState.SetDecided(vote)
-	// 		abaState.SetTerminate(true)
-
-	// 		i.logger.Debug("$$$$$$ UponABAFinish terminated aba", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(ABAFinishData.ACRound)), zap.Int("sender", int(senderID)), zap.Int("vote", int(ABAFinishData.Vote)))
-
-	// 	}
-	// }
-	// i.logger.Debug("$$$$$$ UponABAFinish finish", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(ABAFinishData.ACRound)), zap.Int("sender", int(senderID)), zap.Int("vote", int(ABAFinishData.Vote)))
-
-	// return nil
 }
 
 func isValidABAFinish(

@@ -1,7 +1,7 @@
 package instance
 
 import (
-	// "fmt"
+	"fmt"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -44,7 +44,6 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	log("set vcbc data")
 	i.State.VCBCState.SetVCBCData(author,data,hash,aggregatedSignature,nodeIDs)
 
-
 	log("check conditions to start cv")
 	if (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum) && !i.State.StartedCV) {
 
@@ -55,6 +54,17 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 			return err
 		}
 
+	}
+
+	log("check if it's waiting for such vcbc final to terminate")
+	if (i.State.WaitForVCBCAfterDecided) {
+		if (i.State.WaitForVCBCAfterDecided_Author == author) {
+
+			i.finalTime = makeTimestamp()
+			diff := i.finalTime - i.initTime
+			log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+			return nil
+		}
 	}
 
 	log("finish")

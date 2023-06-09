@@ -83,6 +83,8 @@ func NewInstance(
 			FillerMsgReceived: 0,
 			StartedCV: false,
 			CVState: messages.NewCVState(),
+			WaitForVCBCAfterDecided: false,
+			WaitForVCBCAfterDecided_Author: types.OperatorID(0),
 		},
 		priority:    specalea.FirstPriority,
 		config:      config,

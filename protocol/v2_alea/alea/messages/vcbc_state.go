@@ -134,6 +134,21 @@ func (v *VCBCState) ReInit(nodeIDs []types.OperatorID) {
 	// }
 }
 
+
+func (v *VCBCState) HasData(author types.OperatorID) bool {
+	_, ok := v.data[author]
+	return ok
+}
+
+
+func (v *VCBCState) GetDataFromAuthor(author types.OperatorID) []byte {
+	if vcbcData, ok := v.data[author]; ok {
+		return vcbcData.Data
+	}
+	return []byte{}
+}
+
+
 func (v *VCBCState) GetDataMap() map[types.OperatorID]*VCBCData {
 	return v.data
 }
