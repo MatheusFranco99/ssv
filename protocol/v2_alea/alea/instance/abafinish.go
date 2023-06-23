@@ -14,7 +14,7 @@ import (
 )
 
 func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error { //(bool, []byte, error) {
-
+	
 	// get data
 	ABAFinishData, err := signedABAFinish.Message.GetABAFinishData()
 	if err != nil {
@@ -23,8 +23,7 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 
 	// sender
 	senderID := signedABAFinish.GetSigners()[0]
-	author := ABAFinishData.Author
-	priority := ABAFinishData.Priority
+	acround := ABAFinishData.ACRound
 	vote := ABAFinishData.Vote
 
 	//funciton identifier
@@ -32,84 +31,109 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponABAFinish "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(senderID)), zap.Int("vote", int(vote)))
+		i.logger.Debug("$$$$$$ UponABAFinish "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("vote", int(vote)))
 	}
 
 	log("start")
 
-	if i.initTime == -1 || i.initTime == 0 {
-		i.initTime = makeTimestamp()
-	}
-
-	if i.State.ACState.CurrentPriority(author) > priority {
-		log("finish old priority")
+	if (i.State.ACState.IsTerminated()) {
+		log("ac terminated. quitting.")
 		return nil
 	}
 
-	log("add finish")
-	i.State.ACState.AddFinish(author, priority, vote, senderID)
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
+	}
 
-	log(fmt.Sprintf("len finish, partial quorum: %v %v", i.State.ACState.LenFinish(author, priority, vote), int(i.State.Share.PartialQuorum)))
-	if i.State.ACState.LenFinish(author, priority, vote) >= int(i.State.Share.PartialQuorum) {
+	if i.State.ACState.CurrentACRound() > acround {
+		log("old acround. quitting.")
+		return nil
+	}
 
-		log(fmt.Sprintf("has sent finish: %v", i.State.ACState.HasSentFinish(author, priority, vote)))
-		if !i.State.ACState.HasSentFinish(author, priority, vote) {
+	aba := i.State.ACState.GetABA(acround)
 
-			log("create aba finish")
-			finishMsg, err := CreateABAFinish(i.State, i.config, vote, author, priority)
+	if aba.IsDecided() {
+		log("aba already decided. quitting.")
+		return nil
+	}
+
+	aba.AddFinish(vote, senderID)
+	log("added finish")
+
+
+	if i.State.ACState.CurrentACRound() < acround {
+		log("future aba. quitting.")
+		return nil
+	}
+
+	len_finish := aba.LenFinish(vote)
+	log(fmt.Sprintf("len finish: %v",len_finish))
+
+	if len_finish >= int(i.State.Share.PartialQuorum) {
+		log("got finish partial quorum")
+
+		has_sent_finish := aba.HasSentFinish(vote)
+		log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
+		if !has_sent_finish {
+			
+			finishMsg, err := CreateABAFinish(i.State, i.config, vote, acround)
 			if err != nil {
 				return errors.Wrap(err, "uponABAFinish: failed to create ABA Finish message")
 			}
+			log("createed aba finish")
 
-			log("broadcast start abafinish")
 			i.Broadcast(finishMsg)
-			log("broadcast finish abafinish")
+			log("broadcasted abafinish")
 
+			aba.SetSentFinish(vote)
 			log("set sent finish")
-			i.State.ACState.SetSentFinish(author, priority, vote)
 
 		}
 	}
 
-	log(fmt.Sprintf("len finish, quorum, is decided: %v %v %v", i.State.ACState.LenFinish(author, priority, vote), int(i.State.Share.Quorum), i.State.ACState.IsDecided(author, priority)))
-	if i.State.ACState.LenFinish(author, priority, vote) >= int(i.State.Share.Quorum) && !i.State.ACState.IsDecided(author, priority) {
+	if len_finish >= int(i.State.Share.Quorum) {
+		log("got finish quorum")
 
-		i.State.ACState.SetDecided(author, priority, vote)
-		i.State.ACState.SetPriority(author, priority+1)
-		log("terminated aba")
-
-
-		log(fmt.Sprintf("result: %v",int(vote)))
+		aba.SetDecided(vote)
+		log(fmt.Sprintf("set aba to decided. Result: %v",int(vote)))
 		
 		if int(vote) == 1 {
 
-			acround := int(i.State.ACState.ACRound)
-			opIDList := make([]types.OperatorID, len(i.State.Share.Committee))
-			for idx, op := range i.State.Share.Committee {
-				opIDList[idx] = op.OperatorID
-			}
-			leader := opIDList[(acround)%len(opIDList)]
+			// acround := int(i.State.ACState.ACRound)
+			// opIDList := make([]types.OperatorID, len(i.State.Share.Committee))
+			// for idx, op := range i.State.Share.Committee {
+			// 	opIDList[idx] = op.OperatorID
+			// }
+			// leader := opIDList[(acround)%len(opIDList)]
+			leader := i.State.Share.Committee[int(acround)%len(i.State.Share.Committee)].OperatorID
+			log("recalculated leader")
 
 			has_vcbc_final := i.State.VCBCState.HasData(leader)
+			log(fmt.Sprintf("has vcbc final of leader: %v",has_vcbc_final))
+
+			i.State.ACState.TerminateAC()
+
 			if (!has_vcbc_final) {
 				i.State.WaitForVCBCAfterDecided = true
 				i.State.WaitForVCBCAfterDecided_Author = leader
+				log("set waiting for vcbc")
 			} else {
-				i.finalTime = makeTimestamp()
-				diff := i.finalTime - i.initTime
-				log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+				if !i.State.Decided {
+					i.finalTime = makeTimestamp()
+					diff := i.finalTime - i.initTime
+					data := i.State.VCBCState.GetDataFromAuthor(leader)
+					i.Decide(data)
+					log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+				}
 			}
 
 		} else {
-			i.State.ACState.IncrementRound()
-			err := i.StartAlea()
+			i.State.ACState.BumpACRound()
+			err := i.StartABA()
 			if err != nil {
 				return err
 			}
 		}
-
-
-		return nil
 	}
 
 	log("finish")
@@ -124,9 +148,9 @@ func isValidABAFinish(
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
 ) error {
-	// if signedMsg.Message.MsgType != specalea.ABAFinishMsgType {
-	// 	return errors.New("msg type is not ABAFinishMsgType")
-	// }
+	if signedMsg.Message.MsgType != messages.ABAFinishMsgType {
+		return errors.New("msg type is not ABAFinishMsgType")
+	}
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
@@ -145,20 +169,13 @@ func isValidABAFinish(
 		return errors.Wrap(err, "ABAFinishData invalid")
 	}
 
-	// vote
-	// vote := ABAFinishData.Vote
-	// if vote != 0 && vote != 1 {
-	// 	return errors.New("vote different than 0 and 1")
-	// }
-
 	return nil
 }
 
-func CreateABAFinish(state *messages.State, config alea.IConfig, vote byte, author types.OperatorID, priority specalea.Priority) (*messages.SignedMessage, error) {
+func CreateABAFinish(state *messages.State, config alea.IConfig, vote byte, acround specalea.ACRound) (*messages.SignedMessage, error) {
 	ABAFinishData := &messages.ABAFinishData{
 		Vote:     vote,
-		Author:   author,
-		Priority: priority,
+		ACRound: acround,
 	}
 	dataByts, err := ABAFinishData.Encode()
 	if err != nil {

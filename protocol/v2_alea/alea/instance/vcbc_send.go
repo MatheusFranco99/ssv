@@ -1,7 +1,7 @@
 package instance
 
 import (
-	// "fmt"
+	"fmt"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -23,7 +23,6 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	// sender
 	sender := signedMessage.GetSigners()[0]
-	author := vcbcSendData.Author
 	data := vcbcSendData.Data
 
 	//funciton identifier
@@ -31,39 +30,54 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(sender)))
+		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)))
 	}
 
 	log("start")
 
-	if sender != author {
-		log("sender != author, quitting.")
-		return nil
+
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
 	}
 
-	has_sent := i.State.SentReadys.Has(author)
+	has_sent := i.State.SentReadys.Has(sender)
+	log(fmt.Sprintf("check if has sent %v",has_sent))
 
-	if ((has_sent && i.State.SentReadys.EqualData(author,data)) || !has_sent) {
-		i.State.SentReadys.Add(author,data)
+	// if never sent ready, or have already sent and the data is equal
+	if (!has_sent || (has_sent && i.State.SentReadys.EqualData(sender,data))) {
+
+
+		i.State.SentReadys.Add(sender,data)
+		log("added to sent readys structure")
+
 		// create VCBCReady message with proof
-		log("create vcbc ready")
-
-
-		
-		hash,err := GetDataHash(data)
+		hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(data)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 		if err != nil {
-			log("error getting hash")
-			return err
+			return errors.Wrap(err, "uponVCBCSend: could not compute data hash")
 		}
+		log("computed hash")
 
-		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, author, []byte{})
+		root, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(fmt.Sprintf("%v%v",sender,hash))), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
+		if err != nil {
+			return errors.Wrap(err, "uponVCBCSend: could not compute signing root")
+		}
+		log("computed signing root")
+
+		signature, err := i.config.GetSigner().SignRoot(messages.NewByteRoot(root),types.QBFTSignatureType, i.State.Share.SharePubKey)
+		if err != nil {
+			return errors.Wrap(err, "uponVCBCSend: could not compute signature")
+		}
+		log("computed signature")
+
+		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, sender, signature)
 		if err != nil {
 			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
 		}
+		log("created VCBCReady")
+
 		// FIX ME : send specifically to author
-		log("broadcast start")
 		i.Broadcast(vcbcReadyMsg)
-		log("broadcast finish")
+		log("broadcasted")
 	}
 
 	return nil
@@ -76,9 +90,9 @@ func isValidVCBCSend(
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
 ) error {
-	// if signedMsg.Message.MsgType != specalea.VCBCSendMsgType {
-	// 	return errors.New("msg type is not VCBCSend")
-	// }
+	if signedMsg.Message.MsgType != messages.VCBCSendMsgType {
+		return errors.New("msg type is not VCBCSend")
+	}
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
@@ -97,37 +111,12 @@ func isValidVCBCSend(
 		return errors.Wrap(err, "VCBCSendData invalid")
 	}
 
-	// author
-	author := VCBCSendData.Author
-	authorInCommittee := false
-	for _, opID := range operators {
-		if opID.OperatorID == author {
-			authorInCommittee = true
-		}
-	}
-	if !authorInCommittee {
-		return errors.New("author (OperatorID) doesn't exist in Committee")
-	}
-
-	if author != signedMsg.GetSigners()[0] {
-		return errors.New("author of VCBCSend differs from sender of the message")
-	}
-
-	// priority
-	// priority := VCBCSendData.Priority
-	// if state.VCBCState.HasM(author, priority) {
-	// 	if !state.VCBCState.EqualM(author, priority, VCBCSendData.Proposals) {
-	// 		return errors.New("existing (priority,author) with different proposals")
-	// 	}
-	// }
-
 	return nil
 }
 
-func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte, author types.OperatorID) (*messages.SignedMessage, error) {
+func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte) (*messages.SignedMessage, error) {
 	vcbcSendData := &messages.VCBCSendData{
 		Data:     data,
-		Author:   author,
 	}
 	dataByts, err := vcbcSendData.Encode()
 	if err != nil {

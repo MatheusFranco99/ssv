@@ -1,7 +1,7 @@
 package instance
 
 import (
-	// "bytes"
+	"bytes"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -30,7 +30,6 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 		return nil
 	}
 	signature := vcbcReadyData.Signature
-	// priority := vcbcReadyData.Priority
 	senderID := signedMessage.GetSigners()[0]
 
 	//funciton identifier
@@ -43,49 +42,63 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
+
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
+	}
+	
+	own_hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(i.StartValue)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
+	if err != nil {
+		return errors.Wrap(err, "uponVCBCReady: could not compute own hash")
+	}
+	log("computed own hash")
+
+	if !bytes.Equal(own_hash,hash) {
+		log("hash not equal. quitting.")
+	}
+	log("compared hashes")
+
 	i.State.ReceivedReadys.Add(senderID,signature)
-	log(fmt.Sprintf("len, quorum: %v %v", i.State.ReceivedReadys.GetLen(), int(i.State.Share.Quorum)))
+	log("added to received readys")
 
 
-	already_has_quorum := (i.State.ReceivedReadys.GetLen() >= int(i.State.Share.Quorum))
 
-	log(fmt.Sprintf("already has quorum %v", already_has_quorum))
-	log(fmt.Sprintf("Has sent final %v",i.State.ReceivedReadys.HasSentFinal()))
-
-	if (already_has_quorum && !i.State.ReceivedReadys.HasSentFinal())  {
-
-		log("creating vcbc final")
-		vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, i.StartValue, hash, author, []byte{}, i.State.ReceivedReadys.GetNodeIDs())
-		if err != nil {
-			return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
-		}
-
-		log("broadcast start")
-		i.Broadcast(vcbcFinalMsg)
-		log("broadcast finish")
+	has_sent_final := i.State.ReceivedReadys.HasSentFinal()
+	if has_sent_final {
+		log("has sent final. quitting.")
+		return nil
 	}
 
-	log("finish")
+	len_readys := i.State.ReceivedReadys.GetLen()
+	log(fmt.Sprintf("len readys: %v", len_readys))
+
+
+	has_quorum := i.State.ReceivedReadys.HasQuorum()
+	if !has_quorum {
+		log("dont have quorum. quitting.")
+		return nil
+	}
+
+	aggSignature, err := i.State.ReceivedReadys.AggregateSignatures(i.State.Share.ValidatorPubKey)
+	if err != nil {
+		return errors.Wrap(err,"uponVCBCReady: failed to reconstruct signature")
+	}
+	log("aggregated signatures")
+
+	vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, hash, aggSignature, i.State.ReceivedReadys.GetNodeIDs())
+	if err != nil {
+		return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
+	}
+	log("created vcbc final")
+
+	i.Broadcast(vcbcFinalMsg)
+	log("broadcasted")
+
+	i.State.ReceivedReadys.SetSentFinal()
+	log("set sent final.")
+
 
 	return nil
-}
-
-func AggregateMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessage, error) {
-	if len(msgs) == 0 {
-		return nil, errors.New("AggregateMsgs: can't aggregate zero msgs")
-	}
-
-	var ret *messages.SignedMessage
-	for _, m := range msgs {
-		if ret == nil {
-			ret = m.DeepCopy()
-		} else {
-			if err := ret.Aggregate(m); err != nil {
-				return nil, errors.Wrap(err, "AggregateMsgs: could not aggregate msg")
-			}
-		}
-	}
-	return ret, nil
 }
 
 func isValidVCBCReady(
@@ -128,16 +141,25 @@ func isValidVCBCReady(
 		return errors.New("author (OperatorID) doesn't exist in Committee")
 	}
 
-	// priority & hash
-	// priority := VCBCReadyData.Priority
-	// if state.VCBCState.HasM(author, priority) {
-	// 	localHash, err := GetProposalsHash(state.VCBCState.GetM(author, priority))
-	// 	if err != nil {
-	// 		return errors.Wrap(err, "could not get local hash")
+	// hash := VCBCReadyData.Hash
+
+	// signature := VCBCReadyData.Signature
+
+	// opID := signedMsg.GetSigners()[0]
+	// pbkey := []byte{}
+	// for _, operator := range operators {
+	// 	if operator.OperatorID == opID {
+	// 		pbkey = operator.PubKey
 	// 	}
-	// 	if !bytes.Equal(localHash, VCBCReadyData.Hash) {
-	// 		return errors.New("existing (priority,author) proposals have different hash")
-	// 	}
+	// }
+
+	// if (len(pbkey) == 0) {
+	// 	return errors.New("VCBCReadyData validation: didnt find operator object with given operatorID")
+	// }
+
+	// err = signature.Verify(messages.NewByteRoot([]byte(fmt.Sprintf("%v%v",author,hash))),config.GetSignatureDomainType(), types.QBFTSignatureType, pbkey)
+	// if err != nil {
+	// 	return errors.Wrap(err,"VCBCReadyData validation: verification of hash signature failed.")
 	// }
 
 	return nil
@@ -146,8 +168,6 @@ func isValidVCBCReady(
 func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, author types.OperatorID, signature []byte) (*messages.SignedMessage, error) {
 	vcbcReadyData := &messages.VCBCReadyData{
 		Hash:     hash,
-		// Priority: priority,
-		// Proof:			proof,
 		Author: author,
 		Signature: signature,
 	}

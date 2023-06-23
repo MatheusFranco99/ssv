@@ -92,32 +92,21 @@ type State struct {
 	Decided                         bool
 	DecidedValue                    []byte
 
-	ProposeContainer     *alea.MsgContainer
-	PrepareContainer     *alea.MsgContainer
-	CommitContainer      *alea.MsgContainer
-	RoundChangeContainer *alea.MsgContainer
-
-	// alea
-	AleaDefaultRound alea.Round
-	Delivered        *alea.VCBCQueue
-	BatchSize        int
+	CommitContainer *alea.MsgContainer
 
 	VCBCState  *VCBCState
 	ReceivedReadys *ReceivedReadys
 	SentReadys *SentReadys
 
-	StopAgreement bool
 	ACState       *ACState
-
-	FillerMsgReceived int
-	FillGapContainer  *alea.MsgContainer
-	FillerContainer   *alea.MsgContainer
-
-	StartedCV bool
-	CVState *CVState
+	ABASpecialState *ABASpecialState
+	StartedABA bool
 
 	WaitForVCBCAfterDecided bool
 	WaitForVCBCAfterDecided_Author types.OperatorID
+
+	CommonCoinContainer *PSigContainer
+	CommonCoin *CommonCoin
 }
 
 // GetRoot returns the state's deterministic root

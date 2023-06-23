@@ -125,14 +125,15 @@ func messageTypeScore(state *State, m *DecodedSSVMessage, relativeHeight int) in
 func consensusTypeScore(state *State, m *DecodedSSVMessage) int {
 	if isConsensusMessage(state, m) {
 		return scoreByPrecedence(state, m,
+			isMessageOfType(messages.VCBCFinalMsgType),
 			isMessageOfType(messages.VCBCSendMsgType),
 			isMessageOfType(messages.VCBCReadyMsgType),
-			isMessageOfType(messages.VCBCFinalMsgType),
-			isMessageOfType(messages.ProposalMsgType),
+			isMessageOfType(messages.ABAFinishMsgType),
+			isMessageOfType(messages.ABASpecialVoteMsgType),
+			isMessageOfType(messages.CommonCoinMsgType),
 			isMessageOfType(messages.ABAInitMsgType),
 			isMessageOfType(messages.ABAAuxMsgType),
-			isMessageOfType(messages.ABAConfMsgType),
-			isMessageOfType(messages.ABAFinishMsgType))
+			isMessageOfType(messages.ABAConfMsgType))
 	}
 	return 0
 }

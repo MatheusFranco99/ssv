@@ -25,8 +25,8 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	// get sender ID
 	senderID := signedMessage.GetSigners()[0]
-	data := vcbcFinalData.Data
-	author := vcbcFinalData.Author
+	// data := vcbcFinalData.Data
+	// author := vcbcFinalData.Author
 	hash := vcbcFinalData.Hash
 	aggregatedSignature := vcbcFinalData.AggregatedSignature
 	nodeIDs := vcbcFinalData.NodesIds
@@ -36,38 +36,62 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponVCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$ UponVCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
 
-	log("set vcbc data")
-	i.State.VCBCState.SetVCBCData(author,data,hash,aggregatedSignature,nodeIDs)
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
+	}
 
-	log("check conditions to start cv")
-	if (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum) && !i.State.StartedCV) {
+	if !i.State.SentReadys.Has(senderID) {
+		log("does not have data")
+		return nil
+	}
 
-		log("starting cv")
-		i.State.StartedCV = true
-		err := i.StartCV()
+	data := i.State.SentReadys.Get(senderID)
+	log("get data")
+
+	i.State.VCBCState.SetVCBCData(senderID,data,hash,aggregatedSignature,nodeIDs)
+	log("saved vcbc data")
+
+	if (i.State.WaitForVCBCAfterDecided) {
+		if (i.State.WaitForVCBCAfterDecided_Author == senderID) {
+			log("it was waiting for such vcbc final to terminate")
+
+			if !i.State.Decided {
+				i.finalTime = makeTimestamp()
+				diff := i.finalTime - i.initTime
+				i.Decide(data)
+				log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+			}
+		}
+	}
+
+
+
+	if (i.State.VCBCState.GetLen() == int(len(i.State.Share.Committee))) {
+		log("received N VCBC Final")
+		if i.State.VCBCState.AllEqual() {
+			log("all N VCBC are equal. Terminating.")
+			if !i.State.Decided {
+				i.finalTime = makeTimestamp()
+				diff := i.finalTime - i.initTime
+				i.Decide(data)
+				log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+			}
+		}
+	}
+
+	if (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum) && !i.State.StartedABA) {
+		log("launching ABA")
+		i.State.StartedABA = true
+		err := i.StartABA()
 		if err != nil {
 			return err
 		}
-
 	}
-
-	log("check if it's waiting for such vcbc final to terminate")
-	if (i.State.WaitForVCBCAfterDecided) {
-		if (i.State.WaitForVCBCAfterDecided_Author == author) {
-
-			i.finalTime = makeTimestamp()
-			diff := i.finalTime - i.initTime
-			log(fmt.Sprintf("consensus decided. Total time: %v",diff))
-			return nil
-		}
-	}
-
-	log("finish")
 
 	return nil
 }
@@ -100,67 +124,40 @@ func isValidVCBCFinal(
 		return errors.Wrap(err, "VCBCFinalData invalid")
 	}
 
-	// author
-	author := VCBCFinalData.Author
-	authorInCommittee := false
-	for _, opID := range operators {
-		if opID.OperatorID == author {
-			authorInCommittee = true
-		}
-	}
-	if !authorInCommittee {
-		return errors.New("author (OperatorID) doesn't exist in Committee")
-	}
+	// hash := VCBCFinalData.Hash
+	// aggregatedSignature := VCBCFinalData.AggregatedSignature
+	// nodeIDs := VCBCFinalData.NodesIds
 
-	// priority & hash
-	// priority := VCBCFinalData.Priority
-	// if state.VCBCState.HasM(author, priority) {
-	// 	localHash, err := GetProposalsHash(state.VCBCState.GetM(author, priority))
-	// 	if err != nil {
-	// 		return errors.Wrap(err, "could not get local hash")
-	// 	}
-	// 	if !bytes.Equal(localHash, VCBCFinalData.Hash) {
-	// 		return errors.New("existing (priority,author) proposals have different hash")
+	// pbkeys := make([][]byte,0)
+	// for _, opID := range nodeIDs{
+	// 	for _, operator := range operators {
+	// 		if operator.OperatorID == opID {
+	// 			pbkeys = append(pbkeys,operator.PubKey)
+	// 			break
+	// 		}
 	// 	}
 	// }
 
-	// AggregatedMsg
-	// aggregatedMsg := VCBCFinalData.AggregatedMsg
-	// signedAggregatedMessage := &messages.SignedMessage{}
-	// signedAggregatedMessage.Decode(aggregatedMsg)
-
-	// if err := signedAggregatedMessage.Signature.VerifyByOperators(signedAggregatedMessage, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-	// 	return errors.Wrap(err, "aggregatedMsg signature invalid")
+	// if (len(pbkeys) == 0) {
+	// 	return errors.New("VCBCFinalData validation: didnt find any operator object with given operatorIDs")
 	// }
-	// if len(signedAggregatedMessage.GetSigners()) < int(state.Share.Quorum) {
-	// 	return errors.New("aggregatedMsg signers don't reach quorum")
+	// if (len(pbkeys) != len(nodeIDs)) {
+	// 	return errors.New("VCBCFinalData validation: list of pubkeys has different size than list of NodeIDs")
 	// }
 
-	// AggregatedMsg data
-	// aggrMsgData := &specalea.VCBCReadyData{}
-	// err = aggrMsgData.Decode(signedAggregatedMessage.Message.Data)
+	// author := signedMsg.GetSigners()[0]
+	// err = aggregatedSignature.VerifyMultiPubKey(messages.NewByteRoot(([]byte(fmt.Sprintf("%v%v",author,hash)))),config.GetSignatureDomainType(), types.QBFTSignatureType,pbkeys)
 	// if err != nil {
-	// 	return errors.Wrap(err, "could get VCBCReadyData from aggregated msg data")
-	// }
-	// if !bytes.Equal(VCBCFinalData.Hash, aggrMsgData.Hash) {
-	// 	return errors.New("aggregated message has different hash than the given on the message")
-	// }
-	// if aggrMsgData.Author != VCBCFinalData.Author {
-	// 	return errors.New("aggregated message has different author than the given on the message")
-	// }
-	// if aggrMsgData.Priority != VCBCFinalData.Priority {
-	// 	return errors.New("aggregated message has different priority than the given on the message")
+	// 	return errors.Wrap(err,"VCBCFinalData validation: verification of aggregated signature failed.")
 	// }
 
 	return nil
 }
 
-func CreateVCBCFinal(state *messages.State, config alea.IConfig, data []byte, hash []byte, author types.OperatorID, aggSign []byte, nodeIDs []types.OperatorID) (*messages.SignedMessage, error) {
+func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, aggSign []byte, nodeIDs []types.OperatorID) (*messages.SignedMessage, error) {
 	
 	vcbcFinalData := &messages.VCBCFinalData{
-		Data: data,
 		Hash: hash,
-		Author: author,
 		AggregatedSignature: aggSign,
 		NodesIds: nodeIDs,
 	}

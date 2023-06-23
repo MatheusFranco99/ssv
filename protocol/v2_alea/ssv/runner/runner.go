@@ -227,7 +227,7 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
 
 	// idx := 0
-	// for idx < 63 {
+	// for idx < 19 {
 	// 	// size_byts := len(byts)
 	// 	// byts_modified := make([]byte, size_byts)
 	// 	// copy(byts_modified, byts)

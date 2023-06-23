@@ -23,8 +23,7 @@ func (i *Instance) uponABAAux(signedABAAux *messages.SignedMessage) error {
 
 	// sender
 	senderID := signedABAAux.GetSigners()[0]
-	author := ABAAuxData.Author
-	priority := ABAAuxData.Priority
+	acround := ABAAuxData.ACRound
 	vote := ABAAuxData.Vote
 	round := ABAAuxData.Round
 
@@ -33,51 +32,68 @@ func (i *Instance) uponABAAux(signedABAAux *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponABAAux "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("priority", int(priority)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
+		i.logger.Debug("$$$$$$ UponABAAux "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
 	}
 
 	log("start")
 
-	if i.initTime == -1 || i.initTime == 0 {
+	if (i.State.ACState.IsTerminated()) {
+		log("ac terminated. quitting.")
+		return nil
+	}
+
+	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
 
-	if i.State.ACState.CurrentPriority(author) > priority {
-		log("finish old priority")
-		return nil
-	}
-	if i.State.ACState.CurrentRound(author, priority) > round {
-		log("finish old round")
+	if i.State.ACState.CurrentACRound() > acround {
+		log("old acround. quitting.")
 		return nil
 	}
 
-	log("add aux")
-	i.State.ACState.AddAux(author, priority, round, vote, senderID)
-
-	log(fmt.Sprintf("has sent conf: %v", i.State.ACState.HasSentConf(author, priority, round)))
-	if i.State.ACState.HasSentConf(author, priority, round) {
-		log("finish already sent conf")
+	if i.State.ACState.GetABA(acround).CurrentRound() > round {
+		log("old aba round. quitting.")
 		return nil
 	}
 
-	log(fmt.Sprintf("len aux, quorum: %v %v", i.State.ACState.LenAux(author, priority, round), int(i.State.Share.Quorum)))
-	if i.State.ACState.LenAux(author, priority, round) >= int(i.State.Share.Quorum) {
+	aba := i.State.ACState.GetABA(acround)
+	abaround := aba.GetABARound(round)
 
-		confValues := i.State.ACState.GetConfValues(author, priority, round)
+	abaround.AddAux(vote, senderID)
+	log("added aux")
+
+	if i.State.ACState.CurrentACRound() < acround {
+		log("future aba. quitting.")
+		return nil
+	}
+	if aba.CurrentRound() < round {
+		log("future aba round. quitting.")
+		return nil
+	}
+
+
+	if abaround.HasSentConf() {
+		log("already sent conf. quitting.")
+		return nil
+	}
+
+	if abaround.LenAux() >= int(i.State.Share.Quorum) {
+		log("got aux quorum.")
+
+		confValues := abaround.GetConfValues()
 		log(fmt.Sprintf("conf values: %v", confValues))
-		// broadcast CONF message
 
-		log("creating aba conf")
-		confMsg, err := CreateABAConf(i.State, i.config, confValues, ABAAuxData.Round, author, priority)
+		confMsg, err := CreateABAConf(i.State, i.config, confValues, round, acround)
 		if err != nil {
 			return errors.Wrap(err, "uponABAAux: failed to create ABA Conf message after strong support")
 		}
-		log("broadcast start")
-		i.Broadcast(confMsg)
-		log("broadcast finish")
+		log("created aba conf")
 
+		i.Broadcast(confMsg)
+		log("broadcasted")
+
+		abaround.SetSentConf()
 		log("set sent conf")
-		i.State.ACState.SetSentConf(author, priority, round)
 	}
 
 	log("finish")
@@ -91,9 +107,9 @@ func isValidABAAux(
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
 ) error {
-	// if signedMsg.Message.MsgType != specalea.ABAAuxMsgType {
-	// 	return errors.New("msg type is not ABAAuxMsgType")
-	// }
+	if signedMsg.Message.MsgType != messages.ABAAuxMsgType {
+		return errors.New("msg type is not ABAAuxMsgType")
+	}
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
@@ -112,21 +128,14 @@ func isValidABAAux(
 		return errors.Wrap(err, "ABAAuxData invalid")
 	}
 
-	// vote
-	// vote := ABAAuxData.Vote
-	// if vote != 0 && vote != 1 {
-	// 	return errors.New("vote different than 0 and 1")
-	// }
-
 	return nil
 }
 
-func CreateABAAux(state *messages.State, config alea.IConfig, vote byte, round specalea.Round, author types.OperatorID, priority specalea.Priority) (*messages.SignedMessage, error) {
+func CreateABAAux(state *messages.State, config alea.IConfig, vote byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
 	ABAAuxData := &messages.ABAAuxData{
 		Vote:     vote,
 		Round:    round,
-		Author:   author,
-		Priority: priority,
+		ACRound: acround,
 	}
 	dataByts, err := ABAAuxData.Encode()
 	if err != nil {

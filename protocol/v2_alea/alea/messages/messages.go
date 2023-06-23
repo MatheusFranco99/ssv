@@ -43,10 +43,7 @@ func HasPartialQuorum(share *types.Share, msgs []*SignedMessage) bool {
 type MessageType int
 
 const (
-	ProposalMsgType MessageType = iota
-	FillGapMsgType
-	FillerMsgType
-	ABAInitMsgType
+	ABAInitMsgType MessageType = iota
 	ABAAuxMsgType
 	ABAConfMsgType
 	ABAFinishMsgType
@@ -55,130 +52,16 @@ const (
 	VCBCFinalMsgType
 	VCBCRequestMsgType
 	VCBCAnswerMsgType
-	CVVoteMsgType
+	ABASpecialVoteMsgType
+	CommonCoinMsgType
 )
-
-// =========================
-//			Proposal
-// =========================
-
-type ProposalData struct {
-	Data []byte
-	// RoundChangeJustification []*SignedMessage
-	// PrepareJustification     []*SignedMessage
-}
-
-// Encode returns a msg encoded bytes or error
-func (d *ProposalData) Encode() ([]byte, error) {
-	return json.Marshal(d)
-}
-
-// Decode returns error if decoding failed
-func (d *ProposalData) Decode(data []byte) error {
-	return json.Unmarshal(data, &d)
-}
-
-// Validate returns error if msg validation doesn't pass.
-// Msg validation checks the msg, it's variables for validity.
-func (d *ProposalData) Validate() error {
-	if len(d.Data) == 0 {
-		return errors.New("ProposalData: data is invalid")
-	}
-	return nil
-}
-
-func (d *ProposalData) Equal(other *ProposalData) bool {
-	if len(d.Data) != len(other.Data) {
-		return false
-	}
-	for idx, value := range d.Data {
-		if value != other.Data[idx] {
-			return false
-		}
-	}
-	return true
-}
-
-// =========================
-//			FillGap
-// =========================
-
-type FillGapData struct {
-	OperatorID types.OperatorID
-	Priority   alea.Priority
-}
-
-// Encode returns a msg encoded bytes or error
-func (d *FillGapData) Encode() ([]byte, error) {
-	return json.Marshal(d)
-}
-
-// Decode returns error if decoding failed
-func (d *FillGapData) Decode(data []byte) error {
-	return json.Unmarshal(data, &d)
-}
-
-// Validate returns error if msg validation doesn't pass.
-// Msg validation checks the msg, it's variables for validity.
-func (d *FillGapData) Validate() error {
-	return nil
-}
-
-// =========================
-//			Filler
-// =========================
-
-type FillerData struct {
-	Entries        [][]*ProposalData
-	Priorities     []alea.Priority
-	AggregatedMsgs [][]byte
-	OperatorID     types.OperatorID
-}
-
-// Encode returns a msg encoded bytes or error
-func (d *FillerData) Encode() ([]byte, error) {
-	return json.Marshal(d)
-}
-
-// Decode returns error if decoding failed
-func (d *FillerData) Decode(data []byte) error {
-	return json.Unmarshal(data, &d)
-}
-
-// Validate returns error if msg validation doesn't pass.
-// Msg validation checks the msg, it's variables for validity.
-func (d *FillerData) Validate() error {
-	if len(d.Priorities) == 0 {
-		return errors.New("FillerData: empty priorities")
-	}
-	if len(d.Entries) == 0 {
-		return errors.New("FillerData: empty entries")
-	}
-	if len(d.Entries) != len(d.Priorities) {
-		return errors.New("FillerData: entries len different than priorities len")
-	}
-	for _, proposals := range d.Entries {
-		if len(proposals) == 0 {
-			return errors.New("FillerData: empty proposals")
-		}
-		for _, proposal := range proposals {
-			err := proposal.Validate()
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
 
 // =========================
 //			ABAInit
 // =========================
 
 type ABAInitData struct {
-	Author   types.OperatorID
-	Priority alea.Priority
+	ACRound  alea.ACRound
 	Round    alea.Round
 	Vote     byte
 }
@@ -207,8 +90,7 @@ func (d *ABAInitData) Validate() error {
 // =========================
 
 type ABAAuxData struct {
-	Author   types.OperatorID
-	Priority alea.Priority
+	ACRound  alea.ACRound
 	Round    alea.Round
 	Vote     byte
 }
@@ -237,8 +119,7 @@ func (d *ABAAuxData) Validate() error {
 // =========================
 
 type ABAConfData struct {
-	Author   types.OperatorID
-	Priority alea.Priority
+	ACRound  alea.ACRound
 	Round    alea.Round
 	Votes    []byte
 }
@@ -259,6 +140,9 @@ func (d *ABAConfData) Validate() error {
 	if len(d.Votes) == 0 {
 		return errors.New("ABAConfData: empty votes")
 	}
+	if len(d.Votes) > 2 {
+		return errors.New("ABAConfData: more than two votes.")
+	}
 	for _, vote := range d.Votes {
 		if vote != 0 && vote != 1 {
 			return errors.New("ABAConfData: vote not 0 or 1")
@@ -272,8 +156,7 @@ func (d *ABAConfData) Validate() error {
 // =========================
 
 type ABAFinishData struct {
-	Author   types.OperatorID
-	Priority alea.Priority
+	ACRound  alea.ACRound
 	Vote     byte
 }
 
@@ -297,12 +180,40 @@ func (d *ABAFinishData) Validate() error {
 }
 
 // =========================
+//		ABASpecialVoteData
+// =========================
+
+type ABASpecialVoteData struct {
+	ACRound			alea.ACRound
+	Vote			byte
+}
+
+// Encode returns a msg encoded bytes or error
+func (d *ABASpecialVoteData) Encode() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+// Decode returns error if decoding failed
+func (d *ABASpecialVoteData) Decode(data []byte) error {
+	return json.Unmarshal(data, &d)
+}
+
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (d *ABASpecialVoteData) Validate() error {
+	if d.Vote != 0 && d.Vote != 1 {
+		return errors.New("ABASpecialVoteData: vote not 0 or 1")
+	}
+	return nil
+}
+
+
+// =========================
 //			VCBCSend
 // =========================
 
 type VCBCSendData struct {
 	Data     []byte
-	Author   types.OperatorID
 }
 
 // Encode returns a msg encoded bytes or error
@@ -331,7 +242,7 @@ func (d *VCBCSendData) Validate() error {
 type VCBCReadyData struct {
 	Hash     []byte
 	Author   types.OperatorID
-	Signature []byte
+	Signature types.Signature
 }
 
 // Encode returns a msg encoded bytes or error
@@ -347,9 +258,13 @@ func (d *VCBCReadyData) Decode(data []byte) error {
 // Validate returns error if msg validation doesn't pass.
 // Msg validation checks the msg, it's variables for validity.
 func (d *VCBCReadyData) Validate() error {
-	// if len(d.Hash) == 0 {
-	// 	return errors.New("VCBCReadyData: empty hash")
-	// }
+	if len(d.Hash) == 0 {
+		return errors.New("VCBCReadyData: empty hash")
+	}
+
+	if len(d.Signature) != 96 {
+		return errors.New("VCBCReadyData: message signature is invalid")
+	}
 	return nil
 }
 
@@ -358,10 +273,8 @@ func (d *VCBCReadyData) Validate() error {
 // =========================
 
 type VCBCFinalData struct {
-	Data		  []byte
 	Hash          []byte
-	Author        types.OperatorID
-	AggregatedSignature []byte
+	AggregatedSignature types.Signature
 	NodesIds		[]types.OperatorID
 }
 
@@ -378,45 +291,47 @@ func (d *VCBCFinalData) Decode(data []byte) error {
 // Validate returns error if msg validation doesn't pass.
 // Msg validation checks the msg, it's variables for validity.
 func (d *VCBCFinalData) Validate() error {
-	// if len(d.Hash) == 0 {
-	// 	return errors.New("VCBCFinalData: empty hash")
-	// }
-	// if len(d.AggregatedMsg) == 0 {
-	// 	return errors.New("VCBCFinalData: empty ready msg byts")
-	// }
+	if len(d.Hash) == 0 {
+		return errors.New("VCBCFinalData: empty hash")
+	}
+	if len(d.AggregatedSignature) != 96 {
+		return errors.New("VCBCFinalData: aggregated signature wrong size")
+	}
+	if len(d.NodesIds) == 0 {
+		return errors.New("VCBCFinalData: empty NodeIds")
+	}
 	return nil
 }
 
 // =========================
-//			CVVote
+//		CommonCoinData
 // =========================
 
-type CVVoteData struct {
-	Data		  []byte
-	DataAuthor	  types.OperatorID
-	AggregatedSignature []byte
-	NodesIds			[]types.OperatorID
-	Round			int
+type CommonCoinData struct {
+	ShareSign		  types.Signature
 }
 
 // Encode returns a msg encoded bytes or error
-func (d *CVVoteData) Encode() ([]byte, error) {
+func (d *CommonCoinData) Encode() ([]byte, error) {
 	return json.Marshal(d)
 }
 
 // Decode returns error if decoding failed
-func (d *CVVoteData) Decode(data []byte) error {
+func (d *CommonCoinData) Decode(data []byte) error {
 	return json.Unmarshal(data, &d)
 }
 
 // Validate returns error if msg validation doesn't pass.
 // Msg validation checks the msg, it's variables for validity.
-func (d *CVVoteData) Validate() error {
-	// if len(d.AggregatedMsg) == 0 {
-	// 	return errors.New("VCBCFinalData: empty ready msg byts")
-	// }
+func (d *CommonCoinData) Validate() error {
+
+	if len(d.ShareSign) != 96 {
+		return errors.New("CommonCoinData: message signature is invalid")
+	}
+
 	return nil
 }
+
 
 
 // =========================
@@ -429,33 +344,6 @@ type Message struct {
 	Round      alea.Round  // QBFT round for which the msg is for (Though not used for AleaBFT, leave field)
 	Identifier []byte      // instance Identifier this msg belongs to
 	Data       []byte
-}
-
-// GetProposalData returns proposal specific data
-func (msg *Message) GetProposalData() (*ProposalData, error) {
-	ret := &ProposalData{}
-	if err := ret.Decode(msg.Data); err != nil {
-		return nil, errors.Wrap(err, "could not decode proposal data from message")
-	}
-	return ret, nil
-}
-
-// GetFillGapData returns fillgap specific data
-func (msg *Message) GetFillGapData() (*FillGapData, error) {
-	ret := &FillGapData{}
-	if err := ret.Decode(msg.Data); err != nil {
-		return nil, errors.Wrap(err, "could not decode FillGap data from message")
-	}
-	return ret, nil
-}
-
-// GetFillerData returns filler specific data
-func (msg *Message) GetFillerData() (*FillerData, error) {
-	ret := &FillerData{}
-	if err := ret.Decode(msg.Data); err != nil {
-		return nil, errors.Wrap(err, "could not decode Filler data from message")
-	}
-	return ret, nil
 }
 
 // GetABAInitData returns abainit specific data
@@ -520,32 +408,22 @@ func (msg *Message) GetVCBCFinalData() (*VCBCFinalData, error) {
 	}
 	return ret, nil
 }
-// VCVoteData returns abainit specific data
-func (msg *Message) GetCVVoteData() (*CVVoteData, error) {
-	ret := &CVVoteData{}
+// ABASpecialVoteData returns abainit specific data
+func (msg *Message) GetABASpecialVoteData() (*ABASpecialVoteData, error) {
+	ret := &ABASpecialVoteData{}
 	if err := ret.Decode(msg.Data); err != nil {
-		return nil, errors.Wrap(err, "could not decode VCVoteData from message")
+		return nil, errors.Wrap(err, "could not decode ABASpecialVoteData from message")
 	}
 	return ret, nil
 }
-
-// VCBCRequestData returns abainit specific data
-// func (msg *Message) GetVCBCRequestData() (*VCBCRequestData, error) {
-// 	ret := &VCBCRequestData{}
-// 	if err := ret.Decode(msg.Data); err != nil {
-// 		return nil, errors.Wrap(err, "could not decode VCBCRequestData from message")
-// 	}
-// 	return ret, nil
-// }
-
-// VCBCAnswerData returns abainit specific data
-// func (msg *Message) GetVCBCAnswerData() (*VCBCAnswerData, error) {
-// 	ret := &VCBCAnswerData{}
-// 	if err := ret.Decode(msg.Data); err != nil {
-// 		return nil, errors.Wrap(err, "could not decode VCBCAnswerData from message")
-// 	}
-// 	return ret, nil
-// }
+// CommonCoinData returns common coin specific data
+func (msg *Message) GetCommonCoinData() (*CommonCoinData, error) {
+	ret := &CommonCoinData{}
+	if err := ret.Decode(msg.Data); err != nil {
+		return nil, errors.Wrap(err, "could not decode CommonCoinData from message")
+	}
+	return ret, nil
+}
 
 // Encode returns a msg encoded bytes or error
 func (msg *Message) Encode() ([]byte, error) {

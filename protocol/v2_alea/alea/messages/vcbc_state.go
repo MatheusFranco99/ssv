@@ -13,14 +13,16 @@ import (
  */
 
 type ReceivedReadys struct {
-	readys map[types.OperatorID][]byte
+	// readys map[types.OperatorID][]byte
+	readys *PSigContainer
 	sentFinal bool
 }
 
-func NewReceivedReadys() *ReceivedReadys {
+func NewReceivedReadys(quorum uint64) *ReceivedReadys {
 
 	return &ReceivedReadys{
-		readys: make(map[types.OperatorID][]byte),
+		// readys: make(map[types.OperatorID][]byte),
+		readys: NewPSigContainer(quorum),
 		sentFinal: false,
 	}
 }
@@ -33,27 +35,37 @@ func (rs *ReceivedReadys) SetSentFinal() {
 	rs.sentFinal = true;
 }
 
-func (rs *ReceivedReadys) Add(opID types.OperatorID, signature []byte) {
-	rs.readys[opID] = signature
+func (rs *ReceivedReadys) Add(opID types.OperatorID, signature types.Signature) {
+	rs.readys.AddSignature(opID,signature)
+}
+
+func (rs *ReceivedReadys) AggregateSignatures(validatorPubKey []byte) (types.Signature,error) {
+	return rs.readys.AggregateSignatures(validatorPubKey)
+}
+
+func (rs *ReceivedReadys) HasQuorum() bool {
+	return rs.readys.HasQuorum()
 }
 
 func (rs *ReceivedReadys) GetLen() int {
-	return len(rs.readys)
+	return rs.readys.GetLen()
 }
 
-func (rs *ReceivedReadys) GetSignatureMap() map[types.OperatorID][]byte {
-	return rs.readys
+func (rs *ReceivedReadys) GetReconstructedSignature(root []byte, validatorPubKey []byte) (types.Signature,error) {
+	return rs.readys.ReconstructSignature(root,validatorPubKey)
 }
 
 func (rs *ReceivedReadys) GetNodeIDs() []types.OperatorID {
-	ans := make([]types.OperatorID,len(rs.readys))
+	ans := make([]types.OperatorID,rs.readys.GetLen())
 	idx := 0
-	for key, _ := range rs.readys {
+	for key, _ := range rs.readys.Signatures {
 		ans[idx] = key
 		idx += 1
 	}
 	return ans
 }
+
+
 
 
 type SentReadys struct {
@@ -71,6 +83,10 @@ func NewSentReadys() *SentReadys {
 func (rs *SentReadys) Has(opID types.OperatorID) bool {
 	_, ok := rs.data[opID]
 	return ok
+}
+
+func (rs *SentReadys) Get(opID types.OperatorID) []byte {
+	return rs.data[opID]
 }
 
 func (rs *SentReadys) EqualData(opID types.OperatorID, data []byte) bool {
@@ -188,6 +204,20 @@ func (v *VCBCState) GetVCBCDataByData(data []byte) *VCBCData {
 }
 func (v *VCBCState) GetLen() int {
 	return len(v.data)
+}
+
+func (v *VCBCState) AllEqual() bool {
+	var ref_data []byte
+	for _, vcbcData := range v.data {
+		if ref_data == nil {
+			ref_data = vcbcData.Data
+		} else {
+			if !bytes.Equal(vcbcData.Data,ref_data) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (v *VCBCState) GetMaxValueOccurences() ([]byte,int) {
