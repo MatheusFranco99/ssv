@@ -231,23 +231,23 @@ func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 	var err error
 	switch msg.Message.MsgType {
 	case messages.VCBCSendMsgType:
-		err = isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.VCBCReadyMsgType:
-		err = isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.VCBCFinalMsgType:
-		err = isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.ABAInitMsgType:
-		err = isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.ABAAuxMsgType:
-		err = isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.ABAConfMsgType:
-		err = isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.ABAFinishMsgType:
-		err = isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.ABASpecialVoteMsgType:
-		err = isValidABASpecialVote(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidABASpecialVote(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	case messages.CommonCoinMsgType:
-		err = isValidCommonCoin(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee)
+		err = isValidCommonCoin(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	default:
 		err = errors.New(fmt.Sprintf("signed message type not supported: %v",msg.Message.MsgType))
 	}

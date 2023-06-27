@@ -102,27 +102,44 @@ func isValidVCBCFinal(
 	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
 	// if signedMsg.Message.MsgType != specalea.VCBCFinalMsgType {
 	// 	return errors.New("msg type is not VCBCFinalMsgType")
 	// }
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		logger.Debug("$$$$$$ UponMV_VCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
+	log("checked height")
 	if len(signedMsg.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
+	log("checked signers == 1")
 	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "msg signature invalid")
 	}
+	log("checked signature")
 
 	VCBCFinalData, err := signedMsg.Message.GetVCBCFinalData()
+	log("got data")
 	if err != nil {
 		return errors.Wrap(err, "could not get VCBCFinalData data")
 	}
 	if err := VCBCFinalData.Validate(); err != nil {
 		return errors.Wrap(err, "VCBCFinalData invalid")
 	}
+	log("validated")
 
 	// hash := VCBCFinalData.Hash
 	// aggregatedSignature := VCBCFinalData.AggregatedSignature

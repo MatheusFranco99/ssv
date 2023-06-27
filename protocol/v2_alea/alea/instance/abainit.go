@@ -36,6 +36,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 		i.logger.Debug("$$$$$$ UponABAInit "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
 	}
 
+
 	log("start")
 
 	if (i.State.ACState.IsTerminated()) {
@@ -136,27 +137,45 @@ func isValidABAInit(
 	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		logger.Debug("$$$$$$ UponMV_ABAInit "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
 	if signedMsg.Message.MsgType != messages.ABAInitMsgType {
 		return errors.New("msg type is not specalea.ABAInitMsgType")
 	}
+	log("checked msg type")
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
+	log("checked height")
 	if len(signedMsg.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
+	log("checked signers == 1")
 	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "msg signature invalid")
 	}
+	log("checked signature")
 
 	ABAInitData, err := signedMsg.Message.GetABAInitData()
+	log("got data")
 	if err != nil {
 		return errors.Wrap(err, "could not get ABAInitData data")
 	}
 	if err := ABAInitData.Validate(); err != nil {
 		return errors.Wrap(err, "ABAInitData invalid")
 	}
+	log("validated")
 
 	return nil
 }

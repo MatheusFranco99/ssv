@@ -90,6 +90,7 @@ func isValidCommonCoin(
 	signedMessage *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
 	if signedMessage.Message.MsgType != messages.CommonCoinMsgType {
 		return errors.New("msg type is not common coin")

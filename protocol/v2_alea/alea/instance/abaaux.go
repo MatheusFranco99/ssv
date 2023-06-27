@@ -106,27 +106,47 @@ func isValidABAAux(
 	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		logger.Debug("$$$$$$ UponMV_ABAAux "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
 	if signedMsg.Message.MsgType != messages.ABAAuxMsgType {
 		return errors.New("msg type is not ABAAuxMsgType")
 	}
+	log("checked msg type")
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
+	log("checked height")
 	if len(signedMsg.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
+	log("checked signers == 1")
 	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "msg signature invalid")
 	}
+	log("checked signature")
+
 
 	ABAAuxData, err := signedMsg.Message.GetABAAuxData()
+	log("got data")
+
 	if err != nil {
 		return errors.Wrap(err, "could not get ABAAuxData data")
 	}
 	if err := ABAAuxData.Validate(); err != nil {
 		return errors.Wrap(err, "ABAAuxData invalid")
 	}
+	log("validated")
+
 
 	return nil
 }
