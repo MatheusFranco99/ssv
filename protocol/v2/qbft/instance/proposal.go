@@ -31,8 +31,6 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 
 	log("start")
 
-	log("addFirstMsg")
-
 	addedMsg, err := proposeMsgContainer.AddFirstMsgForSignerAndRound(signedProposal)
 	if err != nil {
 		return errors.Wrap(err, "could not add proposal msg to container")
@@ -40,9 +38,11 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 	if !addedMsg {
 		return nil // uponProposal was already called
 	}
+	log("added First Msg")
 
 	// newRound := signedProposal.Message.Round
 	i.State.ProposalAcceptedForCurrentRound = signedProposal
+	log("got signed proposal")
 
 	// i.logger.Debug("$$$$$$ UponProposal start. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(newRound)))
 
@@ -56,12 +56,13 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 	if err != nil {
 		return errors.Wrap(err, "could not get proposal data")
 	}
+	log("got proposal data")
 
-	log("create prepare msg")
 	prepare, err := CreatePrepare(i.State, i.config, newRound, proposalData.Data)
 	if err != nil {
 		return errors.Wrap(err, "could not create prepare msg")
 	}
+	log("created prepare msg")
 
 	// i.logger.Debug("got proposal, broadcasting prepare message",
 	// 	zap.Uint64("round", uint64(i.State.Round)),
@@ -69,18 +70,12 @@ func (i *Instance) uponProposal(signedProposal *specqbft.SignedMessage, proposeM
 	// 	zap.Any("prepare-signers", prepare.Signers))
 
 	// i.logger.Debug("$$$$$$ UponProposal broadcast start. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(newRound)))
-	log("broadcast start")
 
 	if err := i.Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
-	log("broadcast finish")
-	log("finish")
-
-	// i.logger.Debug("$$$$$$ UponProposal broadcast finish. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(newRound)))
-
-	// i.logger.Debug("$$$$$$ UponProposal return. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(newRound)))
-
+	log("broadcasted")
+	
 	return nil
 }
 

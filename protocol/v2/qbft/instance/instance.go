@@ -90,20 +90,20 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 
 		// propose if this node is the proposer
 		if proposer(i.State, i.GetConfig(), specqbft.FirstRound) == i.State.Share.OperatorID {
-			log("create proposal")
 
 			proposal, err := CreateProposal(i.State, i.config, i.StartValue, nil, nil)
+			log("created proposal")
 			// nolint
 			if err != nil {
+				log("failed to create proposal")
 				i.logger.Warn("failed to create proposal", zap.Error(err))
 				// TODO align spec to add else to avoid broadcast errored proposal
 			} else {
 				// nolint
-				log("broadcast start")
-
 				if err := i.Broadcast(proposal); err != nil {
 					i.logger.Warn("failed to broadcast proposal", zap.Error(err))
 				}
+				log("broadcasted")
 			}
 		}
 		log("finish")
@@ -161,6 +161,17 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 }
 
 func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		i.logger.Debug("$$$$$$ UponMessageValidation "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
 	if err := msg.Validate(); err != nil {
 		return errors.Wrap(err, "invalid signed message")
 	}
@@ -169,9 +180,10 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 		return errors.New("past round")
 	}
 
+	var err error
 	switch msg.Message.MsgType {
 	case specqbft.ProposalMsgType:
-		return isValidProposal(
+		err = isValidProposal(
 			i.State,
 			i.config,
 			msg,
@@ -187,7 +199,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 		if err != nil {
 			return errors.Wrap(err, "could not get accepted proposal data")
 		}
-		return validSignedPrepareForHeightRoundAndValue(
+		err = validSignedPrepareForHeightRoundAndValue(
 			i.config,
 			msg,
 			i.State.Height,
@@ -200,7 +212,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 		if proposedMsg == nil {
 			return errors.New("did not receive proposal for this round")
 		}
-		return validateCommit(
+		err = validateCommit(
 			i.config,
 			msg,
 			i.State.Height,
@@ -209,10 +221,14 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 			i.State.Share.Committee,
 		)
 	case specqbft.RoundChangeMsgType:
-		return validRoundChange(i.State, i.config, msg, i.State.Height, msg.Message.Round)
+		err = validRoundChange(i.State, i.config, msg, i.State.Height, msg.Message.Round)
 	default:
-		return errors.New("signed message type not supported")
+		err = errors.New("signed message type not supported")
 	}
+
+	log("finish")
+
+	return err
 }
 
 // IsDecided interface implementation

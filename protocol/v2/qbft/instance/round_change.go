@@ -32,7 +32,6 @@ func (i *Instance) uponRoundChange(
 	log("start")
 
 	// i.logger.Debug("$$$$$$ UponRoundChange start. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
-	log("add signed message")
 
 	addedMsg, err := roundChangeMsgContainer.AddFirstMsgForSignerAndRound(signedRoundChange)
 	if err != nil {
@@ -41,6 +40,8 @@ func (i *Instance) uponRoundChange(
 	if !addedMsg {
 		return nil // UponCommit was already called
 	}
+	log("added signed message")
+
 
 	// i.logger.Debug("got change round",
 	// 	zap.Uint64("round", uint64(i.State.Round)),
@@ -55,6 +56,9 @@ func (i *Instance) uponRoundChange(
 		signedRoundChange,
 		roundChangeMsgContainer,
 		valCheck)
+	
+	log("check if has received proposal justification")
+
 	if err != nil {
 		// i.logger.Debug("$$$$$$ UponRoundChange return couldn't get proposal justification. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
@@ -65,7 +69,8 @@ func (i *Instance) uponRoundChange(
 		if err != nil {
 			return errors.Wrap(err, "could not round change data from highestJustifiedRoundChangeMsg")
 		}
-		log("create proposal")
+		log("got round change data")
+
 
 		proposal, err := CreateProposal(
 			i.State,
@@ -77,6 +82,7 @@ func (i *Instance) uponRoundChange(
 		if err != nil {
 			return errors.Wrap(err, "failed to create proposal")
 		}
+		log("created proposal")
 
 		// i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
@@ -84,12 +90,11 @@ func (i *Instance) uponRoundChange(
 		// 	zap.Uint64("round", uint64(i.State.Round)))
 
 		// i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast start. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
-		log("broadcast start")
 
 		if err := i.Broadcast(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
-		log("broadcast finish")
+		log("broadcasted")
 
 		// i.logger.Debug("$$$$$$ UponRoundChange return got proposal justification broadcast finish. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 
@@ -98,13 +103,14 @@ func (i *Instance) uponRoundChange(
 		if newRound <= i.State.Round {
 			return nil // no need to advance round
 		}
-		log("round change partial quorum")
+		log("got round change partial quorum")
 
 		err := i.uponChangeRoundPartialQuorum(newRound, instanceStartValue)
 		// i.logger.Debug("$$$$$$ UponRoundChange return upon change round with partial quorum. time(micro):", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", roundForDebug))
 		if err != nil {
 			return err
 		}
+		log("called upon change round partial quorum")
 	}
 	log("finish")
 
