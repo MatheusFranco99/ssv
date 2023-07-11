@@ -144,6 +144,8 @@ github.com/bloxapp/eth2-key-manager v1.2.0 h1:KhEi6vY25+K023kgGKDChuB4eDGYO1b2iB
 github.com/bloxapp/eth2-key-manager v1.2.0/go.mod h1:ihH4gGX4nE72AXA3LCTuXWSrN1r/xS5MBD6VW4P0nks=
 github.com/bloxapp/ssv v0.4.0 h1:Wl3wQpusHLH0HFP94/JNZGluu8RklY5ZHqFSSxXWjO4=
 github.com/bloxapp/ssv v0.4.0/go.mod h1:Ifl2SURujoFe1SEk0r9Iz+gtyyTaiC713X+0OcqQvvs=
+github.com/bloxapp/ssv-spec v0.2.8-0.20230116160450-3526f3880cb9 h1:2tPKHBFQO8bzESNZPBe5UfrLQiVGajou+4xQ6prTHng=
+github.com/bloxapp/ssv-spec v0.2.8-0.20230116160450-3526f3880cb9/go.mod h1:w0GcW7zn+EGU9YTUPM0W9L0w8Q7N3kVjIlO2Ha/htqw=
 github.com/bloxapp/ssv-spec v0.2.8-0.20230118104749-37a78c8e8a93 h1:y6ve7PO+Dhgqerutq1fo0i4pRYl//vtTyQiwG0c79M8=
 github.com/bloxapp/ssv-spec v0.2.8-0.20230118104749-37a78c8e8a93/go.mod h1:w0GcW7zn+EGU9YTUPM0W9L0w8Q7N3kVjIlO2Ha/htqw=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
