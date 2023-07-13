@@ -67,10 +67,74 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 	abaround.AddInit(vote, senderID)
 	log("added init")
 
+
+	if (round == specalea.FirstRound) {
+		i.State.ABASpecialState.Add(acround, senderID, vote)
+		log("added to abaspecialstate")
+	}
+
 	if i.State.ACState.CurrentACRound() < acround {
 		log("future aba. quitting.")
 		return nil
 	}
+
+
+
+	if (round == specalea.FirstRound) {
+
+		if (i.State.ABASpecialState.HasQuorum(acround)) {
+			log("has quorum for special vote.")
+			if (i.State.ABASpecialState.IsSameVote(acround)) {
+				log("has equal votes.")
+
+
+				aba := i.State.ACState.GetABA(acround)
+				has_sent_finish := aba.HasSentFinish(vote)
+
+				log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
+				if !has_sent_finish {
+
+					finishMsg, err := CreateABAFinish(i.State, i.config, vote, acround)
+					if err != nil {
+						return errors.Wrap(err, "UponABASpecialVote: failed to create ABA Finish message")
+					}
+					log("created aba finish")
+
+					i.Broadcast(finishMsg)
+					log("broadcasted abafinish")
+
+					aba.SetSentFinish(vote)
+					log("set sent finish")
+
+				}
+
+				if vote == byte(0) {
+					log("vote is 0. starting next ABA.")
+					i.StartABA()
+				} else {
+					leader := i.State.Share.Committee[int(acround)%len(i.State.Share.Committee)].OperatorID
+					log("calculted leader again")
+
+					has_vcbc_final := i.State.VCBCState.HasData(leader)
+					log(fmt.Sprintf("checked if has data: %v",has_vcbc_final))
+					if (!has_vcbc_final) {
+						i.State.WaitForVCBCAfterDecided = true
+						i.State.WaitForVCBCAfterDecided_Author = leader
+						log("set variables to wait for VCBC of leader of ABA decided with 1")
+					} else {
+						if !i.State.Decided {
+							i.finalTime = makeTimestamp()
+							diff := i.finalTime - i.initTime
+							data := i.State.VCBCState.GetDataFromAuthor(leader)
+							i.Decide(data)
+							log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if aba.CurrentRound() < round {
 		log("future aba round. quitting.")
 		return nil

@@ -60,14 +60,14 @@ func (i *Instance) StartABA() error {
 	i.Broadcast(initMsg)
 	log("broadcasted aba init")
 
-	specialVoteMsg, err := CreateABASpecialVote(i.State, i.config, vote, acround)
-	if err != nil {
-		return errors.Wrap(err, "UponStartABA: failed to create ABA special vote message")
-	}
-	log("created aba special vote")
+	// specialVoteMsg, err := CreateABASpecialVote(i.State, i.config, vote, acround)
+	// if err != nil {
+	// 	return errors.Wrap(err, "UponStartABA: failed to create ABA special vote message")
+	// }
+	// log("created aba special vote")
 
-	i.Broadcast(specialVoteMsg)
-	log("broadcasted aba special vote")
+	// i.Broadcast(specialVoteMsg)
+	// log("broadcasted aba special vote")
 
 	return nil
 }
