@@ -9,20 +9,20 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *Controller) UponFutureMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) UponFutureMsg(msg *messages.SignedMessage) (*messages.SignedMessage, []byte, error) {
 	if err := ValidateFutureMsg(c.GetConfig(), msg, c.Share.Committee); err != nil {
-		return nil, errors.Wrap(err, "invalid future msg")
+		return nil, nil, errors.Wrap(err, "invalid future msg")
 	}
 	if !c.addHigherHeightMsg(msg) {
-		return nil, errors.New("discarded future msg")
+		return nil, nil, errors.New("discarded future msg")
 	}
 	if c.f1SyncTrigger() {
 		c.logger.Debug("triggered f+1 sync",
 			zap.Uint64("ctrl_height", uint64(c.Height)),
 			zap.Uint64("msg_height", uint64(msg.Message.Height)))
-		return nil, c.GetConfig().GetNetwork().SyncHighestDecided(spectypes.MessageIDFromBytes(c.Identifier))
+		return nil, nil, c.GetConfig().GetNetwork().SyncHighestDecided(spectypes.MessageIDFromBytes(c.Identifier))
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 func ValidateFutureMsg(

@@ -55,6 +55,10 @@ func NewSyncCommitteeAggregatorRunner(
 		logger:   logger.With(zap.String("who", "SyncCommitteeAggregatorRunner")),
 	}
 }
+func (r *SyncCommitteeAggregatorRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 
 func (r *SyncCommitteeAggregatorRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)

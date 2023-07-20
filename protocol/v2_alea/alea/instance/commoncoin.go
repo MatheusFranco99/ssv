@@ -34,6 +34,10 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponCommonCoinData "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
 	}
 
@@ -123,6 +127,7 @@ func (i *Instance) SendCommonCoinShare() error {
 
 	// logger
 	log := func(str string) {
+		return
 		i.logger.Debug("$$$$$$ UponSendCommonCoinShare "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

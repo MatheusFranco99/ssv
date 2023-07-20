@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
@@ -33,6 +34,10 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly && !strings.Contains(str,"Total time")) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponABAInit "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
 	}
 
@@ -80,7 +85,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 
 
 
-	if (round == specalea.FirstRound) {
+	if (i.State.FastABAOptimization && round == specalea.FirstRound) {
 
 		if (i.State.ABASpecialState.HasQuorum(acround)) {
 			log("has quorum for special vote.")
@@ -126,7 +131,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 							i.finalTime = makeTimestamp()
 							diff := i.finalTime - i.initTime
 							data := i.State.VCBCState.GetDataFromAuthor(leader)
-							i.Decide(data)
+							i.Decide(data, signedABAInit)
 							log(fmt.Sprintf("consensus decided. Total time: %v",diff))
 						}
 					}
@@ -151,6 +156,11 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 
 	if abaround.LenInit(vote) >= int(i.State.Share.Quorum) {
 		log("got init quorum.")
+
+		// Common coin for Conf quorum step
+		if i.State.SendCommonCoin {
+			i.SendCommonCoinShare()
+		}
 
 		auxMsg, err := CreateABAAux(i.State, i.config, vote, round, acround)
 		if err != nil {
@@ -209,6 +219,10 @@ func isValidABAInit(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_ABAInit "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

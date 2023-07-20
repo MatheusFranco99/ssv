@@ -11,13 +11,13 @@ import (
 )
 
 // UponDecided returns decided msg if decided, nil otherwise
-func (c *Controller) UponDecided(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) UponDecided(msg *messages.SignedMessage) (*messages.SignedMessage, []byte, error) {
 	if err := ValidateDecided(
 		c.config,
 		msg,
 		c.Share,
 	); err != nil {
-		return nil, errors.Wrap(err, "invalid decided msg")
+		return nil, nil, errors.Wrap(err, "invalid decided msg")
 	}
 
 	// get decided value
@@ -79,9 +79,9 @@ func (c *Controller) UponDecided(msg *messages.SignedMessage) (*messages.SignedM
 		c.NewDecidedHandler(msg)
 	}
 	if !prevDecided {
-		return msg, nil
+		return msg, nil, nil
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 func ValidateDecided(
@@ -114,5 +114,6 @@ func ValidateDecided(
 
 // IsDecidedMsg returns true if signed commit has all quorum sigs
 func IsDecidedMsg(share *spectypes.Share, signedDecided *messages.SignedMessage) bool {
+	return false
 	return share.HasQuorum(len(signedDecided.Signers)) //&& signedDecided.Message.MsgType == specalea.CommitMsgType
 }

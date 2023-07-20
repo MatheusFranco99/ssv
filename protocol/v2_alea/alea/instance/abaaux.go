@@ -32,6 +32,10 @@ func (i *Instance) uponABAAux(signedABAAux *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponABAAux "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
 	}
 
@@ -113,6 +117,10 @@ func isValidABAAux(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_ABAAux "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

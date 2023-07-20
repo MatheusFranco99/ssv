@@ -107,6 +107,18 @@ type State struct {
 
 	CommonCoinContainer *PSigContainer
 	CommonCoin *CommonCoin
+
+	FastABAOptimization bool
+	WaitVCBCQuorumOptimization bool
+	EqualVCBCOptimization bool
+
+	DecidedMessage *SignedMessage
+
+	DecidedLogOnly bool
+
+	SendCommonCoin bool
+
+	HasStarted bool
 }
 
 // GetRoot returns the state's deterministic root

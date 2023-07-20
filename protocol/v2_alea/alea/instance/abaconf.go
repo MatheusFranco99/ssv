@@ -34,6 +34,10 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponABAConf "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Binary("votes", votes))
 	}
 
@@ -82,11 +86,12 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 		
 		// coin := i.config.GetCoinF()(round)
 		// coin := byte(1)
-		rand.Seed(int64(acround)+int64(round))
-		coin := byte(rand.Intn(2))
+		// rand.Seed(int64(acround)+int64(round))
+		// coin := byte(rand.Intn(2))
 		// coin := Coin(int(round), int(author), int(priority))
 
-		// coin := i.State.CommonCoin.GetCoin(acround,round)
+		coin := i.State.CommonCoin.GetCoin(acround,round)
+		
 		log(fmt.Sprintf("coin: %v", coin))
 
 		conf_values := abaround.GetConfValues()
@@ -167,6 +172,10 @@ func isValidABAConf(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_ABAConf "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

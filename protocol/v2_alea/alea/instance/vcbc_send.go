@@ -30,6 +30,10 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)))
 	}
 
@@ -97,6 +101,10 @@ func isValidVCBCSend(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_VCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

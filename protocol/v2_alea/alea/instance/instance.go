@@ -22,6 +22,8 @@ import (
 
 	spectypesalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
+
+	"strings"
 )
 
 var logger = logging.Logger("ssv/protocol/alea/instance").Desugar()
@@ -78,6 +80,13 @@ func NewInstance(
 			CommonCoinContainer: messages.NewPSigContainer(uint64(share.Quorum)),
 			CommonCoin: messages.NewCommonCoin(int64(0)),
 			ABASpecialState: messages.NewABASpecialState(len(share.Committee)),
+			FastABAOptimization: false,
+			WaitVCBCQuorumOptimization: false,
+			EqualVCBCOptimization: false,
+			DecidedMessage: nil,
+			DecidedLogOnly: true,
+			SendCommonCoin: true,
+			HasStarted: false,
 		},
 		priority:    specalea.FirstPriority,
 		config:      config,
@@ -94,11 +103,16 @@ func NewInstance(
 func (i *Instance) Start(value []byte, height specalea.Height) {
 	i.startOnce.Do(func() {
 
+		i.State.HasStarted = true
+
 		//funciton identifier
 		functionID := uuid.New().String()
 
 		// logger
 		log := func(str string) {
+			if (i.State.DecidedLogOnly && !strings.Contains(str,"start")) {
+				return
+			}
 			i.logger.Debug("$$$$$$ UponStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 		}
 
@@ -121,9 +135,10 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 
 
 
-func (i *Instance) Decide(value []byte) {
+func (i *Instance) Decide(value []byte, msg *messages.SignedMessage) {
 	i.State.Decided = true
 	i.State.DecidedValue = value
+	i.State.DecidedMessage = msg
 }
 
 func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
@@ -146,6 +161,10 @@ func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
 func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 	
+	if !i.State.HasStarted {
+		return false,nil,nil,nil
+	}
+
 	// special treatment to ready msg
 	if msg.Message.MsgType == messages.VCBCReadyMsgType {
 
@@ -194,7 +213,11 @@ func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decide
 	if res != nil {
 		return false, nil, nil, res.(error)
 	}
-	return i.State.Decided, i.State.DecidedValue, aggregatedCommit, nil
+
+	decided = i.State.Decided
+	decidedValue = i.State.DecidedValue
+	aggregatedCommit = i.State.DecidedMessage
+	return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 }
 
 func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {

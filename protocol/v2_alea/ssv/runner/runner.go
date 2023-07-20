@@ -3,6 +3,9 @@ package runner
 import (
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
+	"github.com/google/uuid"
+ 	"time"
+ 	"fmt"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
@@ -47,6 +50,8 @@ type Runner interface {
 	expectedPostConsensusRootsAndDomain() ([]ssz.HashRoot, phase0.DomainType, error)
 	// executeDuty an INTERNAL function, executes a duty.
 	executeDuty(duty *spectypes.Duty) error
+	
+	SetSystemLoad(v int)
 }
 
 type BaseRunner struct {
@@ -59,13 +64,26 @@ type BaseRunner struct {
 
 	// implementation vars
 	TimeoutF TimeoutF `json:"-"`
+
+	// System load to perform
+	SystemLoad int
 }
 
 func NewBaseRunner(logger *zap.Logger) *BaseRunner {
 	return &BaseRunner{
 		logger: logger,
+		SystemLoad: 0,
 	}
 }
+
+func (b *BaseRunner) SetSystemLoad(v int) {
+	b.SystemLoad = v
+}
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
+}
+
 
 // baseStartNewDuty is a base func that all runner implementation can call to start a duty
 func (b *BaseRunner) baseStartNewDuty(runner Runner, duty *spectypes.Duty) error {
@@ -102,7 +120,7 @@ func (b *BaseRunner) baseConsensusMsgProcessing(runner Runner, msg *messages.Sig
 		prevDecided, _ = b.State.RunningInstance.IsDecided()
 	}
 
-	decidedMsg, err := b.QBFTController.ProcessMsg(msg)
+	decidedMsg, decidedDataData, err := b.QBFTController.ProcessMsg(msg)
 	if err != nil {
 		return false, nil, err
 	}
@@ -128,23 +146,23 @@ func (b *BaseRunner) baseConsensusMsgProcessing(runner Runner, msg *messages.Sig
 			}
 		}
 	}
-
 	// get decided value
 	// decidedData, err := decidedMsg.Message.GetCommitData()
 	// if err != nil {
 	// 	return false, nil, errors.Wrap(err, "failed to get decided data")
 	// }
-
-	// decidedValue = &spectypes.ConsensusData{}
+	
+	decidedValue = &spectypes.ConsensusData{}
 	// if err := decidedValue.Decode(decidedData.Data); err != nil {
-	// 	return true, nil, errors.Wrap(err, "failed to parse decided value to ConsensusData")
-	// }
+		if err := decidedValue.Decode(decidedDataData); err != nil {
+		return true, nil, errors.Wrap(err, "failed to parse decided value to ConsensusData")
+	}
 
-	// if err := b.validateDecidedConsensusData(runner, decidedValue); err != nil {
-	// 	return true, nil, errors.Wrap(err, "decided ConsensusData invalid")
-	// }
+	if err := b.validateDecidedConsensusData(runner, decidedValue); err != nil {
+		return true, nil, errors.Wrap(err, "decided ConsensusData invalid")
+	}
 
-	// runner.GetBaseRunner().State.DecidedValue = decidedValue
+	runner.GetBaseRunner().State.DecidedValue = decidedValue
 
 	return true, decidedValue, nil
 }
@@ -188,14 +206,14 @@ func (b *BaseRunner) basePartialSigMsgProcessing(
 // didDecideCorrectly returns true if the expected consensus instance decided correctly
 func (b *BaseRunner) didDecideCorrectly(prevDecided bool, decidedMsg *messages.SignedMessage) (bool, error) {
 	decided := decidedMsg != nil
-	decidedRunningInstance := decided && b.State.RunningInstance != nil && decidedMsg.Message.Height == b.State.RunningInstance.GetHeight()
+	// decidedRunningInstance := decided && b.State.RunningInstance != nil && decidedMsg.Message.Height == b.State.RunningInstance.GetHeight()
 
 	if !decided {
 		return false, nil
 	}
-	if !decidedRunningInstance {
-		return false, errors.New("decided wrong instance")
-	}
+	// if !decidedRunningInstance {
+	// 	return false, errors.New("decided wrong instance")
+	// }
 	// verify we decided running instance only, if not we do not proceed
 	if prevDecided {
 		return false, nil
@@ -205,6 +223,18 @@ func (b *BaseRunner) didDecideCorrectly(prevDecided bool, decidedMsg *messages.S
 }
 
 func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error {
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		b.logger.Debug("$$$$$$ UponBaseRunnerDecide "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log(fmt.Sprintf("Launching %v instances",b.SystemLoad))
+
+
 	byts, err := input.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode ConsensusData")
@@ -226,25 +256,25 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 
 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
 
-	// idx := 0
-	// for idx < 19 {
-	// 	// size_byts := len(byts)
-	// 	// byts_modified := make([]byte, size_byts)
-	// 	// copy(byts_modified, byts)
-	// 	// byts_modified[0] += 1
-	// 	// byts_modified[2*3%size_byts] = byts_modified[idx%size_byts]
+	idx := 0
+ 	for idx < (b.SystemLoad - 1) {
+		// size_byts := len(byts)
+		// byts_modified := make([]byte, size_byts)
+		// copy(byts_modified, byts)
+		// byts_modified[0] += 1
+		// byts_modified[2*3%size_byts] = byts_modified[idx%size_byts]
 
-	// 	if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
-	// 		return errors.Wrap(err, "could not start new QBFT instance")
-	// 	}
-	// 	newInstance := runner.GetBaseRunner().QBFTController.InstanceForHeight(runner.GetBaseRunner().QBFTController.Height)
-	// 	if newInstance == nil {
-	// 		return errors.New("could not find newly created QBFT instance")
-	// 	}
-	// 	runner.GetBaseRunner().State.RunningInstance = newInstance
-	// 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
-	// 	idx += 1
-	// }
+		if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
+			return errors.Wrap(err, "could not start new QBFT instance")
+		}
+		newInstance := runner.GetBaseRunner().QBFTController.InstanceForHeight(runner.GetBaseRunner().QBFTController.Height)
+		if newInstance == nil {
+			return errors.New("could not find newly created QBFT instance")
+		}
+		runner.GetBaseRunner().State.RunningInstance = newInstance
+		b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
+		idx += 1
+	}
 
 	return nil
 }

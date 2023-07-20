@@ -15,6 +15,10 @@ func (i *Instance) StartVCBC(data []byte) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponVCBCStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

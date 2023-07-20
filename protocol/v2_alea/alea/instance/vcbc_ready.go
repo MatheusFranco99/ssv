@@ -37,6 +37,10 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponVCBCReady "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
@@ -115,6 +119,10 @@ func isValidVCBCReady(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_VCBCReady "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

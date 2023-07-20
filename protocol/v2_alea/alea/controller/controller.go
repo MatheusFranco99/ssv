@@ -79,9 +79,9 @@ func (c *Controller) StartNewInstance(value []byte) error {
 }
 
 // ProcessMsg processes a new msg, returns decided message or error
-func (c *Controller) ProcessMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) ProcessMsg(msg *messages.SignedMessage) (*messages.SignedMessage, []byte, error) {
 	if err := c.BaseMsgValidation(msg); err != nil {
-		return nil, errors.Wrap(err, "invalid msg")
+		return nil, nil, errors.Wrap(err, "invalid msg")
 	}
 
 	/**
@@ -100,40 +100,40 @@ func (c *Controller) ProcessMsg(msg *messages.SignedMessage) (*messages.SignedMe
 	}
 }
 
-func (c *Controller) UponExistingInstanceMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) UponExistingInstanceMsg(msg *messages.SignedMessage) (*messages.SignedMessage, []byte, error) {
 	inst := c.InstanceForHeight(msg.Message.Height)
 	if inst == nil {
-		return nil, errors.New("instance not found")
+		return nil, nil, errors.New("instance not found")
 	}
 
 	prevDecided, _ := inst.IsDecided()
 
-	decided, _, decidedMsg, err := inst.ProcessMsg(msg)
+	decided, decideValue, decidedMsg, err := inst.ProcessMsg(msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not process msg")
+		return nil, nil, errors.Wrap(err, "could not process msg")
 	}
 
 	// save the highest Decided
 	if !decided {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	// ProcessMsg returns a nil decidedMsg when given a non-commit message
 	// while the instance is decided. In this case, we have nothing new to broadcast.
-	if decidedMsg == nil {
-		return nil, nil
-	}
+	// if decidedMsg == nil {
+	// 	return nil, nil
+	// }
 
-	if err := c.broadcastDecided(decidedMsg); err != nil {
-		// no need to fail processing instance deciding if failed to save/ broadcast
-		c.logger.Debug("failed to broadcast decided message", zap.Error(err))
-	}
+	// if err := c.broadcastDecided(decidedMsg); err != nil {
+	// 	// no need to fail processing instance deciding if failed to save/ broadcast
+	// 	c.logger.Debug("failed to broadcast decided message", zap.Error(err))
+	// }
 
 	if prevDecided {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return decidedMsg, nil
+	return decidedMsg, decideValue, nil
 }
 
 // BaseMsgValidation returns error if msg is invalid (base validation)

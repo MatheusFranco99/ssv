@@ -13,6 +13,9 @@ import (
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"github.com/google/uuid"
+	"fmt"
+ 	"time"
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
@@ -40,7 +43,17 @@ type Validator struct {
 	Queues  map[spectypes.BeaconRole]queueContainer
 
 	state uint32
-}
+
+ 	// test variable -> do only one duty per slot
+ 	DoneDutyForSlot map[int]bool
+ 	// increment system load
+ 	SystemLoad int
+ }
+
+
+ func makeTimestamp() int64 {
+ 	return time.Now().UnixNano() / int64(time.Microsecond)
+ }
 
 // NewValidator creates a new instance of Validator.
 func NewValidator(pctx context.Context, cancel func(), options Options) *Validator {
@@ -60,6 +73,8 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 		Signer:      options.Signer,
 		Queues:      make(map[spectypes.BeaconRole]queueContainer),
 		state:       uint32(NotStarted),
+		DoneDutyForSlot: make(map[int]bool),
+ 		SystemLoad: 0,
 	}
 
 	for _, dutyRunner := range options.DutyRunners {
@@ -81,10 +96,48 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 
 // StartDuty starts a duty for the validator
 func (v *Validator) StartDuty(duty *spectypes.Duty) error {
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		v.logger.Debug("$$$$$$ UponValidatorStartDuty "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+
+	log("start")
+
+	if duty.Type.String() != "SYNC_COMMITTEE" {
+		log("duty not sync committee. Quitting.")
+		return nil
+	}
+
+	slot := duty.Slot
+	if _,ok := v.DoneDutyForSlot[int(slot)]; ok {
+
+		log(fmt.Sprintf("already did duty in this slot. %v not going to start. Quitting.",duty.Type.String()))
+		return nil
+	}
+
 	dutyRunner := v.DutyRunners[duty.Type]
 	if dutyRunner == nil {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
+
+	log(fmt.Sprintf("Setting true for slot %v, due to duty %v",int(slot),duty.Type.String()))
+ 	v.DoneDutyForSlot[int(slot)] = true
+ 	if v.SystemLoad == 0 {
+ 		v.SystemLoad = 1
+ 	} else {
+ 		if v.SystemLoad == 1 {
+ 			v.SystemLoad = 0
+ 		}
+ 		v.SystemLoad += 20
+ 	}
+ 	log(fmt.Sprintf("System load: %v",v.SystemLoad))
+
+ 	dutyRunner.SetSystemLoad(v.SystemLoad)
+
 	return dutyRunner.StartNewDuty(duty)
 }
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
@@ -36,6 +37,11 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly && !strings.Contains(str,"Total time")) {
+			return
+		}
+
 		i.logger.Debug("$$$$$$ UponVCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
 	}
 
@@ -63,7 +69,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 			if !i.State.Decided {
 				i.finalTime = makeTimestamp()
 				diff := i.finalTime - i.initTime
-				i.Decide(data)
+				i.Decide(data, signedMessage)
 				log(fmt.Sprintf("consensus decided. Total time: %v",diff))
 			}
 		}
@@ -71,25 +77,27 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 
 
-	if (i.State.VCBCState.GetLen() == int(len(i.State.Share.Committee))) {
+	if (i.State.EqualVCBCOptimization && i.State.VCBCState.GetLen() == int(len(i.State.Share.Committee))) {
 		log("received N VCBC Final")
 		if i.State.VCBCState.AllEqual() {
 			log("all N VCBC are equal. Terminating.")
 			if !i.State.Decided {
 				i.finalTime = makeTimestamp()
 				diff := i.finalTime - i.initTime
-				i.Decide(data)
+				i.Decide(data, signedMessage)
 				log(fmt.Sprintf("consensus decided. Total time: %v",diff))
 			}
 		}
 	}
 
-	if (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum) && !i.State.StartedABA) {
-		log("launching ABA")
-		i.State.StartedABA = true
-		err := i.StartABA()
-		if err != nil {
-			return err
+	if (!i.State.StartedABA) {
+		if (!i.State.WaitVCBCQuorumOptimization || (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum)) ) {
+			log("launching ABA")
+			i.State.StartedABA = true
+			err := i.StartABA()
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -113,6 +121,10 @@ func isValidVCBCFinal(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_VCBCFinal "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

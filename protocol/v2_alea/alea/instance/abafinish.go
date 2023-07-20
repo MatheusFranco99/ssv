@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error { //(bool, []byte, error) {
@@ -31,6 +32,10 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 
 	// logger
 	log := func(str string) {
+
+		if (i.State.DecidedLogOnly && !strings.Contains(str,"Total time")) {
+			return
+		}
 		i.logger.Debug("$$$$$$ UponABAFinish "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("vote", int(vote)))
 	}
 
@@ -122,7 +127,7 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 					i.finalTime = makeTimestamp()
 					diff := i.finalTime - i.initTime
 					data := i.State.VCBCState.GetDataFromAuthor(leader)
-					i.Decide(data)
+					i.Decide(data, signedABAFinish)
 					log(fmt.Sprintf("consensus decided. Total time: %v",diff))
 				}
 			}
@@ -155,6 +160,10 @@ func isValidABAFinish(
 
 	// logger
 	log := func(str string) {
+
+		if (state.DecidedLogOnly) {
+			return
+		}
 		logger.Debug("$$$$$$ UponMV_ABAFinish "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 

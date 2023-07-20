@@ -57,6 +57,10 @@ func NewAttesterRunnner(
 	}
 }
 
+func (r *AttesterRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *AttesterRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }
