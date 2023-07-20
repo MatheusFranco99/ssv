@@ -62,6 +62,11 @@ func NewInstance(
 		nodeIDs[i] = types.OperatorID(op.OperatorID)
 	}
 
+	N := len(share.Committee)
+	f := (N-1)/3
+	share.Quorum = uint64(2*f+1)
+	share.PartialQuorum = uint64(f+1)
+
 	inst := &Instance{
 		State: &messages.State{
 			Share:             share,
@@ -119,6 +124,7 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		}
 
 		log("starting alea instance")
+		log(fmt.Sprintf("start %v %v %v",i.State.Share.Quorum, i.State.Share.PartialQuorum, len(i.State.Share.Committee)))
 
 		i.StartValue = value
 		i.State.Round = specalea.FirstRound
