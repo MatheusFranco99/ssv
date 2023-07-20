@@ -119,6 +119,9 @@ type State struct {
 	SendCommonCoin bool
 
 	HasStarted bool
+
+	DiffieHellmanContainer *DiffieHellmanContainer
+	DiffieHellmanContainerOneTimeCost *DiffieHellmanContainerOneTimeCost
 }
 
 // GetRoot returns the state's deterministic root

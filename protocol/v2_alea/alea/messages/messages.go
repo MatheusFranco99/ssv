@@ -53,7 +53,32 @@ const (
 	VCBCRequestMsgType
 	VCBCAnswerMsgType
 	CommonCoinMsgType
+	DiffieHellmanMsgType
 )
+
+// =========================
+//			DiffieHellman
+// =========================
+
+type DiffieHellmanData struct {
+	PublicShare int
+}
+
+// Encode returns a msg encoded bytes or error
+func (d *DiffieHellmanData) Encode() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+// Decode returns error if decoding failed
+func (d *DiffieHellmanData) Decode(data []byte) error {
+	return json.Unmarshal(data, &d)
+}
+
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (d *DiffieHellmanData) Validate() error {
+	return nil
+}
 
 // =========================
 //			ABAInit
@@ -308,6 +333,15 @@ type Message struct {
 	Data       []byte
 }
 
+// GetDiffieHellmanData returns abainit specific data
+func (msg *Message) GetDiffieHellmanData() (*DiffieHellmanData, error) {
+	ret := &DiffieHellmanData{}
+	if err := ret.Decode(msg.Data); err != nil {
+		return nil, errors.Wrap(err, "could not decode DiffieHellmanData data from message")
+	}
+	return ret, nil
+}
+
 // GetABAInitData returns abainit specific data
 func (msg *Message) GetABAInitData() (*ABAInitData, error) {
 	ret := &ABAInitData{}
@@ -418,6 +452,7 @@ type SignedMessage struct {
 	Signature types.Signature
 	Signers   []types.OperatorID
 	Message   *Message // message for which this signature is for
+	DiffieHellmanProof map[types.OperatorID][32]byte
 }
 
 func (signedMsg *SignedMessage) GetSignature() types.Signature {
@@ -527,9 +562,9 @@ func (signedMsg *SignedMessage) DeepCopy() *SignedMessage {
 // Validate returns error if msg validation doesn't pass.
 // Msg validation checks the msg, it's variables for validity.
 func (signedMsg *SignedMessage) Validate() error {
-	if len(signedMsg.Signature) != 96 {
-		return errors.New("message signature is invalid")
-	}
+	// if len(signedMsg.Signature) != 96 {
+	// 	return errors.New("message signature is invalid")
+	// }
 	if len(signedMsg.Signers) == 0 {
 		return errors.New("message signers is empty")
 	}

@@ -111,11 +111,19 @@ func isValidVCBCSend(
 		return errors.New("msg allows 1 signer")
 	}
 	log("checked number of signers is 1")
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return errors.Wrap(err, "msg signature invalid")
-	}
+	// if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+	// 	return errors.Wrap(err, "msg signature invalid")
+	// }
 
-	log("checked signature")
+	// log("checked signature")
+
+	msg_bytes, err := signedMsg.Message.Encode()
+	if err != nil {
+		return errors.Wrap(err, "Could not encode message")
+	}
+	if !state.DiffieHellmanContainerOneTimeCost.VerifyHash(msg_bytes,signedMsg.GetSigners()[0],signedMsg.DiffieHellmanProof[state.Share.OperatorID]) {
+		return errors.New("Failed Diffie Hellman verification")
+	}
 
 	VCBCSendData, err := signedMsg.Message.GetVCBCSendData()
 
@@ -146,15 +154,25 @@ func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte) (*m
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+
+	// No signing -> use Diffie Hellman
+	// sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "CreateVCBCSend: failed signing filler msg")
+	// }
+	sig := []byte{}
+
+	msg_bytes, err := msg.Encode()
 	if err != nil {
-		return nil, errors.Wrap(err, "CreateVCBCSend: failed signing filler msg")
+		return nil, errors.Wrap(err,"CreateVCBCSend: failed to encode message")
 	}
+	hash_map := state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
 
 	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []types.OperatorID{state.Share.OperatorID},
 		Message:   msg,
+		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
 }

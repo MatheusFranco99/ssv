@@ -87,6 +87,8 @@ func NewInstance(
 			DecidedLogOnly: true,
 			SendCommonCoin: true,
 			HasStarted: false,
+			DiffieHellmanContainer:         messages.NewDiffieHellmanContainer(),
+			DiffieHellmanContainerOneTimeCost: messages.NewDiffieHellmanContainerOneTimeCost(int(share.OperatorID), nodeIDs),
 		},
 		priority:    specalea.FirstPriority,
 		config:      config,

@@ -105,9 +105,19 @@ func isValidCommonCoin(
 	if len(signedMessage.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
-	if err := signedMessage.Signature.VerifyByOperators(signedMessage, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return errors.Wrap(err, "msg signature invalid")
+	// if err := signedMessage.Signature.VerifyByOperators(signedMessage, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+	// 	return errors.Wrap(err, "msg signature invalid")
+	// }
+
+	msg_bytes, err := signedMessage.Message.Encode()
+	if err != nil {
+		return errors.Wrap(err, "Could not encode message")
 	}
+	if !state.DiffieHellmanContainerOneTimeCost.VerifyHash(msg_bytes,signedMessage.GetSigners()[0],signedMessage.DiffieHellmanProof[state.Share.OperatorID]) {
+		return errors.New("Failed Diffie Hellman verification")
+	}
+
+	
 
 	msgData, err := signedMessage.Message.GetCommonCoinData()
 	if err != nil {
@@ -190,15 +200,25 @@ func CreateCommonCoin(state *messages.State, config alea.IConfig, shareSign type
 		Data:       dataByts,
 	}
 
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+	// No signing -> use Diffie Hellman
+	// sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "failed signing prepare msg")
+	// }
+
+	sig := []byte{}
+
+	msg_bytes, err := msg.Encode()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed signing prepare msg")
+		return nil, errors.Wrap(err,"CreateCommonCoin: failed to encode message")
 	}
+	hash_map := state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
 
 	signedMsg := &messages.SignedMessage{
 		Signature: sig,
 		Signers:   []types.OperatorID{state.Share.OperatorID},
 		Message:   msg,
+		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
 }
