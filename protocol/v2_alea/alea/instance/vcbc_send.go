@@ -54,26 +54,15 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 		i.State.SentReadys.Add(sender,data)
 		log("added to sent readys structure")
 
-		// create VCBCReady message with proof
+		// create VCBCReady message with hash
 		hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(data)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 		if err != nil {
 			return errors.Wrap(err, "uponVCBCSend: could not compute data hash")
 		}
 		log("computed hash")
 
-		root, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(fmt.Sprintf("%v%v",sender,hash))), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
-		if err != nil {
-			return errors.Wrap(err, "uponVCBCSend: could not compute signing root")
-		}
-		log("computed signing root")
 
-		signature, err := i.config.GetSigner().SignRoot(messages.NewByteRoot(root),types.QBFTSignatureType, i.State.Share.SharePubKey)
-		if err != nil {
-			return errors.Wrap(err, "uponVCBCSend: could not compute signature")
-		}
-		log("computed signature")
-
-		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, sender, signature)
+		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, sender)
 		if err != nil {
 			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
 		}

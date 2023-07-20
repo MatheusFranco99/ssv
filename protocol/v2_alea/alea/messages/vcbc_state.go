@@ -14,16 +14,20 @@ import (
 
 type ReceivedReadys struct {
 	// readys map[types.OperatorID][]byte
-	readys *PSigContainer
+	// readys *PSigContainer
+	readys map[types.OperatorID]*SignedMessage
 	sentFinal bool
+	quorum int
 }
 
 func NewReceivedReadys(quorum uint64) *ReceivedReadys {
 
 	return &ReceivedReadys{
 		// readys: make(map[types.OperatorID][]byte),
-		readys: NewPSigContainer(quorum),
+		// readys: NewPSigContainer(quorum),
+		readys: make(map[types.OperatorID]*SignedMessage),
 		sentFinal: false,
+		quorum: int(quorum),
 	}
 }
 
@@ -35,35 +39,62 @@ func (rs *ReceivedReadys) SetSentFinal() {
 	rs.sentFinal = true;
 }
 
-func (rs *ReceivedReadys) Add(opID types.OperatorID, signature types.Signature) {
-	rs.readys.AddSignature(opID,signature)
-}
-
-func (rs *ReceivedReadys) AggregateSignatures(validatorPubKey []byte) (types.Signature,error) {
-	return rs.readys.AggregateSignatures(validatorPubKey)
+// func (rs *ReceivedReadys) Add(opID types.OperatorID, signature types.Signature) {
+	// rs.readys.AddSignature(opID,signature)
+func (rs *ReceivedReadys) Add(opID types.OperatorID, msg *SignedMessage) {
+	if _,ok := rs.readys[opID]; !ok {
+		rs.readys[opID] = msg
+	}
 }
 
 func (rs *ReceivedReadys) HasQuorum() bool {
-	return rs.readys.HasQuorum()
+	// return rs.readys.HasQuorum()
+	return len(rs.readys) >= rs.quorum
 }
 
 func (rs *ReceivedReadys) GetLen() int {
-	return rs.readys.GetLen()
-}
-
-func (rs *ReceivedReadys) GetReconstructedSignature(root []byte, validatorPubKey []byte) (types.Signature,error) {
-	return rs.readys.ReconstructSignature(root,validatorPubKey)
+	// return rs.readys.GetLen()
+	return len(rs.readys)
 }
 
 func (rs *ReceivedReadys) GetNodeIDs() []types.OperatorID {
-	ans := make([]types.OperatorID,rs.readys.GetLen())
+	ans := make([]types.OperatorID,len(rs.readys))
 	idx := 0
-	for key, _ := range rs.readys.Signatures {
+	for key, _ := range rs.readys {
 		ans[idx] = key
 		idx += 1
 	}
 	return ans
 }
+
+func (rs *ReceivedReadys) GetMessages() []*SignedMessage {
+	ans := make([]*SignedMessage,len(rs.readys))
+	idx := 0
+	for _, m := range rs.readys {
+		ans[idx] = m
+		idx += 1
+	}
+	return ans
+}
+
+
+// func (rs *ReceivedReadys) AggregateSignatures(validatorPubKey []byte) (types.Signature,error) {
+// 	return rs.readys.AggregateSignatures(validatorPubKey)
+// }
+
+// func (rs *ReceivedReadys) GetReconstructedSignature(root []byte, validatorPubKey []byte) (types.Signature,error) {
+// 	return rs.readys.ReconstructSignature(root,validatorPubKey)
+// }
+
+// func (rs *ReceivedReadys) GetNodeIDs() []types.OperatorID {
+// 	ans := make([]types.OperatorID,rs.readys.GetLen())
+// 	idx := 0
+// 	for key, _ := range rs.readys.Signatures {
+// 		ans[idx] = key
+// 		idx += 1
+// 	}
+// 	return ans
+// }
 
 
 
@@ -113,8 +144,7 @@ type VCBCData struct {
 	Data []byte
 	Author types.OperatorID
 	Hash []byte
-	AggregatedSignature []byte
-	NodeIDs []types.OperatorID
+	AggregatedMessage *SignedMessage
 }
 
 type VCBCState struct {
@@ -169,14 +199,13 @@ func (v *VCBCState) GetDataMap() map[types.OperatorID]*VCBCData {
 	return v.data
 }
 
-func (v *VCBCState) SetVCBCData(author types.OperatorID, data []byte, hash []byte, aggregatedSignature []byte, nodeIDs []types.OperatorID) {
+func (v *VCBCState) SetVCBCData(author types.OperatorID, data []byte, hash []byte, aggregated_msg *SignedMessage) {
 	if _, ok := v.data[author]; !ok {
 		vcbcData := &VCBCData{
 			Data: data,
 			Author: author,
 			Hash: hash,
-			AggregatedSignature: aggregatedSignature,
-			NodeIDs: nodeIDs,
+			AggregatedMessage: aggregated_msg,
 		}
 		v.data[author] = vcbcData
 	}

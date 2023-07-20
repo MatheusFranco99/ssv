@@ -212,7 +212,6 @@ func (d *VCBCSendData) Validate() error {
 type VCBCReadyData struct {
 	Hash     []byte
 	Author   types.OperatorID
-	Signature types.Signature
 }
 
 // Encode returns a msg encoded bytes or error
@@ -231,10 +230,6 @@ func (d *VCBCReadyData) Validate() error {
 	if len(d.Hash) == 0 {
 		return errors.New("VCBCReadyData: empty hash")
 	}
-
-	if len(d.Signature) != 96 {
-		return errors.New("VCBCReadyData: message signature is invalid")
-	}
 	return nil
 }
 
@@ -244,8 +239,7 @@ func (d *VCBCReadyData) Validate() error {
 
 type VCBCFinalData struct {
 	Hash          []byte
-	AggregatedSignature types.Signature
-	NodesIds		[]types.OperatorID
+	AggregatedMessage *SignedMessage
 }
 
 // Encode returns a msg encoded bytes or error
@@ -264,11 +258,9 @@ func (d *VCBCFinalData) Validate() error {
 	if len(d.Hash) == 0 {
 		return errors.New("VCBCFinalData: empty hash")
 	}
-	if len(d.AggregatedSignature) != 96 {
-		return errors.New("VCBCFinalData: aggregated signature wrong size")
-	}
-	if len(d.NodesIds) == 0 {
-		return errors.New("VCBCFinalData: empty NodeIds")
+	err := d.AggregatedMessage.Validate()
+	if err != nil {
+		return errors.Wrap(err,"VCBCFinalData Validate: aggregated message is invalid.")
 	}
 	return nil
 }

@@ -26,11 +26,8 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	// get sender ID
 	senderID := signedMessage.GetSigners()[0]
-	// data := vcbcFinalData.Data
-	// author := vcbcFinalData.Author
 	hash := vcbcFinalData.Hash
-	aggregatedSignature := vcbcFinalData.AggregatedSignature
-	nodeIDs := vcbcFinalData.NodesIds
+	aggregated_msg := vcbcFinalData.AggregatedMessage
 
 	//funciton identifier
 	functionID := uuid.New().String()
@@ -59,7 +56,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	data := i.State.SentReadys.Get(senderID)
 	log("get data")
 
-	i.State.VCBCState.SetVCBCData(senderID,data,hash,aggregatedSignature,nodeIDs)
+	i.State.VCBCState.SetVCBCData(senderID,data,hash,aggregated_msg)//aggregatedSignature,nodeIDs)
 	log("saved vcbc data")
 
 	if (i.State.WaitForVCBCAfterDecided) {
@@ -112,9 +109,6 @@ func isValidVCBCFinal(
 	operators []*types.Operator,
 	logger *zap.Logger,
 ) error {
-	// if signedMsg.Message.MsgType != specalea.VCBCFinalMsgType {
-	// 	return errors.New("msg type is not VCBCFinalMsgType")
-	// }
 
 	//funciton identifier
 	functionID := uuid.New().String()
@@ -129,6 +123,12 @@ func isValidVCBCFinal(
 	}
 
 	log("start")
+
+
+	if signedMsg.Message.MsgType != messages.VCBCFinalMsgType {
+		return errors.New("msg type is not VCBCFinalMsgType")
+	}
+	log("checked msg type")
 
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
@@ -153,42 +153,23 @@ func isValidVCBCFinal(
 	}
 	log("validated")
 
-	// hash := VCBCFinalData.Hash
-	// aggregatedSignature := VCBCFinalData.AggregatedSignature
-	// nodeIDs := VCBCFinalData.NodesIds
+	aggregated_msg := VCBCFinalData.AggregatedMessage
 
-	// pbkeys := make([][]byte,0)
-	// for _, opID := range nodeIDs{
-	// 	for _, operator := range operators {
-	// 		if operator.OperatorID == opID {
-	// 			pbkeys = append(pbkeys,operator.PubKey)
-	// 			break
-	// 		}
-	// 	}
-	// }
 
-	// if (len(pbkeys) == 0) {
-	// 	return errors.New("VCBCFinalData validation: didnt find any operator object with given operatorIDs")
-	// }
-	// if (len(pbkeys) != len(nodeIDs)) {
-	// 	return errors.New("VCBCFinalData validation: list of pubkeys has different size than list of NodeIDs")
-	// }
-
-	// author := signedMsg.GetSigners()[0]
-	// err = aggregatedSignature.VerifyMultiPubKey(messages.NewByteRoot(([]byte(fmt.Sprintf("%v%v",author,hash)))),config.GetSignatureDomainType(), types.QBFTSignatureType,pbkeys)
-	// if err != nil {
-	// 	return errors.Wrap(err,"VCBCFinalData validation: verification of aggregated signature failed.")
-	// }
+	// verify signature
+	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+		return errors.Wrap(err, "aggregated msg signature invalid")
+	}
+	log("checked aggregated message")
 
 	return nil
 }
 
-func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, aggSign []byte, nodeIDs []types.OperatorID) (*messages.SignedMessage, error) {
+func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, aggregated_msg *messages.SignedMessage) (*messages.SignedMessage, error) {
 	
 	vcbcFinalData := &messages.VCBCFinalData{
 		Hash: hash,
-		AggregatedSignature: aggSign,
-		NodesIds: nodeIDs,
+		AggregatedMessage: aggregated_msg,
 	}
 	dataByts, err := vcbcFinalData.Encode()
 	if err != nil {

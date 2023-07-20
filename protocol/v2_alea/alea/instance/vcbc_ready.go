@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"sort"
 )
 
 func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
@@ -29,7 +30,6 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	if author != i.State.Share.OperatorID {
 		return nil
 	}
-	signature := vcbcReadyData.Signature
 	senderID := signedMessage.GetSigners()[0]
 
 	//funciton identifier
@@ -62,7 +62,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	}
 	log("compared hashes")
 
-	i.State.ReceivedReadys.Add(senderID,signature)
+	i.State.ReceivedReadys.Add(senderID,signedMessage)
 	log("added to received readys")
 
 
@@ -83,13 +83,14 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 		return nil
 	}
 
-	aggSignature, err := i.State.ReceivedReadys.AggregateSignatures(i.State.Share.ValidatorPubKey)
-	if err != nil {
-		return errors.Wrap(err,"uponVCBCReady: failed to reconstruct signature")
-	}
-	log("aggregated signatures")
+	// Aggregate ready messages as proof
 
-	vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, hash, aggSignature, i.State.ReceivedReadys.GetNodeIDs())
+	aggregated_msg,err := aggregateMsgs(i.State.ReceivedReadys.GetMessages())
+	if err != nil {
+		return errors.Wrap(err,"uponVCBCReady: failed to aggregate messages")
+	}
+
+	vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, hash, aggregated_msg)
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
 	}
@@ -104,6 +105,30 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	return nil
 }
+
+func aggregateMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessage, error) {
+	if len(msgs) == 0 {
+		return nil, errors.New("can't aggregate zero msgs")
+	}
+
+	var ret *messages.SignedMessage
+	for _, m := range msgs {
+		if ret == nil {
+			ret = m.DeepCopy()
+		} else {
+			if err := ret.Aggregate(m); err != nil {
+				return nil, errors.Wrap(err, "could not aggregate msg")
+			}
+		}
+	}
+	// TODO: REWRITE THIS!
+	sort.Slice(ret.Signers, func(i, j int) bool {
+		return ret.Signers[i] < ret.Signers[j]
+	})
+	return ret, nil
+}
+
+
 
 func isValidVCBCReady(
 	state *messages.State,
@@ -167,35 +192,13 @@ func isValidVCBCReady(
 	}
 	log("checked author in committee")
 
-	// hash := VCBCReadyData.Hash
-
-	// signature := VCBCReadyData.Signature
-
-	// opID := signedMsg.GetSigners()[0]
-	// pbkey := []byte{}
-	// for _, operator := range operators {
-	// 	if operator.OperatorID == opID {
-	// 		pbkey = operator.PubKey
-	// 	}
-	// }
-
-	// if (len(pbkey) == 0) {
-	// 	return errors.New("VCBCReadyData validation: didnt find operator object with given operatorID")
-	// }
-
-	// err = signature.Verify(messages.NewByteRoot([]byte(fmt.Sprintf("%v%v",author,hash))),config.GetSignatureDomainType(), types.QBFTSignatureType, pbkey)
-	// if err != nil {
-	// 	return errors.Wrap(err,"VCBCReadyData validation: verification of hash signature failed.")
-	// }
-
 	return nil
 }
 
-func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, author types.OperatorID, signature []byte) (*messages.SignedMessage, error) {
+func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, author types.OperatorID) (*messages.SignedMessage, error) {
 	vcbcReadyData := &messages.VCBCReadyData{
 		Hash:     hash,
 		Author: author,
-		Signature: signature,
 	}
 	dataByts, err := vcbcReadyData.Encode()
 	if err != nil {
