@@ -52,7 +52,6 @@ const (
 	VCBCFinalMsgType
 	VCBCRequestMsgType
 	VCBCAnswerMsgType
-	ABASpecialVoteMsgType
 	CommonCoinMsgType
 )
 
@@ -178,35 +177,6 @@ func (d *ABAFinishData) Validate() error {
 	}
 	return nil
 }
-
-// =========================
-//		ABASpecialVoteData
-// =========================
-
-type ABASpecialVoteData struct {
-	ACRound			alea.ACRound
-	Vote			byte
-}
-
-// Encode returns a msg encoded bytes or error
-func (d *ABASpecialVoteData) Encode() ([]byte, error) {
-	return json.Marshal(d)
-}
-
-// Decode returns error if decoding failed
-func (d *ABASpecialVoteData) Decode(data []byte) error {
-	return json.Unmarshal(data, &d)
-}
-
-// Validate returns error if msg validation doesn't pass.
-// Msg validation checks the msg, it's variables for validity.
-func (d *ABASpecialVoteData) Validate() error {
-	if d.Vote != 0 && d.Vote != 1 {
-		return errors.New("ABASpecialVoteData: vote not 0 or 1")
-	}
-	return nil
-}
-
 
 // =========================
 //			VCBCSend
@@ -405,14 +375,6 @@ func (msg *Message) GetVCBCFinalData() (*VCBCFinalData, error) {
 	ret := &VCBCFinalData{}
 	if err := ret.Decode(msg.Data); err != nil {
 		return nil, errors.Wrap(err, "could not decode VCBCFinalData from message")
-	}
-	return ret, nil
-}
-// ABASpecialVoteData returns abainit specific data
-func (msg *Message) GetABASpecialVoteData() (*ABASpecialVoteData, error) {
-	ret := &ABASpecialVoteData{}
-	if err := ret.Decode(msg.Data); err != nil {
-		return nil, errors.Wrap(err, "could not decode ABASpecialVoteData from message")
 	}
 	return ret, nil
 }

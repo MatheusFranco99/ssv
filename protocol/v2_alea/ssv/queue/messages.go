@@ -129,7 +129,6 @@ func consensusTypeScore(state *State, m *DecodedSSVMessage) int {
 			isMessageOfType(messages.VCBCSendMsgType),
 			isMessageOfType(messages.VCBCReadyMsgType),
 			isMessageOfType(messages.ABAFinishMsgType),
-			isMessageOfType(messages.ABASpecialVoteMsgType),
 			isMessageOfType(messages.CommonCoinMsgType),
 			isMessageOfType(messages.ABAInitMsgType),
 			isMessageOfType(messages.ABAAuxMsgType),

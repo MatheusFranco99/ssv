@@ -114,7 +114,6 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))
 
-		// i.SendCommonCoinShare()
 
 		i.StartVCBC(value)
 	})
@@ -179,17 +178,7 @@ func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decide
 		case messages.ABAConfMsgType:
 			return i.uponABAConf(msg)
 		case messages.ABAFinishMsgType:
-			// _, _, err := i.uponABAFinish(msg)
-			// decided, decidedValue, err := i.uponABAFinish(msg)
-			// if decided {
-			// 	i.State.Decided = decided
-			// 	i.State.DecidedValue = decidedValue
-			// 	aggregatedCommit = msg
-			// }
-			// return err
 			return i.uponABAFinish(msg)
-		case messages.ABASpecialVoteMsgType:
-			return i.uponABASpecialVote(msg)
 		case messages.VCBCSendMsgType:
 			return i.uponVCBCSend(msg)
 		case messages.VCBCReadyMsgType:
@@ -215,6 +204,7 @@ func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 
 	// logger
 	log := func(str string) {
+		return
 		i.logger.Debug("$$$$$$ UponMessageValidation "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
@@ -229,28 +219,26 @@ func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 	}
 
 	var err error
-	// switch msg.Message.MsgType {
-	// case messages.VCBCSendMsgType:
-	// 	err = isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.VCBCReadyMsgType:
-	// 	err = isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.VCBCFinalMsgType:
-	// 	err = isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.ABAInitMsgType:
-	// 	err = isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.ABAAuxMsgType:
-	// 	err = isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.ABAConfMsgType:
-	// 	err = isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.ABAFinishMsgType:
-	// 	err = isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.ABASpecialVoteMsgType:
-	// 	err = isValidABASpecialVote(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// case messages.CommonCoinMsgType:
-	// 	err = isValidCommonCoin(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	// default:
-	// 	err = errors.New(fmt.Sprintf("signed message type not supported: %v",msg.Message.MsgType))
-	// }
+	switch msg.Message.MsgType {
+	case messages.VCBCSendMsgType:
+		err = isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.VCBCReadyMsgType:
+		err = isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.VCBCFinalMsgType:
+		err = isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.ABAInitMsgType:
+		err = isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.ABAAuxMsgType:
+		err = isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.ABAConfMsgType:
+		err = isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.ABAFinishMsgType:
+		err = isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	case messages.CommonCoinMsgType:
+		err = isValidCommonCoin(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
+	default:
+		err = errors.New(fmt.Sprintf("signed message type not supported: %v",msg.Message.MsgType))
+	}
 
 	log("finish")
 	return err
