@@ -42,6 +42,10 @@ func NewValidatorRegistrationRunner(
 	}
 }
 
+func (r *ValidatorRegistrationRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *ValidatorRegistrationRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }

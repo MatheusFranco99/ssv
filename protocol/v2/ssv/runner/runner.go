@@ -3,6 +3,9 @@ package runner
 import (
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
+	"github.com/google/uuid"
+	"time"
+	"fmt"
 
 	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
@@ -46,6 +49,8 @@ type Runner interface {
 	expectedPostConsensusRootsAndDomain() ([]ssz.HashRoot, phase0.DomainType, error)
 	// executeDuty an INTERNAL function, executes a duty.
 	executeDuty(duty *spectypes.Duty) error
+
+	SetSystemLoad(v int)
 }
 
 type BaseRunner struct {
@@ -58,12 +63,20 @@ type BaseRunner struct {
 
 	// implementation vars
 	TimeoutF TimeoutF `json:"-"`
+
+	// System load to perform
+	SystemLoad int
 }
 
 func NewBaseRunner(logger *zap.Logger) *BaseRunner {
 	return &BaseRunner{
 		logger: logger,
+		SystemLoad: 0,
 	}
+}
+
+func (b *BaseRunner) SetSystemLoad(v int) {
+	b.SystemLoad = v
 }
 
 // baseStartNewDuty is a base func that all runner implementation can call to start a duty
@@ -203,7 +216,24 @@ func (b *BaseRunner) didDecideCorrectly(prevDecided bool, decidedMsg *specqbft.S
 	return true, nil
 }
 
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
+}
+
 func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error {
+
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		b.logger.Debug("$$$$$$ UponBaseRunnerDecide "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log(fmt.Sprintf("Launching %v instances",b.SystemLoad))
+
 	byts, err := input.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode ConsensusData")
@@ -225,28 +255,28 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 
 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
 
-	// idx := 0
-	// for idx < 63 {
-	// 	// size_byts := len(byts)
-	// 	// byts_modified := make([]byte, size_byts)
-	// 	// copy(byts_modified, byts)
-	// 	// byts_modified[2*3%size_byts] = byts_modified[idx%size_byts]
+	idx := 0
+	for idx < (b.SystemLoad - 1) {
+		// size_byts := len(byts)
+		// byts_modified := make([]byte, size_byts)
+		// copy(byts_modified, byts)
+		// byts_modified[2*3%size_byts] = byts_modified[idx%size_byts]
 
-	// 	if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
-	// 		return errors.Wrap(err, "could not start new QBFT instance")
-	// 	}
+		if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
+			return errors.Wrap(err, "could not start new QBFT instance")
+		}
 
-	// 	newInstance := runner.GetBaseRunner().QBFTController.InstanceForHeight(runner.GetBaseRunner().QBFTController.Height)
-	// 	if newInstance == nil {
-	// 		return errors.New("could not find newly created QBFT instance")
-	// 	}
+		newInstance := runner.GetBaseRunner().QBFTController.InstanceForHeight(runner.GetBaseRunner().QBFTController.Height)
+		if newInstance == nil {
+			return errors.New("could not find newly created QBFT instance")
+		}
 
-	// 	runner.GetBaseRunner().State.RunningInstance = newInstance
+		runner.GetBaseRunner().State.RunningInstance = newInstance
 
-	// 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
+		b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
 
-	// 	idx += 1
-	// }
+		idx += 1
+	}
 
 	return nil
 }

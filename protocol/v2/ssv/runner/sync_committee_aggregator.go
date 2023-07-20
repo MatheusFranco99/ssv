@@ -55,6 +55,12 @@ func NewSyncCommitteeAggregatorRunner(
 	}
 }
 
+
+
+func (r *SyncCommitteeAggregatorRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *SyncCommitteeAggregatorRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }

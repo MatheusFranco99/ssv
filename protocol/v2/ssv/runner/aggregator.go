@@ -52,6 +52,11 @@ func NewAggregatorRunner(
 	}
 }
 
+
+func (r *AggregatorRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *AggregatorRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }

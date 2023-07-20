@@ -26,6 +26,7 @@ func (i *Instance) uponRoundChange(
 
 	// logger
 	log := func(str string) {
+		return
 		i.logger.Debug("$$$$$$ UponRoundChange "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(roundForDebug)))
 	}
 

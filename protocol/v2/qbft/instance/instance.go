@@ -92,10 +92,10 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 		if proposer(i.State, i.GetConfig(), specqbft.FirstRound) == i.State.Share.OperatorID {
 
 			proposal, err := CreateProposal(i.State, i.config, i.StartValue, nil, nil)
-			log("created proposal")
+			// log("created proposal")
 			// nolint
 			if err != nil {
-				log("failed to create proposal")
+				// log("failed to create proposal")
 				i.logger.Warn("failed to create proposal", zap.Error(err))
 				// TODO align spec to add else to avoid broadcast errored proposal
 			} else {
@@ -103,10 +103,10 @@ func (i *Instance) Start(value []byte, height specqbft.Height) {
 				if err := i.Broadcast(proposal); err != nil {
 					i.logger.Warn("failed to broadcast proposal", zap.Error(err))
 				}
-				log("broadcasted")
+				// log("broadcasted")
 			}
 		}
-		log("finish")
+		// log("finish")
 
 	})
 }
@@ -163,14 +163,15 @@ func (i *Instance) ProcessMsg(msg *specqbft.SignedMessage) (decided bool, decide
 func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 
 	//funciton identifier
-	functionID := uuid.New().String()
+	// functionID := uuid.New().String()
 
 	// logger
-	log := func(str string) {
-		i.logger.Debug("$$$$$$ UponMessageValidation "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
-	}
+	// log := func(str string) {
+	// 	return
+	// 	i.logger.Debug("$$$$$$ UponMessageValidation "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	// }
 
-	log("start")
+	// log("start")
 
 	if err := msg.Validate(); err != nil {
 		return errors.Wrap(err, "invalid signed message")
@@ -226,7 +227,7 @@ func (i *Instance) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 		err = errors.New("signed message type not supported")
 	}
 
-	log("finish")
+	// log("finish")
 
 	return err
 }

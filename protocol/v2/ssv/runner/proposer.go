@@ -57,6 +57,11 @@ func NewProposerRunner(
 	}
 }
 
+
+func (r *ProposerRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *ProposerRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }
