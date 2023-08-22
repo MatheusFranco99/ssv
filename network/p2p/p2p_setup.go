@@ -39,11 +39,11 @@ const (
 	// backoffExponentBase is the base of the backoff exponent
 	backoffExponentBase = 2.0
 	// backoffConnectorCacheSize is the cache size of the backoff connector
-	backoffConnectorCacheSize = 1024
+	backoffConnectorCacheSize = 16384
 	// connectTimeout is the timeout used for connections
 	connectTimeout = time.Minute
 	// connectorQueueSize is the buffer size of the channel used by the connector
-	connectorQueueSize = 256
+	connectorQueueSize = 16384
 )
 
 // Setup is used to setup the network
@@ -272,8 +272,8 @@ func (n *p2pNetwork) setupPubsub() error {
 		MsgHandler: n.handlePubsubMessages,
 		ScoreIndex: n.idx,
 		//Discovery: n.disc,
-		OutboundQueueSize:   n.cfg.PubsubOutQueueSize,
-		ValidationQueueSize: n.cfg.PubsubValidationQueueSize,
+		OutboundQueueSize:   16384, //n.cfg.PubsubOutQueueSize,
+		ValidationQueueSize: 16384, //n.cfg.PubsubValidationQueueSize,
 		ValidateThrottle:    n.cfg.PubsubValidateThrottle,
 		MsgIDCacheTTL:       n.cfg.PubsubMsgCacheTTL,
 		GetValidatorStats:   n.cfg.GetValidatorStats,

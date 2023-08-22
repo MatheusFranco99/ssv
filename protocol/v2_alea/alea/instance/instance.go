@@ -106,6 +106,39 @@ func NewInstance(
 	return inst
 }
 
+func (i *Instance) GetInitTime() int64 {
+	return i.initTime
+}
+
+func (i *Instance) GetFinalTime() int64 {
+	return i.finalTime
+}
+
+func (i *Instance) GetStatsString() string {
+	if i.State.Decided == false {
+		return ""
+	}
+	acround := i.State.ACState.CurrentACRound()
+
+	aba := i.State.ACState.GetABA(acround)
+	round := aba.GetRound()
+	abaround := aba.GetABARound(round)
+
+	stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Has quorum: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",	
+		i.State.Height,
+		i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(), 
+		acround,
+		round,
+		abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
+		abaround.LenAux(), abaround.GetAux(), abaround.HasSentAux(byte(0)), abaround.HasSentAux(byte(1)),
+		abaround.LenConf(), abaround.GetConf(), abaround.HasSentConf(),
+		aba.LenFinish(byte(0)), aba.LenFinish(byte(1)), aba.GetFinish(), aba.HasSentFinish(byte(0)), aba.HasSentFinish(byte(1)),
+		)
+	
+	i.logger.Debug(fmt.Sprintf("Instance: GetStats outputting: %v",stats))
+	return stats
+}
+
 // Start is an interface implementation
 func (i *Instance) Start(value []byte, height specalea.Height) {
 	i.startOnce.Do(func() {
@@ -123,8 +156,8 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 			i.logger.Debug("$$$$$$ UponStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 		}
 
-		log("starting alea instance")
-		log(fmt.Sprintf("start %v %v %v",i.State.Share.Quorum, i.State.Share.PartialQuorum, len(i.State.Share.Committee)))
+		// log("starting alea instance")
+		// log(fmt.Sprintf("start %v %v %v",i.State.Share.Quorum, i.State.Share.PartialQuorum, len(i.State.Share.Committee)))
 
 		i.StartValue = value
 		i.State.Round = specalea.FirstRound

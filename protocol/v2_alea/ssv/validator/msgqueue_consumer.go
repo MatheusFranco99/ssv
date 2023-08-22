@@ -24,6 +24,10 @@ type queueContainer struct {
 	queueState *queue.State
 }
 
+func (qc queueContainer) ClearQ() {
+	qc.Q = queue.New()
+}
+
 // HandleMessage handles a spectypes.SSVMessage.
 // TODO: accept DecodedSSVMessage once p2p is upgraded to decode messages during validation.
 func (v *Validator) HandleMessage(msg *spectypes.SSVMessage) {

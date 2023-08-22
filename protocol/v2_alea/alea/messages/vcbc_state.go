@@ -270,3 +270,14 @@ func (v *VCBCState) GetMaxValueOccurences() ([]byte,int) {
 
 	return maxBytes, maxCount
 }
+
+func (v *VCBCState) GetNodeIDs() []types.OperatorID {
+	ans := make([]types.OperatorID,len(v.data))
+	idx := 0
+	for opID, _ := range v.data {
+		ans[idx] = opID
+		idx += 1
+	}
+	return ans
+}
+

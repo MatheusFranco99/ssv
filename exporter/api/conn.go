@@ -24,7 +24,7 @@ var (
 	// maxMessageSize max msg size allowed from peer.
 	maxMessageSize = int64(1024)
 
-	chanSize = 256
+	chanSize = 16384
 
 	newline = []byte{'\n'}
 	space   = []byte{' '}

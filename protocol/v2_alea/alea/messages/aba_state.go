@@ -30,6 +30,18 @@ func NewABARound() *ABARound {
 	return abaround
 }
 
+
+func (r *ABARound) GetInit() map[types.OperatorID]byte {
+	return r.init
+}
+func (r *ABARound) GetAux() map[types.OperatorID]byte {
+	return r.aux
+}
+func (r *ABARound) GetConf() map[types.OperatorID][]byte {
+	return r.conf
+}
+
+
 func (r *ABARound) AddInit(vote byte, sender types.OperatorID) {
 	if _, ok := r.init[sender]; ok {
 		return
@@ -155,6 +167,10 @@ func (ab *ABA) GetDecidedValue() byte {
 }
 
 
+func (ab *ABA) GetRound() alea.Round {
+	return ab.round
+}
+
 
 func (ab *ABA) BumpRound() {
 	ab.round += 1
@@ -219,6 +235,10 @@ func (ab *ABA) HasSentFinish(vote byte) bool {
 		return ab.sentFinish[vote]
 	}
 	return false
+}
+
+func (ab *ABA) GetFinish() map[types.OperatorID]byte {
+	return ab.finish
 }
 
 /*

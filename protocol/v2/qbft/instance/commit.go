@@ -75,7 +75,7 @@ func (i *Instance) UponCommit(signedCommit *messages.SignedMessage, commitMsgCon
 		// i.logger.Debug("$$$$$$ UponCommit return with quorum.", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(signedCommit.Message.Round)))
 		i.finalTime = makeTimestamp()
 		duration := i.finalTime - i.initTime
-		log(fmt.Sprintf("return decided, total time: %v", duration))
+		// log(fmt.Sprintf("return decided, total time: %v", duration))
 		// log("return decided, total time:")
 
 		return true, msgCommitData.Data, agg, nil

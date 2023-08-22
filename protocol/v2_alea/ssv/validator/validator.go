@@ -74,7 +74,7 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 		Queues:      make(map[spectypes.BeaconRole]queueContainer),
 		state:       uint32(NotStarted),
 		DoneDutyForSlot: make(map[int]bool),
- 		SystemLoad: 0,
+ 		SystemLoad: 100,
 	}
 
 	for _, dutyRunner := range options.DutyRunners {
@@ -108,7 +108,7 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 	log("start")
 
 	if duty.Type.String() != "SYNC_COMMITTEE" {
-		log("duty not sync committee. Quitting.")
+		// log("duty not sync committee. Quitting.")
 		return nil
 	}
 
@@ -117,6 +117,9 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 
 		log(fmt.Sprintf("already did duty in this slot. %v not going to start. Quitting.",duty.Type.String()))
 		return nil
+	} else {
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.ShowStats(int(slot)-1)
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.SetCurrentSlot(int(slot))
 	}
 
 	dutyRunner := v.DutyRunners[duty.Type]
@@ -126,17 +129,19 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 
 	log(fmt.Sprintf("Setting true for slot %v, due to duty %v",int(slot),duty.Type.String()))
  	v.DoneDutyForSlot[int(slot)] = true
- 	if v.SystemLoad == 0 {
- 		v.SystemLoad = 1
- 	} else {
- 		if v.SystemLoad == 1 {
- 			v.SystemLoad = 0
- 		}
- 		v.SystemLoad += 20
- 	}
+ 	// if v.SystemLoad == 0 {
+ 	// 	v.SystemLoad = 1
+ 	// } else {
+ 	// 	if v.SystemLoad == 1 {
+ 	// 		v.SystemLoad = 0
+ 	// 	}
+ 	// 	v.SystemLoad += 20
+ 	// }
  	log(fmt.Sprintf("System load: %v",v.SystemLoad))
 
  	dutyRunner.SetSystemLoad(v.SystemLoad)
+
+	v.Queues[dutyRunner.GetBaseRunner().BeaconRoleType].ClearQ()
 
 	return dutyRunner.StartNewDuty(duty)
 }
