@@ -17,3 +17,11 @@ func (m *MessageContainer) Len() int {
 func (m *MessageContainer) GetMessages() []*SignedMessage {
 	return m.Msgs
 }
+
+func (m *MessageContainer) AddMessage(s *SignedMessage) {
+	m.Msgs = append(m.Msgs, s)
+}
+
+func (m *MessageContainer) GetMessagesSlice(a int, b int) []*SignedMessage {
+	return m.Msgs[a : b+1]
+}

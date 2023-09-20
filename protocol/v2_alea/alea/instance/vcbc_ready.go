@@ -180,14 +180,15 @@ func isValidVCBCReady(
 	}
 	log("checked author in committee")
 
+	// Signature will be checked outside
 	// If it's not using BLS -> verify
 	// If it's using BLS but it's not using AggregateVerify -> verify
 	// If it's using BLS and AggregateVerify, verify only when quorum is reached
-	state.ReadyCounter[author] += 1
-	if !(state.UseBLS) || !(state.AggregateVerify) || (state.ReadyCounter[author] == state.Share.Quorum) {
-		Verify(state, config, signedMsg, operators)
-		log("checked signature")
-	}
+	// state.ReadyCounter[author] += 1
+	// if !(state.UseBLS) || !(state.AggregateVerify) || (state.ReadyCounter[author] == state.Share.Quorum) {
+	// 	Verify(state, config, signedMsg, operators)
+	// 	log("checked signature")
+	// }
 
 	return nil
 }

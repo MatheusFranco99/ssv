@@ -89,6 +89,19 @@ func Verify(state *messages.State, config alea.IConfig, signedMsg *messages.Sign
 	return nil
 }
 
+func VerifyBLSAggregate(state *messages.State, config alea.IConfig, signedMsgs []*messages.SignedMessage, operators []*types.Operator) error {
+	aggregated_msg, err := aggregateMsgs(signedMsgs)
+	if err != nil {
+		return err
+	}
+
+	// verify signature
+	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+		return errors.Wrap(err, "aggregated msg signature invalid")
+	}
+	return nil
+}
+
 func MockEDDSASignature() ([]byte, error) {
 	// Parse the private key
 	privateKeyBytes, err := hex.DecodeString(Ed25519PrivateKey)

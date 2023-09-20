@@ -105,8 +105,9 @@ func isValidVCBCSend(
 	}
 	log("checked number of signers is 1")
 
-	Verify(state, config, signedMsg, operators)
-	log("checked signature")
+	// Signature will be verified outside
+	// Verify(state, config, signedMsg, operators)
+	// log("checked signature")
 
 	VCBCSendData, err := signedMsg.Message.GetVCBCSendData()
 

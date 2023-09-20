@@ -189,13 +189,14 @@ func isValidABAFinish(
 	}
 	log("validated")
 
-	counter := state.AbaFinishCounter
-	data := ABAFinishData
-	counter[data.ACRound] += 1
-	if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound] == state.Share.Quorum || counter[data.ACRound] == state.Share.PartialQuorum) {
-		Verify(state, config, signedMsg, operators)
-		log("checked signature")
-	}
+	// Signature will be checked outside
+	// counter := state.AbaFinishCounter
+	// data := ABAFinishData
+	// counter[data.ACRound] += 1
+	// if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound] == state.Share.Quorum || counter[data.ACRound] == state.Share.PartialQuorum) {
+	// 	Verify(state, config, signedMsg, operators)
+	// 	log("checked signature")
+	// }
 
 	return nil
 }

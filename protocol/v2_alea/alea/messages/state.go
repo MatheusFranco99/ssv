@@ -133,17 +133,18 @@ type State struct {
 	DiffieHellmanContainerOneTimeCost *DiffieHellmanContainerOneTimeCost
 
 	// Message Containers and counters
-	ReadyContainer     map[types.OperatorID]*MessageContainer
-	AbaInitContainer   map[alea.ACRound]map[alea.Round]*MessageContainer
-	AbaAuxContainer    map[alea.ACRound]map[alea.Round]*MessageContainer
-	AbaConfContainer   map[alea.ACRound]map[alea.Round]*MessageContainer
-	AbaFinishContainer map[alea.ACRound]map[alea.Round]*MessageContainer
-	ReadyCounter       map[types.OperatorID]uint64
-	AbaInitCounter     map[alea.ACRound]map[alea.Round]uint64
-	AbaAuxCounter      map[alea.ACRound]map[alea.Round]uint64
-	AbaConfCounter     map[alea.ACRound]map[alea.Round]uint64
-	AbaFinishCounter   map[alea.ACRound]uint64
-	CommonCoinCounter  uint64
+	ReadyContainer         *MessageContainer
+	AbaInitContainer       map[alea.ACRound]map[alea.Round]*MessageContainer
+	AbaAuxContainer        map[alea.ACRound]map[alea.Round]*MessageContainer
+	AbaConfContainer       map[alea.ACRound]map[alea.Round]*MessageContainer
+	AbaFinishContainer     map[alea.ACRound]*MessageContainer
+	CommonCoinMsgContainer *MessageContainer
+	ReadyCounter           map[types.OperatorID]uint64
+	AbaInitCounter         map[alea.ACRound]map[alea.Round]uint64
+	AbaAuxCounter          map[alea.ACRound]map[alea.Round]uint64
+	AbaConfCounter         map[alea.ACRound]map[alea.Round]uint64
+	AbaFinishCounter       map[alea.ACRound]uint64
+	CommonCoinCounter      uint64
 
 	// Log Tags
 	VCBCSendLogTag   int

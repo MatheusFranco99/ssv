@@ -87,9 +87,9 @@ func BenchmarkAlea(t *testing.B) {
 	vcbc_send_message_1 := VCBCSendMessage(1, TestingHeight, 1, TestingContent, inst.State)
 
 	vcbc_ready_message_1_1 := VCBCReadyMessage(1, TestingHeight, 1, 1, TestingContentHash, inst.State)
-	vcbc_ready_message_1_2 := VCBCReadyMessage(2, TestingHeight, 1, 1, TestingContentHash, inst.State)
-	vcbc_ready_message_1_3 := VCBCReadyMessage(3, TestingHeight, 1, 1, TestingContentHash, inst.State)
-	vcbc_ready_message_1_4 := VCBCReadyMessage(4, TestingHeight, 1, 1, TestingContentHash, inst.State)
+	vcbc_ready_message_1_2 := VCBCReadyMessage(2, TestingHeight, 1, 1, TestingContentHash, inst2.State)
+	vcbc_ready_message_1_3 := VCBCReadyMessage(3, TestingHeight, 1, 1, TestingContentHash, inst3.State)
+	vcbc_ready_message_1_4 := VCBCReadyMessage(4, TestingHeight, 1, 1, TestingContentHash, inst4.State)
 	agg_msg_1, err := AggregateMsgs([]*messages.SignedMessage{vcbc_ready_message_1_1, vcbc_ready_message_1_2, vcbc_ready_message_1_3, vcbc_ready_message_1_4})
 	if err != nil {
 		panic(err)
@@ -99,10 +99,10 @@ func BenchmarkAlea(t *testing.B) {
 	// VCBC from 2
 	vcbc_send_message_2 := VCBCSendMessage(2, TestingHeight, 1, TestingContent, inst2.State)
 
-	vcbc_ready_message_2_1 := VCBCReadyMessage(1, TestingHeight, 1, 2, TestingContentHash, inst2.State)
+	vcbc_ready_message_2_1 := VCBCReadyMessage(1, TestingHeight, 1, 2, TestingContentHash, inst.State)
 	vcbc_ready_message_2_2 := VCBCReadyMessage(2, TestingHeight, 1, 2, TestingContentHash, inst2.State)
-	vcbc_ready_message_2_3 := VCBCReadyMessage(3, TestingHeight, 1, 2, TestingContentHash, inst2.State)
-	vcbc_ready_message_2_4 := VCBCReadyMessage(4, TestingHeight, 1, 2, TestingContentHash, inst2.State)
+	vcbc_ready_message_2_3 := VCBCReadyMessage(3, TestingHeight, 1, 2, TestingContentHash, inst3.State)
+	vcbc_ready_message_2_4 := VCBCReadyMessage(4, TestingHeight, 1, 2, TestingContentHash, inst4.State)
 	agg_msg_2, err := AggregateMsgs([]*messages.SignedMessage{vcbc_ready_message_2_1, vcbc_ready_message_2_2, vcbc_ready_message_2_3, vcbc_ready_message_2_4})
 	if err != nil {
 		panic(err)
@@ -112,10 +112,10 @@ func BenchmarkAlea(t *testing.B) {
 	// VCBC from 3
 	vcbc_send_message_3 := VCBCSendMessage(3, TestingHeight, 1, TestingContent, inst3.State)
 
-	vcbc_ready_message_3_1 := VCBCReadyMessage(1, TestingHeight, 1, 3, TestingContentHash, inst3.State)
-	vcbc_ready_message_3_2 := VCBCReadyMessage(2, TestingHeight, 1, 3, TestingContentHash, inst3.State)
+	vcbc_ready_message_3_1 := VCBCReadyMessage(1, TestingHeight, 1, 3, TestingContentHash, inst.State)
+	vcbc_ready_message_3_2 := VCBCReadyMessage(2, TestingHeight, 1, 3, TestingContentHash, inst2.State)
 	vcbc_ready_message_3_3 := VCBCReadyMessage(3, TestingHeight, 1, 3, TestingContentHash, inst3.State)
-	vcbc_ready_message_3_4 := VCBCReadyMessage(4, TestingHeight, 1, 3, TestingContentHash, inst3.State)
+	vcbc_ready_message_3_4 := VCBCReadyMessage(4, TestingHeight, 1, 3, TestingContentHash, inst4.State)
 	agg_msg_3, err := AggregateMsgs([]*messages.SignedMessage{vcbc_ready_message_3_1, vcbc_ready_message_3_2, vcbc_ready_message_3_3, vcbc_ready_message_3_4})
 	if err != nil {
 		panic(err)
@@ -125,9 +125,9 @@ func BenchmarkAlea(t *testing.B) {
 	// VCBC from 4
 	vcbc_send_message_4 := VCBCSendMessage(4, TestingHeight, 1, TestingContent, inst4.State)
 
-	vcbc_ready_message_4_1 := VCBCReadyMessage(1, TestingHeight, 1, 4, TestingContentHash, inst4.State)
-	vcbc_ready_message_4_2 := VCBCReadyMessage(2, TestingHeight, 1, 4, TestingContentHash, inst4.State)
-	vcbc_ready_message_4_3 := VCBCReadyMessage(3, TestingHeight, 1, 4, TestingContentHash, inst4.State)
+	vcbc_ready_message_4_1 := VCBCReadyMessage(1, TestingHeight, 1, 4, TestingContentHash, inst.State)
+	vcbc_ready_message_4_2 := VCBCReadyMessage(2, TestingHeight, 1, 4, TestingContentHash, inst2.State)
+	vcbc_ready_message_4_3 := VCBCReadyMessage(3, TestingHeight, 1, 4, TestingContentHash, inst3.State)
 	vcbc_ready_message_4_4 := VCBCReadyMessage(4, TestingHeight, 1, 4, TestingContentHash, inst4.State)
 	agg_msg_4, err := AggregateMsgs([]*messages.SignedMessage{vcbc_ready_message_4_1, vcbc_ready_message_4_2, vcbc_ready_message_4_3, vcbc_ready_message_4_4})
 	if err != nil {

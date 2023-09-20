@@ -146,16 +146,17 @@ func isValidABAAux(
 	}
 	log("validated")
 
-	counter := state.AbaAuxCounter
-	data := ABAAuxData
-	if _, ok := counter[data.ACRound]; !ok {
-		counter[data.ACRound] = make(map[specalea.Round]uint64)
-	}
-	counter[data.ACRound][data.Round] += 1
-	if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound][data.Round] == state.Share.Quorum || counter[data.ACRound][data.Round] == state.Share.PartialQuorum) {
-		Verify(state, config, signedMsg, operators)
-		log("checked signature")
-	}
+	// Signature will be checked outside
+	// counter := state.AbaAuxCounter
+	// data := ABAAuxData
+	// if _, ok := counter[data.ACRound]; !ok {
+	// 	counter[data.ACRound] = make(map[specalea.Round]uint64)
+	// }
+	// counter[data.ACRound][data.Round] += 1
+	// if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound][data.Round] == state.Share.Quorum || counter[data.ACRound][data.Round] == state.Share.PartialQuorum) {
+	// 	Verify(state, config, signedMsg, operators)
+	// 	log("checked signature")
+	// }
 
 	return nil
 }

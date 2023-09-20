@@ -99,10 +99,11 @@ func isValidCommonCoin(
 		return errors.New("msg allows 1 signer")
 	}
 
-	state.CommonCoinCounter += 1
-	if !(state.UseBLS) || !(state.AggregateVerify) || (state.CommonCoinCounter == state.Share.Quorum) {
-		Verify(state, config, signedMessage, operators)
-	}
+	// Signature will be checked outside
+	// state.CommonCoinCounter += 1
+	// if !(state.UseBLS) || !(state.AggregateVerify) || (state.CommonCoinCounter == state.Share.Quorum) {
+	// 	Verify(state, config, signedMessage, operators)
+	// }
 
 	msgData, err := signedMessage.Message.GetCommonCoinData()
 	if err != nil {

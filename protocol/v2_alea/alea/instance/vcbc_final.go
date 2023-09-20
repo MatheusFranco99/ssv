@@ -134,8 +134,9 @@ func isValidVCBCFinal(
 	}
 	log("checked signers == 1")
 
-	Verify(state, config, signedMsg, operators)
-	log("checked signature")
+	// Signature will be verified outside
+	// Verify(state, config, signedMsg, operators)
+	// log("checked signature")
 
 	VCBCFinalData, err := signedMsg.Message.GetVCBCFinalData()
 	log("got data")
@@ -147,6 +148,7 @@ func isValidVCBCFinal(
 	}
 	log("validated")
 
+	// !Below is commented because it was verifying this signature twice
 	// aggregated_msg := VCBCFinalData.AggregatedMessage
 
 	// verify signature
