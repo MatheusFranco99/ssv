@@ -34,7 +34,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 	// logger
 	log := func(str string) {
 
-		if i.State.DecidedLogOnly && !strings.Contains(str, "Total time") {
+		if i.State.HideLogs || i.State.HideValidationLogs || (i.State.DecidedLogOnly && !strings.Contains(str, "Total time")) {
 			return
 		}
 		i.logger.Debug("$$$$$$ UponABAInit "+fmt.Sprint(i.State.AbaInitLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
