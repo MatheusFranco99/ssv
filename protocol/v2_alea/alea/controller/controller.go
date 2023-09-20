@@ -21,22 +21,20 @@ import (
 	"time"
 )
 
-
 const (
+	reset     = "\033[0m"
+	bold      = "\033[1m"
+	underline = "\033[4m"
+	strike    = "\033[9m"
+	italic    = "\033[3m"
 
-    reset = "\033[0m"
-    bold = "\033[1m"
-    underline = "\033[4m"
-    strike = "\033[9m"
-    italic = "\033[3m"
-
-    cRed = "\033[31m"
-    cGreen = "\033[32m"
-    cYellow = "\033[33m"
-    cBlue = "\033[34m"
-    cPurple = "\033[35m"
-    cCyan = "\033[36m"
-    cWhite = "\033[37m"
+	cRed    = "\033[31m"
+	cGreen  = "\033[32m"
+	cYellow = "\033[33m"
+	cBlue   = "\033[34m"
+	cPurple = "\033[35m"
+	cCyan   = "\033[36m"
+	cWhite  = "\033[37m"
 )
 
 var logger = logging.Logger("ssv/protocol/alea/controller").Desugar()
@@ -59,13 +57,13 @@ type Controller struct {
 	config              alea.IConfig
 	fullNode            bool
 	logger              *zap.Logger
-	HeightCountMap		map[int]int
-	CurrSlot			int
-	Latencies			map[int]map[specalea.Height]int64
-	SlotStartTime		map[int]int64
+	HeightCountMap      map[int]int
+	CurrSlot            int
+	Latencies           map[int]map[specalea.Height]int64
+	SlotStartTime       map[int]int64
 	ThroughputHistogram map[int][]int
-	SlotDivision		int
-	HeightsStored		map[int][]*instance.Instance
+	SlotDivision        int
+	HeightsStored       map[int][]*instance.Instance
 }
 
 func NewController(
@@ -87,58 +85,58 @@ func NewController(
 		fullNode:            fullNode,
 		logger: logger.With(zap.String("publicKey", hex.EncodeToString(msgId.GetPubKey())),
 			zap.String("role", msgId.GetRoleType().String())),
-		HeightCountMap:  make(map[int]int),
-		CurrSlot: 0,
-		Latencies: make(map[int]map[specalea.Height]int64),
-		SlotStartTime: make(map[int]int64),
+		HeightCountMap:      make(map[int]int),
+		CurrSlot:            0,
+		Latencies:           make(map[int]map[specalea.Height]int64),
+		SlotStartTime:       make(map[int]int64),
 		ThroughputHistogram: make(map[int][]int),
-		SlotDivision: 12,
-		HeightsStored: make(map[int][]*instance.Instance),
+		SlotDivision:        12,
+		HeightsStored:       make(map[int][]*instance.Instance),
 	}
 }
 
 func (c *Controller) ShowStats(slot_value int) {
 	if v, ok := c.HeightCountMap[slot_value]; ok {
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vThroughput:%v, slot:%v, %v$$$$$$",cBlue,v, slot_value,reset))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vThroughput:%v, slot:%v, %v$$$$$$", cBlue, v, slot_value, reset))
 	} else {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Throughput, slot:%v, $$$$$$", slot_value))
 	}
 
-	if _,ok := c.Latencies[slot_value]; !ok {
+	if _, ok := c.Latencies[slot_value]; !ok {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Latency list, slot:%v, $$$$$$", slot_value))
 	} else {
-		latency_lst := make([]int64,len(c.Latencies[slot_value]))
+		latency_lst := make([]int64, len(c.Latencies[slot_value]))
 		mean_value := float64(0)
 		idx := 0
-		for _,v := range c.Latencies[slot_value] {
+		for _, v := range c.Latencies[slot_value] {
 			mean_value += float64(v)
 			latency_lst[idx] = v
 			idx += 1
 		}
 		num_points := len(c.Latencies[slot_value])
 		mean_value = mean_value / float64(num_points)
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Latency mean:%v,%v num_points:%v, slot:%v, $$$$$$", cPurple,mean_value,reset, num_points, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Latency mean:%v,%v num_points:%v, slot:%v, $$$$$$", cPurple, mean_value, reset, num_points, slot_value))
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Latency list:%v,%v slot:%v, $$$$$$", cCyan, latency_lst, reset, slot_value))
 	}
 
 	if _, ok := c.ThroughputHistogram[slot_value]; !ok {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Histogram list, slot:%v, $$$$$$", slot_value))
 	} else {
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Histogram:%v, %vslot:%v, $$$$$$", cGreen,c.ThroughputHistogram[slot_value], reset, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Histogram:%v, %vslot:%v, $$$$$$", cGreen, c.ThroughputHistogram[slot_value], reset, slot_value))
 	}
 
 	if _, ok := c.HeightsStored[c.CurrSlot]; !ok {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No HeightsStored list, slot:%v, $$$$$$", slot_value))
 	} else {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: HeightsStored:%v, slot:%v, $$$$$$", c.HeightsStored[slot_value], slot_value))
-		
+
 		num_not_decided := 0
-		for _,v := range c.HeightsStored[slot_value] {
+		for _, v := range c.HeightsStored[slot_value] {
 			if !v.State.Decided {
 				num_not_decided += 1
 			}
 		}
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vNumber of not decided:%v%v, slot:%v, $$$$$$", cYellow,num_not_decided,reset, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vNumber of not decided:%v%v, slot:%v, $$$$$$", cYellow, num_not_decided, reset, slot_value))
 
 		// v_idx := 0
 		// for _,v := range c.HeightsStored[slot_value] {
@@ -154,9 +152,9 @@ func (c *Controller) ShowStats(slot_value int) {
 		// 		round := aba.GetRound()
 		// 		abaround := aba.GetABARound(round)
 
-		// 		stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",	
+		// 		stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",
 		// 			i.State.Height,
-		// 			i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(), 
+		// 			i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(),
 		// 			acround,
 		// 			round,
 		// 			abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
@@ -168,7 +166,7 @@ func (c *Controller) ShowStats(slot_value int) {
 		// 	}
 		// }
 	}
-	
+
 }
 
 func makeTimestamp() int64 {
@@ -179,8 +177,6 @@ func (c *Controller) SetCurrentSlot(slot_value int) {
 	c.CurrSlot = slot_value
 	c.SlotStartTime[slot_value] = makeTimestamp()
 }
-
-
 
 // StartNewInstance will start a new alea instance, if can't will return error
 func (c *Controller) StartNewInstance(value []byte) error {
@@ -197,9 +193,9 @@ func (c *Controller) StartNewInstance(value []byte) error {
 	newInstance.Start(value, c.Height)
 
 	if _, ok := c.HeightsStored[c.CurrSlot]; !ok {
-		c.HeightsStored[c.CurrSlot] = make([]*instance.Instance,0)
+		c.HeightsStored[c.CurrSlot] = make([]*instance.Instance, 0)
 	}
-	c.HeightsStored[c.CurrSlot] = append(c.HeightsStored[c.CurrSlot],newInstance)
+	c.HeightsStored[c.CurrSlot] = append(c.HeightsStored[c.CurrSlot], newInstance)
 
 	return nil
 }
@@ -270,12 +266,12 @@ func (c *Controller) UponExistingInstanceMsg(msg *messages.SignedMessage) (*mess
 	c.Latencies[c.CurrSlot][inst.State.Height] = (inst.GetFinalTime() - inst.GetInitTime())
 
 	if _, ok := c.ThroughputHistogram[c.CurrSlot]; !ok {
-		c.ThroughputHistogram[c.CurrSlot] = make([]int,c.SlotDivision)
+		c.ThroughputHistogram[c.CurrSlot] = make([]int, c.SlotDivision)
 	}
-	slot_init_time := c.SlotStartTime[c.CurrSlot]//c.config.GetNetwork().GetSlotStartTime()
-	diff := inst.GetFinalTime()-slot_init_time
+	slot_init_time := c.SlotStartTime[c.CurrSlot] //c.config.GetNetwork().GetSlotStartTime()
+	diff := inst.GetFinalTime() - slot_init_time
 	dividor := int64(12_000_000) / int64(c.SlotDivision)
-	c.ThroughputHistogram[c.CurrSlot][int(math.Floor( float64(diff) / float64(dividor)  ))] += 1
+	c.ThroughputHistogram[c.CurrSlot][int(math.Floor(float64(diff)/float64(dividor)))] += 1
 
 	return decidedMsg, decideValue, nil
 }

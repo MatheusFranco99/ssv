@@ -6,16 +6,17 @@ import (
 
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
 
+	"fmt"
+	"time"
+
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"github.com/google/uuid"
-	"fmt"
- 	"time"
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
@@ -44,32 +45,31 @@ type Validator struct {
 
 	state uint32
 
- 	// test variable -> do only one duty per slot
- 	DoneDutyForSlot map[int]bool
- 	// increment system load
- 	SystemLoad int
- }
+	// test variable -> do only one duty per slot
+	DoneDutyForSlot map[int]bool
+	// increment system load
+	SystemLoad int
+}
 
- const (
+const (
+	reset     = "\033[0m"
+	bold      = "\033[1m"
+	underline = "\033[4m"
+	strike    = "\033[9m"
+	italic    = "\033[3m"
 
-    reset = "\033[0m"
-    bold = "\033[1m"
-    underline = "\033[4m"
-    strike = "\033[9m"
-    italic = "\033[3m"
-
-    cRed = "\033[31m"
-    cGreen = "\033[32m"
-    cYellow = "\033[33m"
-    cBlue = "\033[34m"
-    cPurple = "\033[35m"
-    cCyan = "\033[36m"
-    cWhite = "\033[37m"
+	cRed    = "\033[31m"
+	cGreen  = "\033[32m"
+	cYellow = "\033[33m"
+	cBlue   = "\033[34m"
+	cPurple = "\033[35m"
+	cCyan   = "\033[36m"
+	cWhite  = "\033[37m"
 )
 
- func makeTimestamp() int64 {
- 	return time.Now().UnixNano() / int64(time.Microsecond)
- }
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
+}
 
 // NewValidator creates a new instance of Validator.
 func NewValidator(pctx context.Context, cancel func(), options Options) *Validator {
@@ -78,19 +78,19 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 	logger := logger.With(zap.String("validator", hex.EncodeToString(options.SSVShare.ValidatorPubKey)))
 
 	v := &Validator{
-		ctx:         pctx,
-		cancel:      cancel,
-		logger:      logger,
-		DutyRunners: options.DutyRunners,
-		Network:     options.Network,
-		Beacon:      options.Beacon,
-		Storage:     options.Storage,
-		Share:       options.SSVShare,
-		Signer:      options.Signer,
-		Queues:      make(map[spectypes.BeaconRole]queueContainer),
-		state:       uint32(NotStarted),
+		ctx:             pctx,
+		cancel:          cancel,
+		logger:          logger,
+		DutyRunners:     options.DutyRunners,
+		Network:         options.Network,
+		Beacon:          options.Beacon,
+		Storage:         options.Storage,
+		Share:           options.SSVShare,
+		Signer:          options.Signer,
+		Queues:          make(map[spectypes.BeaconRole]queueContainer),
+		state:           uint32(NotStarted),
 		DoneDutyForSlot: make(map[int]bool),
- 		SystemLoad: 0,
+		SystemLoad:      0,
 	}
 
 	for _, dutyRunner := range options.DutyRunners {
@@ -120,7 +120,6 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 		v.logger.Debug("$$$$$$ UponValidatorStartDuty "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
-
 	log("start")
 
 	if duty.Type.String() != "SYNC_COMMITTEE" {
@@ -129,12 +128,12 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 	}
 
 	slot := duty.Slot
-	if _,ok := v.DoneDutyForSlot[int(slot)]; ok {
+	if _, ok := v.DoneDutyForSlot[int(slot)]; ok {
 
-		log(fmt.Sprintf("already did duty in this slot. %v not going to start. Quitting.",duty.Type.String()))
+		log(fmt.Sprintf("already did duty in this slot. %v not going to start. Quitting.", duty.Type.String()))
 		return nil
 	} else {
-		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.ShowStats(int(slot)-1)
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.ShowStats(int(slot) - 1)
 		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.SetCurrentSlot(int(slot))
 	}
 
@@ -143,19 +142,19 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
 
-	log(fmt.Sprintf("Setting true for %vslot %v,%v due to duty %v",cBlue,int(slot),reset,duty.Type.String()))
- 	v.DoneDutyForSlot[int(slot)] = true
- 	if v.SystemLoad == 0 {
- 		v.SystemLoad = 1
- 	} else {
- 		if v.SystemLoad == 1 {
- 			v.SystemLoad = 0
- 		}
- 		v.SystemLoad += 20
- 	}
- 	log(fmt.Sprintf("%vSystem load: %v%v",cYellow,v.SystemLoad,reset))
+	log(fmt.Sprintf("Setting true for %vslot %v,%v due to duty %v", cBlue, int(slot), reset, duty.Type.String()))
+	v.DoneDutyForSlot[int(slot)] = true
+	if v.SystemLoad == 0 {
+		v.SystemLoad = 1
+	} else {
+		if v.SystemLoad == 1 {
+			v.SystemLoad = 0
+		}
+		v.SystemLoad += 20
+	}
+	log(fmt.Sprintf("%vSystem load: %v%v", cYellow, v.SystemLoad, reset))
 
- 	dutyRunner.SetSystemLoad(v.SystemLoad)
+	dutyRunner.SetSystemLoad(v.SystemLoad)
 
 	v.Queues[dutyRunner.GetBaseRunner().BeaconRoleType].ClearQ()
 
