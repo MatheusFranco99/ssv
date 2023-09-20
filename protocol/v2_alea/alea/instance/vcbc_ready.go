@@ -80,9 +80,12 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	// Aggregate ready messages as proof
 
-	aggregated_msg, err := aggregateMsgs(i.State.ReceivedReadys.GetMessages())
-	if err != nil {
-		return errors.Wrap(err, "uponVCBCReady: failed to aggregate messages")
+	aggregated_msg := signedMessage
+	if i.State.UseBLS {
+		aggregated_msg, err = aggregateMsgs(i.State.ReceivedReadys.GetMessages())
+		if err != nil {
+			return errors.Wrap(err, "uponVCBCReady: failed to aggregate messages")
+		}
 	}
 
 	vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, hash, aggregated_msg)

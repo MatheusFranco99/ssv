@@ -99,7 +99,7 @@ func NewController(
 
 func (c *Controller) ShowStats(slot_value int) {
 	if v, ok := c.HeightCountMap[slot_value]; ok {
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Throughput:%v, slot:%v, $$$$$$",v, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vThroughput:%v, slot:%v, %v$$$$$$",cBlue,v, slot_value,reset))
 	} else {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Throughput, slot:%v, $$$$$$", slot_value))
 	}
@@ -117,14 +117,14 @@ func (c *Controller) ShowStats(slot_value int) {
 		}
 		num_points := len(c.Latencies[slot_value])
 		mean_value = mean_value / float64(num_points)
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Latency mean:%v, num_points:%v, slot:%v, $$$$$$", mean_value, num_points, slot_value))
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Latency list:%v, slot:%v, $$$$$$", latency_lst, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Latency mean:%v,%v num_points:%v, slot:%v, $$$$$$", cPurple,mean_value,reset, num_points, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Latency list:%v,%v slot:%v, $$$$$$", cCyan, latency_lst, reset, slot_value))
 	}
 
 	if _, ok := c.ThroughputHistogram[slot_value]; !ok {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Histogram list, slot:%v, $$$$$$", slot_value))
 	} else {
-		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Histogram:%v, slot:%v, $$$$$$", c.ThroughputHistogram[slot_value], slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats:%v Histogram:%v, %vslot:%v, $$$$$$", cGreen,c.ThroughputHistogram[slot_value], reset, slot_value))
 	}
 
 	if _, ok := c.HeightsStored[c.CurrSlot]; !ok {
@@ -140,33 +140,33 @@ func (c *Controller) ShowStats(slot_value int) {
 		}
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vNumber of not decided:%v%v, slot:%v, $$$$$$", cYellow,num_not_decided,reset, slot_value))
 
-		v_idx := 0
-		for _,v := range c.HeightsStored[slot_value] {
-			if v_idx > 2 {
-				break
-			}
-			if !v.State.Decided {
-				v_idx += 1
-				i := v
-				acround := i.State.ACState.CurrentACRound()
+		// v_idx := 0
+		// for _,v := range c.HeightsStored[slot_value] {
+		// 	if v_idx > 2 {
+		// 		break
+		// 	}
+		// 	if !v.State.Decided {
+		// 		v_idx += 1
+		// 		i := v
+		// 		acround := i.State.ACState.CurrentACRound()
 
-				aba := i.State.ACState.GetABA(acround)
-				round := aba.GetRound()
-				abaround := aba.GetABARound(round)
+		// 		aba := i.State.ACState.GetABA(acround)
+		// 		round := aba.GetRound()
+		// 		abaround := aba.GetABARound(round)
 
-				stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",	
-					i.State.Height,
-					i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(), 
-					acround,
-					round,
-					abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
-					abaround.LenAux(), abaround.GetAux(), abaround.HasSentAux(byte(0)), abaround.HasSentAux(byte(1)),
-					abaround.LenConf(), abaround.GetConf(), abaround.HasSentConf(),
-					aba.LenFinish(byte(0)), aba.LenFinish(byte(1)), aba.GetFinish(), aba.HasSentFinish(byte(0)), aba.HasSentFinish(byte(1)),
-					)
-				c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Instance stats:%v, slot:%v, $$$$$$", stats, slot_value))
-			}
-		}
+		// 		stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",	
+		// 			i.State.Height,
+		// 			i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(), 
+		// 			acround,
+		// 			round,
+		// 			abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
+		// 			abaround.LenAux(), abaround.GetAux(), abaround.HasSentAux(byte(0)), abaround.HasSentAux(byte(1)),
+		// 			abaround.LenConf(), abaround.GetConf(), abaround.HasSentConf(),
+		// 			aba.LenFinish(byte(0)), aba.LenFinish(byte(1)), aba.GetFinish(), aba.HasSentFinish(byte(0)), aba.HasSentFinish(byte(1)),
+		// 			)
+		// 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Instance stats:%v, slot:%v, $$$$$$", stats, slot_value))
+		// 	}
+		// }
 	}
 	
 }

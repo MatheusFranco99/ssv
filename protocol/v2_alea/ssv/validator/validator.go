@@ -50,6 +50,22 @@ type Validator struct {
  	SystemLoad int
  }
 
+ const (
+
+    reset = "\033[0m"
+    bold = "\033[1m"
+    underline = "\033[4m"
+    strike = "\033[9m"
+    italic = "\033[3m"
+
+    cRed = "\033[31m"
+    cGreen = "\033[32m"
+    cYellow = "\033[33m"
+    cBlue = "\033[34m"
+    cPurple = "\033[35m"
+    cCyan = "\033[36m"
+    cWhite = "\033[37m"
+)
 
  func makeTimestamp() int64 {
  	return time.Now().UnixNano() / int64(time.Microsecond)
@@ -74,7 +90,7 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 		Queues:      make(map[spectypes.BeaconRole]queueContainer),
 		state:       uint32(NotStarted),
 		DoneDutyForSlot: make(map[int]bool),
- 		SystemLoad: 100,
+ 		SystemLoad: 0,
 	}
 
 	for _, dutyRunner := range options.DutyRunners {
@@ -127,17 +143,17 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
 
-	log(fmt.Sprintf("Setting true for slot %v, due to duty %v",int(slot),duty.Type.String()))
+	log(fmt.Sprintf("Setting true for %vslot %v,%v due to duty %v",cBlue,int(slot),reset,duty.Type.String()))
  	v.DoneDutyForSlot[int(slot)] = true
- 	// if v.SystemLoad == 0 {
- 	// 	v.SystemLoad = 1
- 	// } else {
- 	// 	if v.SystemLoad == 1 {
- 	// 		v.SystemLoad = 0
- 	// 	}
- 	// 	v.SystemLoad += 20
- 	// }
- 	log(fmt.Sprintf("System load: %v",v.SystemLoad))
+ 	if v.SystemLoad == 0 {
+ 		v.SystemLoad = 1
+ 	} else {
+ 		if v.SystemLoad == 1 {
+ 			v.SystemLoad = 0
+ 		}
+ 		v.SystemLoad += 20
+ 	}
+ 	log(fmt.Sprintf("%vSystem load: %v%v",cYellow,v.SystemLoad,reset))
 
  	dutyRunner.SetSystemLoad(v.SystemLoad)
 

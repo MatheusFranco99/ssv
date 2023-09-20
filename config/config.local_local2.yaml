@@ -9,14 +9,14 @@ db:
 
 eth2:
   ### replace with your beacon node address
-  BeaconNodeAddr: 0.0.0.0:8000
+  BeaconNodeAddr: 146.193.41.55:8000
   Network: prater
-  MinGenesisTime: 1689863877
+  MinGenesisTime: 1695171300
 
 
 eth1:
   ### replace with your eth1 node WebSocket address
-  ETH1Addr: ws://0.0.0.0:3334/ws
+  ETH1Addr: ws://146.193.41.55:3334/ws
 
 p2p:
   Discovery: mdns
@@ -24,11 +24,11 @@ p2p:
     - blox-docker
 ### replace with your ip and ports
 ### otherwise, the default ports (TCP 13001, UDP 12001) are used
-  # HostAddress: localhost
+  # HostAddress: 146.193.41.55
   TcpPort: 5002
   UdpPort: 4002
-### mdns for local network setup
-#  Bootnodes: enr:-LK4QMmL9hLJ1csDN4rQoSjlJGE2SvsXOETfcLH8uAVrxlHaELF0u3NeKCTY2eO_X1zy5eEKcHruyaAsGNiyyG4QWUQBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpD1pf1CAAAAAP__________gmlkgnY0gmlwhCLdu_SJc2VjcDI1NmsxoQO8KQz5L1UEXzEr-CXFFq1th0eG6gopbdul2OQVMuxfMoN0Y3CCE4iDdWRwgg-g
+### mdns for lcal network setup
+  # Bootnodes: enr:-LK4QMmL9hLJ1csDN4rQoSjlJGE2SvsXOETfcLH8uAVrxlHaELF0u3NeKCTY2eO_X1zy5eEKcHruyaAsGNiyyG4QWUQBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpD1pf1CAAAAAP__________gmlkgnY0gmlwhCLdu_SJc2VjcDI1NmsxoQO8KQz5L1UEXzEr-CXFFq1th0eG6gopbdul2OQVMuxfMoN0Y3CCE4iDdWRwgg-g
 
 ssv:
   GenesisEpoch: 1
