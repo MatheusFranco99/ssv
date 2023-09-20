@@ -1,7 +1,6 @@
 package instance
 
 import (
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	// specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
@@ -10,16 +9,13 @@ import (
 
 func (i *Instance) StartVCBC(data []byte) error {
 
-	//funciton identifier
-	functionID := uuid.New().String()
-
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly) {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponVCBCStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		i.logger.Debug("$$$$$$ UponVCBCStart : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -30,7 +26,6 @@ func (i *Instance) StartVCBC(data []byte) error {
 		return errors.Wrap(err, "StartVCBC: failed to create VCBCSend message")
 	}
 	log("created vcbc send")
-
 
 	i.Broadcast(msgToBroadcast)
 	log("broadcasted")

@@ -8,7 +8,6 @@ import (
 
 	// "time"
 
-	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
 
@@ -63,9 +62,9 @@ func NewInstance(
 	}
 
 	N := len(share.Committee)
-	f := (N-1)/3
-	share.Quorum = uint64(2*f+1)
-	share.PartialQuorum = uint64(f+1)
+	f := (N - 1) / 3
+	share.Quorum = uint64(2*f + 1)
+	share.PartialQuorum = uint64(f + 1)
 
 	inst := &Instance{
 		State: &messages.State{
@@ -74,26 +73,56 @@ func NewInstance(
 			Round:             specalea.FirstRound,
 			Height:            height,
 			LastPreparedRound: specalea.NoRound,
-			VCBCState:         messages.NewVCBCState(nodeIDs),
-			ReceivedReadys:    messages.NewReceivedReadys(uint64(share.Quorum)),
-			SentReadys:        messages.NewSentReadys(),
-			ACState:           messages.NewACState(),
-			CommitContainer:      specalea.NewMsgContainer(),
-			StartedABA: false,
-			WaitForVCBCAfterDecided: false,
-			WaitForVCBCAfterDecided_Author: types.OperatorID(0),
-			CommonCoinContainer: messages.NewPSigContainer(uint64(share.Quorum)),
-			CommonCoin: messages.NewCommonCoin(int64(0)),
+			CommitContainer:   specalea.NewMsgContainer(),
+			DecidedMessage:    nil,
+			// Alea State
+			VCBCState:       messages.NewVCBCState(nodeIDs),
+			ReceivedReadys:  messages.NewReceivedReadys(uint64(share.Quorum)),
+			SentReadys:      messages.NewSentReadys(),
+			ACState:         messages.NewACState(),
+			StartedABA:      false,
 			ABASpecialState: messages.NewABASpecialState(len(share.Committee)),
-			FastABAOptimization: true,
+			HasStarted:      false,
+			// Flag for case: Aggrement decided one but doesnt' have leader's VCBC
+			WaitForVCBCAfterDecided:        false,
+			WaitForVCBCAfterDecided_Author: types.OperatorID(0),
+			// Common Coin
+			CommonCoinContainer: messages.NewPSigContainer(uint64(share.Quorum)),
+			CommonCoin:          messages.NewCommonCoin(int64(0)),
+			SendCommonCoin:      true,
+			// Optimization
+			FastABAOptimization:        true,
 			WaitVCBCQuorumOptimization: true,
-			EqualVCBCOptimization: true,
-			DecidedMessage: nil,
-			DecidedLogOnly: true,
-			SendCommonCoin: true,
-			HasStarted: false,
-			DiffieHellmanContainer:         messages.NewDiffieHellmanContainer(),
+			EqualVCBCOptimization:      true,
+			UseBLS:                     true,
+			AggregateVerify:            false,
+			UseDiffieHellman:           false,
+			UseEDDSA:                   false,
+			UseRSA:                     false,
+			// logs
+			DecidedLogOnly:     true,
+			HideLogs:           false,
+			HideValidationLogs: true,
+			// Diffie Hellman
+			DiffieHellmanContainer:            messages.NewDiffieHellmanContainer(),
 			DiffieHellmanContainerOneTimeCost: messages.NewDiffieHellmanContainerOneTimeCost(int(share.OperatorID), nodeIDs),
+			// Message Containers and counters
+			ReadyCounter:      make(map[types.OperatorID]uint64),
+			AbaInitCounter:    make(map[specalea.ACRound]map[specalea.Round]uint64),
+			AbaAuxCounter:     make(map[specalea.ACRound]map[specalea.Round]uint64),
+			AbaConfCounter:    make(map[specalea.ACRound]map[specalea.Round]uint64),
+			AbaFinishCounter:  make(map[specalea.ACRound]uint64),
+			CommonCoinCounter: 0,
+			// Log Tags
+			VCBCSendLogTag:   0,
+			VCBCReadyLogTag:  0,
+			VCBCFinalLogTag:  0,
+			CommonCoinLogTag: 0,
+			AbaInitLogTag:    0,
+			AbaAuxLogTag:     0,
+			AbaConfLogTag:    0,
+			AbaFinishLogTag:  0,
+			AbaLogTag:        0,
 		},
 		priority:    specalea.FirstPriority,
 		config:      config,
@@ -114,46 +143,18 @@ func (i *Instance) GetFinalTime() int64 {
 	return i.finalTime
 }
 
-func (i *Instance) GetStatsString() string {
-	if i.State.Decided == false {
-		return ""
-	}
-	acround := i.State.ACState.CurrentACRound()
-
-	aba := i.State.ACState.GetABA(acround)
-	round := aba.GetRound()
-	abaround := aba.GetABARound(round)
-
-	stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Has quorum: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",	
-		i.State.Height,
-		i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(), 
-		acround,
-		round,
-		abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
-		abaround.LenAux(), abaround.GetAux(), abaround.HasSentAux(byte(0)), abaround.HasSentAux(byte(1)),
-		abaround.LenConf(), abaround.GetConf(), abaround.HasSentConf(),
-		aba.LenFinish(byte(0)), aba.LenFinish(byte(1)), aba.GetFinish(), aba.HasSentFinish(byte(0)), aba.HasSentFinish(byte(1)),
-		)
-	
-	i.logger.Debug(fmt.Sprintf("Instance: GetStats outputting: %v",stats))
-	return stats
-}
-
 // Start is an interface implementation
 func (i *Instance) Start(value []byte, height specalea.Height) {
 	i.startOnce.Do(func() {
 
 		i.State.HasStarted = true
 
-		//funciton identifier
-		functionID := uuid.New().String()
-
 		// logger
 		log := func(str string) {
-			if (i.State.DecidedLogOnly && !strings.Contains(str,"start")) {
+			if i.State.HideLogs || (i.State.DecidedLogOnly && !strings.Contains(str, "start")) {
 				return
 			}
-			i.logger.Debug("$$$$$$ UponStart "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
+			i.logger.Debug("$$$$$$ UponStart : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 		}
 
 		// log("starting alea instance")
@@ -169,12 +170,23 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))
 
-
 		i.StartVCBC(value)
 	})
 }
 
+func (i *Instance) SendFinalForDecisionPurpose() {
 
+	acround := i.State.ACState.ACRound
+	finishMsg, err := CreateABAFinish(i.State, i.config, byte(1), acround)
+	if err != nil {
+		panic(err)
+	}
+
+	i.Broadcast(finishMsg)
+
+	aba := i.State.ACState.GetABA(acround)
+	aba.SetSentFinish(byte(1))
+}
 
 func (i *Instance) Decide(value []byte, msg *messages.SignedMessage) {
 	i.State.Decided = true
@@ -201,9 +213,9 @@ func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
 func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-	
+
 	if !i.State.HasStarted {
-		return false,nil,nil,nil
+		return false, nil, nil, nil
 	}
 
 	// special treatment to ready msg
@@ -263,13 +275,12 @@ func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decide
 
 func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 
-	//funciton identifier
-	functionID := uuid.New().String()
-
 	// logger
 	log := func(str string) {
-		return
-		i.logger.Debug("$$$$$$ UponMessageValidation "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		if i.State.HideLogs || i.State.HideValidationLogs || i.State.DecidedLogOnly {
+			return
+		}
+		i.logger.Debug("$$$$$$ UponMessageValidation : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -301,7 +312,7 @@ func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 	case messages.CommonCoinMsgType:
 		err = isValidCommonCoin(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
 	default:
-		err = errors.New(fmt.Sprintf("signed message type not supported: %v",msg.Message.MsgType))
+		err = errors.New(fmt.Sprintf("signed message type not supported: %v", msg.Message.MsgType))
 	}
 
 	log("finish")
@@ -344,4 +355,29 @@ func (i *Instance) Encode() ([]byte, error) {
 // Decode implementation
 func (i *Instance) Decode(data []byte) error {
 	return json.Unmarshal(data, &i)
+}
+
+func (i *Instance) GetStatsString() string {
+	if i.State.Decided == false {
+		return ""
+	}
+	acround := i.State.ACState.CurrentACRound()
+
+	aba := i.State.ACState.GetABA(acround)
+	round := aba.GetRound()
+	abaround := aba.GetABARound(round)
+
+	stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Has quorum: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",
+		i.State.Height,
+		i.State.VCBCState.GetLen(), 0, i.State.VCBCState.GetNodeIDs(),
+		acround,
+		round,
+		abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
+		abaround.LenAux(), abaround.GetAux(), abaround.HasSentAux(byte(0)), abaround.HasSentAux(byte(1)),
+		abaround.LenConf(), abaround.GetConf(), abaround.HasSentConf(),
+		aba.LenFinish(byte(0)), aba.LenFinish(byte(1)), aba.GetFinish(), aba.HasSentFinish(byte(0)), aba.HasSentFinish(byte(1)),
+	)
+
+	i.logger.Debug(fmt.Sprintf("Instance: GetStats outputting: %v", stats))
+	return stats
 }

@@ -94,34 +94,67 @@ type State struct {
 
 	CommitContainer *alea.MsgContainer
 
-	VCBCState  *VCBCState
-	ReceivedReadys *ReceivedReadys
-	SentReadys *SentReadys
-
-	ACState       *ACState
-	ABASpecialState *ABASpecialState
-	StartedABA bool
-
-	WaitForVCBCAfterDecided bool
-	WaitForVCBCAfterDecided_Author types.OperatorID
-
-	CommonCoinContainer *PSigContainer
-	CommonCoin *CommonCoin
-
-	FastABAOptimization bool
-	WaitVCBCQuorumOptimization bool
-	EqualVCBCOptimization bool
-
+	HasStarted     bool
 	DecidedMessage *SignedMessage
 
-	DecidedLogOnly bool
+	// Alea State
+	VCBCState       *VCBCState
+	ReceivedReadys  *ReceivedReadys
+	SentReadys      *SentReadys
+	ACState         *ACState
+	ABASpecialState *ABASpecialState
+	StartedABA      bool
 
-	SendCommonCoin bool
+	WaitForVCBCAfterDecided        bool             // If aggrement decided 1 but don't have VCBC, raise flag to alert VCBC module that it's waiting for it
+	WaitForVCBCAfterDecided_Author types.OperatorID // Author of the VCBC that it's waiting for
 
-	HasStarted bool
+	// CommonCoin
+	CommonCoinContainer *PSigContainer // Message Container
+	CommonCoin          *CommonCoin    // Common Coin to get coins
+	SendCommonCoin      bool
 
-	DiffieHellmanContainer *DiffieHellmanContainer
+	// Optimizations
+	FastABAOptimization        bool
+	WaitVCBCQuorumOptimization bool
+	EqualVCBCOptimization      bool
+	UseBLS                     bool
+	AggregateVerify            bool
+	UseDiffieHellman           bool
+	UseEDDSA                   bool
+	UseRSA                     bool
+
+	// Log flags
+	DecidedLogOnly     bool
+	HideLogs           bool
+	HideValidationLogs bool
+
+	// Diffie Hellman Container
+	DiffieHellmanContainer            *DiffieHellmanContainer
 	DiffieHellmanContainerOneTimeCost *DiffieHellmanContainerOneTimeCost
+
+	// Message Containers and counters
+	ReadyContainer     map[types.OperatorID]*MessageContainer
+	AbaInitContainer   map[alea.ACRound]map[alea.Round]*MessageContainer
+	AbaAuxContainer    map[alea.ACRound]map[alea.Round]*MessageContainer
+	AbaConfContainer   map[alea.ACRound]map[alea.Round]*MessageContainer
+	AbaFinishContainer map[alea.ACRound]map[alea.Round]*MessageContainer
+	ReadyCounter       map[types.OperatorID]uint64
+	AbaInitCounter     map[alea.ACRound]map[alea.Round]uint64
+	AbaAuxCounter      map[alea.ACRound]map[alea.Round]uint64
+	AbaConfCounter     map[alea.ACRound]map[alea.Round]uint64
+	AbaFinishCounter   map[alea.ACRound]uint64
+	CommonCoinCounter  uint64
+
+	// Log Tags
+	VCBCSendLogTag   int
+	VCBCReadyLogTag  int
+	VCBCFinalLogTag  int
+	CommonCoinLogTag int
+	AbaInitLogTag    int
+	AbaAuxLogTag     int
+	AbaConfLogTag    int
+	AbaFinishLogTag  int
+	AbaLogTag        int
 }
 
 // GetRoot returns the state's deterministic root

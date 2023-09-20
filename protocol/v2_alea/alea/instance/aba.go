@@ -2,32 +2,30 @@ package instance
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
+
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	// "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
 func (i *Instance) StartABA() error {
 
-
 	//funciton identifier
-	functionID := uuid.New().String()
+	i.State.AbaLogTag += 1
 
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly) {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponStartAlea "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("ACRound", int(i.State.ACState.ACRound)))
+		i.logger.Debug("$$$$$$ UponStartAlea "+fmt.Sprint(i.State.AbaLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("ACRound", int(i.State.ACState.ACRound)))
 	}
-	
 
 	log("start")
 
-	if (i.State.ACState.IsTerminated()) {
+	if i.State.ACState.IsTerminated() {
 		log("ac terminated. quitting.")
 		return nil
 	}
@@ -40,14 +38,13 @@ func (i *Instance) StartABA() error {
 	// }
 	// leader := opIDList[(acround)%len(opIDList)]
 	// i.config.GetProposerF()(i.State, specalea.Round(i.State.ACState.ACRound))
-	log(fmt.Sprintf("leader: %v",int(leader)))
+	log(fmt.Sprintf("leader: %v", int(leader)))
 
 	vote := byte(0)
 	if i.State.VCBCState.HasData(leader) {
 		vote = byte(1)
 	}
-	log(fmt.Sprintf("vote: %v",int(vote)))
-
+	log(fmt.Sprintf("vote: %v", int(vote)))
 
 	initMsg, err := CreateABAInit(i.State, i.config, vote, specalea.FirstRound, acround)
 	if err != nil {
@@ -55,10 +52,9 @@ func (i *Instance) StartABA() error {
 	}
 	log("created aba init")
 
-
 	aba := i.State.ACState.GetABA(acround)
 	abaround := aba.GetABARound(specalea.FirstRound)
-	abaround.SetSentInit( vote)
+	abaround.SetSentInit(vote)
 	log("set sent init")
 
 	i.Broadcast(initMsg)

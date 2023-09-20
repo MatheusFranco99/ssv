@@ -7,7 +7,6 @@ import (
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
-	"github.com/google/uuid"
 
 	"math/rand"
 
@@ -30,20 +29,20 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 	round := ABAConfData.Round
 
 	//funciton identifier
-	functionID := uuid.New().String()
+	i.State.AbaConfLogTag += 1
 
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly) {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponABAConf "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Binary("votes", votes))
+		i.logger.Debug("$$$$$$ UponABAConf "+fmt.Sprint(i.State.AbaConfLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Binary("votes", votes))
 	}
 
 	log("start")
 
-	if (i.State.ACState.IsTerminated()) {
+	if i.State.ACState.IsTerminated() {
 		log("ac terminated. quitting.")
 		return nil
 	}
@@ -61,7 +60,6 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 		log("old aba round. quitting.")
 		return nil
 	}
-
 
 	aba := i.State.ACState.GetABA(acround)
 	abaround := aba.GetABARound(round)
@@ -83,15 +81,14 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 	if len_conf >= int(i.State.Share.Quorum) {
 		log("got conf quorum")
 
-		
 		// coin := i.config.GetCoinF()(round)
 		// coin := byte(1)
 		// rand.Seed(int64(acround)+int64(round))
 		// coin := byte(rand.Intn(2))
 		// coin := Coin(int(round), int(author), int(priority))
 
-		coin := i.State.CommonCoin.GetCoin(acround,round)
-		
+		coin := i.State.CommonCoin.GetCoin(acround, round)
+
 		log(fmt.Sprintf("coin: %v", coin))
 
 		conf_values := abaround.GetConfValues()
@@ -103,7 +100,7 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 		}
 		log(fmt.Sprintf("init vote : %v", init_vote))
 
-		has_sent_init := aba.GetABARound(round+1).HasSentInit(init_vote)
+		has_sent_init := aba.GetABARound(round + 1).HasSentInit(init_vote)
 		log(fmt.Sprintf("has sent init: %v", has_sent_init))
 
 		if !has_sent_init {
@@ -117,7 +114,7 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 			i.Broadcast(initMsg)
 			log("broadcasted abainit")
 
-			aba.GetABARound(round+1).SetSentInit(init_vote)
+			aba.GetABARound(round + 1).SetSentInit(init_vote)
 			aba.BumpRound()
 			log("set sent init and inc round")
 		}
@@ -167,16 +164,14 @@ func isValidABAConf(
 	operators []*types.Operator,
 	logger *zap.Logger,
 ) error {
-	//funciton identifier
-	functionID := uuid.New().String()
 
 	// logger
 	log := func(str string) {
 
-		if (state.DecidedLogOnly) {
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
 			return
 		}
-		logger.Debug("$$$$$$ UponMV_ABAConf "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		logger.Debug("$$$$$$ UponMV_ABAConf : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -193,18 +188,6 @@ func isValidABAConf(
 		return errors.New("msg allows 1 signer")
 	}
 	log("checked signers == 1")
-	// if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-	// 	return errors.Wrap(err, "msg signature invalid")
-	// }
-	// log("checked signature")
-
-	msg_bytes, err := signedMsg.Message.Encode()
-	if err != nil {
-		return errors.Wrap(err, "Could not encode message")
-	}
-	if !state.DiffieHellmanContainerOneTimeCost.VerifyHash(msg_bytes,signedMsg.GetSigners()[0],signedMsg.DiffieHellmanProof[state.Share.OperatorID]) {
-		return errors.New("Failed Diffie Hellman verification")
-	}
 
 	ABAConfData, err := signedMsg.Message.GetABAConfData()
 	log("got data")
@@ -216,13 +199,24 @@ func isValidABAConf(
 	}
 	log("validated")
 
+	counter := state.AbaConfCounter
+	data := ABAConfData
+	if _, ok := counter[data.ACRound]; !ok {
+		counter[data.ACRound] = make(map[specalea.Round]uint64)
+	}
+	counter[data.ACRound][data.Round] += 1
+	if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound][data.Round] == state.Share.Quorum || counter[data.ACRound][data.Round] == state.Share.PartialQuorum) {
+		Verify(state, config, signedMsg, operators)
+		log("checked signature")
+	}
+
 	return nil
 }
 
 func CreateABAConf(state *messages.State, config alea.IConfig, votes []byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
 	ABAConfData := &messages.ABAConfData{
-		Votes:    votes,
-		Round:    round,
+		Votes:   votes,
+		Round:   round,
 		ACRound: acround,
 	}
 	dataByts, err := ABAConfData.Encode()
@@ -236,23 +230,15 @@ func CreateABAConf(state *messages.State, config alea.IConfig, votes []byte, rou
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	// No signing -> use Diffie Hellman
-	// sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "CreateABAConf: failed signing abaconf msg")
-	// }
-	sig := []byte{}
-
-	msg_bytes, err := msg.Encode()
+	sig, hash_map, err := Sign(state, config, msg)
 	if err != nil {
-		return nil, errors.Wrap(err,"CreateABAConf: failed to encode message")
+		panic(err)
 	}
-	hash_map := state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
 
 	signedMsg := &messages.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
 		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil

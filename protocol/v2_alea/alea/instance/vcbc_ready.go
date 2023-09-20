@@ -10,10 +10,10 @@ import (
 
 	"fmt"
 
-	"github.com/google/uuid"
+	"sort"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"sort"
 )
 
 func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
@@ -32,40 +32,36 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	}
 	senderID := signedMessage.GetSigners()[0]
 
-	//funciton identifier
-	functionID := uuid.New().String()
+	i.State.VCBCReadyLogTag += 1
 
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly) {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponVCBCReady "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$ UponVCBCReady "+fmt.Sprint(i.State.VCBCReadyLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
 
-
 	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
-	
+
 	own_hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(i.StartValue)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: could not compute own hash")
 	}
 	log("computed own hash")
 
-	if !bytes.Equal(own_hash,hash) {
+	if !bytes.Equal(own_hash, hash) {
 		log("hash not equal. quitting.")
 	}
 	log("compared hashes")
 
-	i.State.ReceivedReadys.Add(senderID,signedMessage)
+	i.State.ReceivedReadys.Add(senderID, signedMessage)
 	log("added to received readys")
-
-
 
 	has_sent_final := i.State.ReceivedReadys.HasSentFinal()
 	if has_sent_final {
@@ -76,7 +72,6 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	len_readys := i.State.ReceivedReadys.GetLen()
 	log(fmt.Sprintf("len readys: %v", len_readys))
 
-
 	has_quorum := i.State.ReceivedReadys.HasQuorum()
 	if !has_quorum {
 		log("dont have quorum. quitting.")
@@ -85,9 +80,9 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	// Aggregate ready messages as proof
 
-	aggregated_msg,err := aggregateMsgs(i.State.ReceivedReadys.GetMessages())
+	aggregated_msg, err := aggregateMsgs(i.State.ReceivedReadys.GetMessages())
 	if err != nil {
-		return errors.Wrap(err,"uponVCBCReady: failed to aggregate messages")
+		return errors.Wrap(err, "uponVCBCReady: failed to aggregate messages")
 	}
 
 	vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, hash, aggregated_msg)
@@ -101,7 +96,6 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	i.State.ReceivedReadys.SetSentFinal()
 	log("set sent final.")
-
 
 	return nil
 }
@@ -128,8 +122,6 @@ func aggregateMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessage, err
 	return ret, nil
 }
 
-
-
 func isValidVCBCReady(
 	state *messages.State,
 	config alea.IConfig,
@@ -139,16 +131,13 @@ func isValidVCBCReady(
 	logger *zap.Logger,
 ) error {
 
-	//funciton identifier
-	functionID := uuid.New().String()
-
 	// logger
 	log := func(str string) {
 
-		if (state.DecidedLogOnly) {
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
 			return
 		}
-		logger.Debug("$$$$$$ UponMV_VCBCReady "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		logger.Debug("$$$$$$ UponMV_VCBCReady : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -164,10 +153,6 @@ func isValidVCBCReady(
 		return errors.New("msg allows 1 signer")
 	}
 	log("checked signers == 1")
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return errors.Wrap(err, "msg signature invalid")
-	}
-	log("checked signature")
 
 	VCBCReadyData, err := signedMsg.Message.GetVCBCReadyData()
 	log("got data")
@@ -192,12 +177,21 @@ func isValidVCBCReady(
 	}
 	log("checked author in committee")
 
+	// If it's not using BLS -> verify
+	// If it's using BLS but it's not using AggregateVerify -> verify
+	// If it's using BLS and AggregateVerify, verify only when quorum is reached
+	state.ReadyCounter[author] += 1
+	if !(state.UseBLS) || !(state.AggregateVerify) || (state.ReadyCounter[author] == state.Share.Quorum) {
+		Verify(state, config, signedMsg, operators)
+		log("checked signature")
+	}
+
 	return nil
 }
 
 func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, author types.OperatorID) (*messages.SignedMessage, error) {
 	vcbcReadyData := &messages.VCBCReadyData{
-		Hash:     hash,
+		Hash:   hash,
 		Author: author,
 	}
 	dataByts, err := vcbcReadyData.Encode()
@@ -211,15 +205,17 @@ func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, au
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+
+	sig, hash_map, err := Sign(state, config, msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "CreateVCBCReady: failed signing filler msg")
+		panic(err)
 	}
 
 	signedMsg := &messages.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
+		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
 }

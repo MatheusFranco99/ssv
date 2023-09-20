@@ -8,7 +8,6 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -26,32 +25,30 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 	data := vcbcSendData.Data
 
 	//funciton identifier
-	functionID := uuid.New().String()
+	i.State.VCBCSendLogTag += 1
 
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly) {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponVCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)))
+		i.logger.Debug("$$$$$$ UponVCBCSend "+fmt.Sprint(i.State.VCBCSendLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)))
 	}
 
 	log("start")
-
 
 	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
 
 	has_sent := i.State.SentReadys.Has(sender)
-	log(fmt.Sprintf("check if has sent %v",has_sent))
+	log(fmt.Sprintf("check if has sent %v", has_sent))
 
 	// if never sent ready, or have already sent and the data is equal
-	if (!has_sent || (has_sent && i.State.SentReadys.EqualData(sender,data))) {
+	if !has_sent || (has_sent && i.State.SentReadys.EqualData(sender, data)) {
 
-
-		i.State.SentReadys.Add(sender,data)
+		i.State.SentReadys.Add(sender, data)
 		log("added to sent readys structure")
 
 		// create VCBCReady message with hash
@@ -60,7 +57,6 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 			return errors.Wrap(err, "uponVCBCSend: could not compute data hash")
 		}
 		log("computed hash")
-
 
 		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, sender)
 		if err != nil {
@@ -85,16 +81,13 @@ func isValidVCBCSend(
 	logger *zap.Logger,
 ) error {
 
-	//funciton identifier
-	functionID := uuid.New().String()
-
 	// logger
 	log := func(str string) {
 
-		if (state.DecidedLogOnly) {
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
 			return
 		}
-		logger.Debug("$$$$$$ UponMV_VCBCSend "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		logger.Debug("$$$$$$ UponMV_VCBCSend : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -111,19 +104,9 @@ func isValidVCBCSend(
 		return errors.New("msg allows 1 signer")
 	}
 	log("checked number of signers is 1")
-	// if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-	// 	return errors.Wrap(err, "msg signature invalid")
-	// }
 
-	// log("checked signature")
-
-	msg_bytes, err := signedMsg.Message.Encode()
-	if err != nil {
-		return errors.Wrap(err, "Could not encode message")
-	}
-	if !state.DiffieHellmanContainerOneTimeCost.VerifyHash(msg_bytes,signedMsg.GetSigners()[0],signedMsg.DiffieHellmanProof[state.Share.OperatorID]) {
-		return errors.New("Failed Diffie Hellman verification")
-	}
+	Verify(state, config, signedMsg, operators)
+	log("checked signature")
 
 	VCBCSendData, err := signedMsg.Message.GetVCBCSendData()
 
@@ -141,7 +124,7 @@ func isValidVCBCSend(
 
 func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte) (*messages.SignedMessage, error) {
 	vcbcSendData := &messages.VCBCSendData{
-		Data:     data,
+		Data: data,
 	}
 	dataByts, err := vcbcSendData.Encode()
 	if err != nil {
@@ -155,23 +138,15 @@ func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte) (*m
 		Data:       dataByts,
 	}
 
-	// No signing -> use Diffie Hellman
-	// sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "CreateVCBCSend: failed signing filler msg")
-	// }
-	sig := []byte{}
-
-	msg_bytes, err := msg.Encode()
+	sig, hash_map, err := Sign(state, config, msg)
 	if err != nil {
-		return nil, errors.Wrap(err,"CreateVCBCSend: failed to encode message")
+		panic(err)
 	}
-	hash_map := state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
 
 	signedMsg := &messages.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
 		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil

@@ -12,7 +12,6 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"github.com/google/uuid"
 )
 
 // uponCommonCoin process proposal message
@@ -28,17 +27,16 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 	shareSig := commonCoinData.ShareSign
 	senderID := signedMessage.GetSigners()[0]
 
-
 	//funciton identifier
-	functionID := uuid.New().String()
+	i.State.CommonCoinLogTag += 1
 
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly) {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponCommonCoinData "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$ UponCommonCoinData "+fmt.Sprint(i.State.CommonCoinLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
@@ -47,37 +45,33 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 		i.initTime = makeTimestamp()
 	}
 
-
 	if i.State.CommonCoin.HasSeed() {
 		log("has seed. quitting.")
 		return nil
 	}
 
-	i.State.CommonCoinContainer.AddSignature(senderID,shareSig)
+	i.State.CommonCoinContainer.AddSignature(senderID, shareSig)
 	log("added signature")
-
 
 	if i.State.CommonCoinContainer.HasQuorum() {
 		log("got quorum")
 
 		root, err := i.GetCommonCoinRoot()
 		if err != nil {
-			return errors.Wrap(err,"UponCommonCoin: could not compute common coin root")
+			return errors.Wrap(err, "UponCommonCoin: could not compute common coin root")
 		}
 		log("recalculated root")
 
-		signature, err := i.State.CommonCoinContainer.ReconstructSignature(root.Value,i.State.Share.ValidatorPubKey)
+		signature, err := i.State.CommonCoinContainer.ReconstructSignature(root.Value, i.State.Share.ValidatorPubKey)
 		if err != nil {
-			return errors.Wrap(err,"UponCommonCoin: error reconstructing signature")
+			return errors.Wrap(err, "UponCommonCoin: error reconstructing signature")
 		}
-		log(fmt.Sprintf("generated threshold signature: %v",signature))
-		
+		log(fmt.Sprintf("generated threshold signature: %v", signature))
 
 		var value int64
 		for i := 0; i < 5; i++ {
 			value = (value << 8) + int64(root.Value[i])
 		}
-		
 
 		i.State.CommonCoin.SetSeed(value)
 		log("setted seed")
@@ -86,7 +80,6 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 	log("finish")
 	return nil
 }
-
 
 func isValidCommonCoin(
 	state *messages.State,
@@ -105,19 +98,11 @@ func isValidCommonCoin(
 	if len(signedMessage.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
-	// if err := signedMessage.Signature.VerifyByOperators(signedMessage, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-	// 	return errors.Wrap(err, "msg signature invalid")
-	// }
 
-	msg_bytes, err := signedMessage.Message.Encode()
-	if err != nil {
-		return errors.Wrap(err, "Could not encode message")
+	state.CommonCoinCounter += 1
+	if !(state.UseBLS) || !(state.AggregateVerify) || (state.CommonCoinCounter == state.Share.Quorum) {
+		Verify(state, config, signedMessage, operators)
 	}
-	if !state.DiffieHellmanContainerOneTimeCost.VerifyHash(msg_bytes,signedMessage.GetSigners()[0],signedMessage.DiffieHellmanProof[state.Share.OperatorID]) {
-		return errors.New("Failed Diffie Hellman verification")
-	}
-
-	
 
 	msgData, err := signedMessage.Message.GetCommonCoinData()
 	if err != nil {
@@ -133,12 +118,13 @@ func isValidCommonCoin(
 func (i *Instance) SendCommonCoinShare() error {
 
 	//funciton identifier
-	functionID := uuid.New().String()
 
 	// logger
 	log := func(str string) {
-		return
-		i.logger.Debug("$$$$$$ UponSendCommonCoinShare "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		if i.State.HideLogs || i.State.DecidedLogOnly {
+			return
+		}
+		i.logger.Debug("$$$$$$ UponSendCommonCoinShare : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -161,9 +147,9 @@ func (i *Instance) SendCommonCoinShare() error {
 	return nil
 }
 
-func (i *Instance) GetCommonCoinRoot() (*messages.ByteRoot, error)  {
+func (i *Instance) GetCommonCoinRoot() (*messages.ByteRoot, error) {
 
-	data := fmt.Sprintf("AleaCommonCoin%v%v",i.State.ID, i.State.Height)
+	data := fmt.Sprintf("AleaCommonCoin%v%v", i.State.ID, i.State.Height)
 
 	root, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(data)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 	if err != nil {
@@ -172,16 +158,15 @@ func (i *Instance) GetCommonCoinRoot() (*messages.ByteRoot, error)  {
 	return messages.NewByteRoot(root), nil
 }
 
-func (i *Instance) GetCommonCoinShare() (types.Signature, error)  {
+func (i *Instance) GetCommonCoinShare() (types.Signature, error) {
 
 	root, err := i.GetCommonCoinRoot()
 	if err != nil {
 		return nil, err
 	}
 
-	return i.config.GetSigner().SignRoot(root ,types.QBFTSignatureType, i.State.Share.SharePubKey)
+	return i.config.GetSigner().SignRoot(root, types.QBFTSignatureType, i.State.Share.SharePubKey)
 }
-
 
 // CreateCommonCoin
 func CreateCommonCoin(state *messages.State, config alea.IConfig, shareSign types.Signature) (*messages.SignedMessage, error) {
@@ -200,24 +185,14 @@ func CreateCommonCoin(state *messages.State, config alea.IConfig, shareSign type
 		Data:       dataByts,
 	}
 
-	// No signing -> use Diffie Hellman
-	// sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed signing prepare msg")
-	// }
-
-	sig := []byte{}
-
-	msg_bytes, err := msg.Encode()
+	sig, hash_map, err := Sign(state, config, msg)
 	if err != nil {
-		return nil, errors.Wrap(err,"CreateCommonCoin: failed to encode message")
+		panic(err)
 	}
-	hash_map := state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
-
 	signedMsg := &messages.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
 		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil

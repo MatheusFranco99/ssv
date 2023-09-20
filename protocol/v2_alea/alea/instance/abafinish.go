@@ -7,15 +7,15 @@ import (
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
-	"github.com/google/uuid"
+
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"strings"
 )
 
 func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error { //(bool, []byte, error) {
-	
+
 	// get data
 	ABAFinishData, err := signedABAFinish.Message.GetABAFinishData()
 	if err != nil {
@@ -28,20 +28,20 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 	vote := ABAFinishData.Vote
 
 	//funciton identifier
-	functionID := uuid.New().String()
+	i.State.AbaFinishLogTag += 1
 
 	// logger
 	log := func(str string) {
 
-		if (i.State.DecidedLogOnly && !strings.Contains(str,"Total time")) {
+		if i.State.HideLogs || (i.State.DecidedLogOnly && !strings.Contains(str, "Total time")) {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponABAFinish "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("vote", int(vote)))
+		i.logger.Debug("$$$$$$ UponABAFinish "+fmt.Sprint(i.State.AbaFinishLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("vote", int(vote)))
 	}
 
 	log("start")
 
-	if (i.State.ACState.IsTerminated()) {
+	if i.State.ACState.IsTerminated() {
 		log("ac terminated. quitting.")
 		return nil
 	}
@@ -65,14 +65,13 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 	aba.AddFinish(vote, senderID)
 	log("added finish")
 
-
 	if i.State.ACState.CurrentACRound() < acround {
 		log("future aba. quitting.")
 		return nil
 	}
 
 	len_finish := aba.LenFinish(vote)
-	log(fmt.Sprintf("len finish: %v",len_finish))
+	log(fmt.Sprintf("len finish: %v", len_finish))
 
 	if len_finish >= int(i.State.Share.PartialQuorum) {
 		log("got finish partial quorum")
@@ -80,7 +79,7 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 		has_sent_finish := aba.HasSentFinish(vote)
 		log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
 		if !has_sent_finish {
-			
+
 			finishMsg, err := CreateABAFinish(i.State, i.config, vote, acround)
 			if err != nil {
 				return errors.Wrap(err, "uponABAFinish: failed to create ABA Finish message")
@@ -100,8 +99,8 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 		log("got finish quorum")
 
 		aba.SetDecided(vote)
-		log(fmt.Sprintf("set aba to decided. Result: %v",int(vote)))
-		
+		log(fmt.Sprintf("set aba to decided. Result: %v", int(vote)))
+
 		if int(vote) == 1 {
 
 			// acround := int(i.State.ACState.ACRound)
@@ -114,11 +113,11 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 			log("recalculated leader")
 
 			has_vcbc_final := i.State.VCBCState.HasData(leader)
-			log(fmt.Sprintf("has vcbc final of leader: %v",has_vcbc_final))
+			log(fmt.Sprintf("has vcbc final of leader: %v", has_vcbc_final))
 
 			i.State.ACState.TerminateAC()
 
-			if (!has_vcbc_final) {
+			if !has_vcbc_final {
 				i.State.WaitForVCBCAfterDecided = true
 				i.State.WaitForVCBCAfterDecided_Author = leader
 				log("set waiting for vcbc")
@@ -128,7 +127,7 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 					diff := i.finalTime - i.initTime
 					data := i.State.VCBCState.GetDataFromAuthor(leader)
 					i.Decide(data, signedABAFinish)
-					log(fmt.Sprintf("consensus decided. Total time: %v",diff))
+					log(fmt.Sprintf("consensus decided. Total time: %v", diff))
 				}
 			}
 
@@ -155,16 +154,13 @@ func isValidABAFinish(
 	logger *zap.Logger,
 ) error {
 
-	//funciton identifier
-	functionID := uuid.New().String()
-
 	// logger
 	log := func(str string) {
 
-		if (state.DecidedLogOnly) {
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
 			return
 		}
-		logger.Debug("$$$$$$ UponMV_ABAFinish "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		logger.Debug("$$$$$$ UponMV_ABAFinish : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
 	log("start")
@@ -182,18 +178,6 @@ func isValidABAFinish(
 		return errors.New("msg allows 1 signer")
 	}
 	log("checked signers == 1")
-	// if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-	// 	return errors.Wrap(err, "msg signature invalid")
-	// }
-	// log("checked signature")
-
-	msg_bytes, err := signedMsg.Message.Encode()
-	if err != nil {
-		return errors.Wrap(err, "Could not encode message")
-	}
-	if !state.DiffieHellmanContainerOneTimeCost.VerifyHash(msg_bytes,signedMsg.GetSigners()[0],signedMsg.DiffieHellmanProof[state.Share.OperatorID]) {
-		return errors.New("Failed Diffie Hellman verification")
-	}
 
 	ABAFinishData, err := signedMsg.Message.GetABAFinishData()
 	log("got data")
@@ -205,12 +189,20 @@ func isValidABAFinish(
 	}
 	log("validated")
 
+	counter := state.AbaFinishCounter
+	data := ABAFinishData
+	counter[data.ACRound] += 1
+	if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound] == state.Share.Quorum || counter[data.ACRound] == state.Share.PartialQuorum) {
+		Verify(state, config, signedMsg, operators)
+		log("checked signature")
+	}
+
 	return nil
 }
 
 func CreateABAFinish(state *messages.State, config alea.IConfig, vote byte, acround specalea.ACRound) (*messages.SignedMessage, error) {
 	ABAFinishData := &messages.ABAFinishData{
-		Vote:     vote,
+		Vote:    vote,
 		ACRound: acround,
 	}
 	dataByts, err := ABAFinishData.Encode()
@@ -224,23 +216,14 @@ func CreateABAFinish(state *messages.State, config alea.IConfig, vote byte, acro
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	// No signing -> use Diffie Hellman
-	// sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed signing abafinish msg")
-	// }
-	sig := []byte{}
-
-	msg_bytes, err := msg.Encode()
+	sig, hash_map, err := Sign(state, config, msg)
 	if err != nil {
-		return nil, errors.Wrap(err,"CreateABAFinish: failed to encode message")
+		panic(err)
 	}
-	hash_map := state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
-
 	signedMsg := &messages.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
 		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
