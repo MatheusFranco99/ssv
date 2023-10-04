@@ -66,6 +66,20 @@ func (vm *validatorsMap) GetValidator(pubKey string) (*validator.Validator, bool
 	return v, ok
 }
 
+// GetValidator returns a validator
+func (vm *validatorsMap) GetValidator0() (*validator.Validator, bool) {
+	// main lock
+	vm.lock.RLock()
+	defer vm.lock.RUnlock()
+
+	for _, v := range vm.validatorsMap {
+		return v, true
+	}
+	return nil, false
+
+	// return v, ok
+}
+
 // GetOrCreateValidator creates a new validator instance if not exist
 func (vm *validatorsMap) GetOrCreateValidator(share *types.SSVShare) *validator.Validator {
 	// main lock

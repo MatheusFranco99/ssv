@@ -147,6 +147,7 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 	if v.SystemLoad == 0 {
 		v.SystemLoad = 1
 	} else {
+		panic("QUITING")
 		if v.SystemLoad == 1 {
 			v.SystemLoad = 0
 		}

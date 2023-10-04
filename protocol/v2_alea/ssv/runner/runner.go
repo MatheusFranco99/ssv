@@ -1,11 +1,12 @@
 package runner
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log"
 	"go.uber.org/zap"
-	"github.com/google/uuid"
- 	"time"
- 	"fmt"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
@@ -50,7 +51,7 @@ type Runner interface {
 	expectedPostConsensusRootsAndDomain() ([]ssz.HashRoot, phase0.DomainType, error)
 	// executeDuty an INTERNAL function, executes a duty.
 	executeDuty(duty *spectypes.Duty) error
-	
+
 	SetSystemLoad(v int)
 }
 
@@ -71,7 +72,7 @@ type BaseRunner struct {
 
 func NewBaseRunner(logger *zap.Logger) *BaseRunner {
 	return &BaseRunner{
-		logger: logger,
+		logger:     logger,
 		SystemLoad: 0,
 	}
 }
@@ -83,7 +84,6 @@ func (b *BaseRunner) SetSystemLoad(v int) {
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Microsecond)
 }
-
 
 // baseStartNewDuty is a base func that all runner implementation can call to start a duty
 func (b *BaseRunner) baseStartNewDuty(runner Runner, duty *spectypes.Duty) error {
@@ -151,10 +151,10 @@ func (b *BaseRunner) baseConsensusMsgProcessing(runner Runner, msg *messages.Sig
 	// if err != nil {
 	// 	return false, nil, errors.Wrap(err, "failed to get decided data")
 	// }
-	
+
 	decidedValue = &spectypes.ConsensusData{}
 	// if err := decidedValue.Decode(decidedData.Data); err != nil {
-		if err := decidedValue.Decode(decidedDataData); err != nil {
+	if err := decidedValue.Decode(decidedDataData); err != nil {
 		return true, nil, errors.Wrap(err, "failed to parse decided value to ConsensusData")
 	}
 
@@ -232,8 +232,7 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 		b.logger.Debug("$$$$$$ UponBaseRunnerDecide "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
-	log(fmt.Sprintf("Launching %v instances",b.SystemLoad))
-
+	log(fmt.Sprintf("Launching %v instances", b.SystemLoad))
 
 	byts, err := input.Encode()
 	if err != nil {
@@ -257,7 +256,7 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 	b.registerTimeoutHandler(newInstance, runner.GetBaseRunner().QBFTController.Height)
 
 	idx := 0
- 	for idx < (b.SystemLoad - 1) {
+	for idx < (b.SystemLoad - 1) {
 		// size_byts := len(byts)
 		// byts_modified := make([]byte, size_byts)
 		// copy(byts_modified, byts)

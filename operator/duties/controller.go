@@ -93,30 +93,45 @@ func (dc *dutyController) ExecuteDuty(duty *spectypes.Duty) error {
 		// enables to work with a custom executor, e.g. readOnlyDutyExec
 		return dc.executor.ExecuteDuty(duty)
 	}
-	logger := dc.loggerWithDutyContext(dc.logger, duty)
+	// logger := dc.loggerWithDutyContext(dc.logger, duty)
 
 	// because we're using the same duty for more than 1 duty (e.g. attest + aggregator) there is an error in bls.Deserialize func for cgo pointer to pointer.
 	// so we need to copy the pubkey val to avoid pointer
 	var pk phase0.BLSPubKey
 	copy(pk[:], duty.PubKey[:])
 
+	v, _ := dc.validatorController.GetValidator0()
 	pubKey := &bls.PublicKey{}
-	if err := pubKey.Deserialize(pk[:]); err != nil {
+	if err := pubKey.Deserialize(v.Share.Share.ValidatorPubKey[:]); err != nil {
 		return errors.Wrap(err, "failed to deserialize pubkey from duty")
 	}
-	if v, ok := dc.validatorController.GetValidator(pubKey.SerializeToHexStr()); ok {
-		ssvMsg, err := createDutyExecuteMsg(duty, pubKey)
-		if err != nil {
-			return err
-		}
-		dec, err := queue.DecodeSSVMessage(ssvMsg)
-		if err != nil {
-			return err
-		}
-		v.Queues[duty.Type].Q.Push(dec)
-	} else {
-		logger.Warn("could not find validator")
+	ssvMsg, err := createDutyExecuteMsg(duty, pubKey)
+	if err != nil {
+		return err
 	}
+	dec, err := queue.DecodeSSVMessage(ssvMsg)
+	if err != nil {
+		return err
+	}
+	v.Queues[duty.Type].Q.Push(dec)
+
+	// pubKey := &bls.PublicKey{}
+	// if err := pubKey.Deserialize(pk[:]); err != nil {
+	// 	return errors.Wrap(err, "failed to deserialize pubkey from duty")
+	// }
+	// if v, ok := dc.validatorController.GetValidator(pubKey.SerializeToHexStr()); ok {
+	// 	ssvMsg, err := createDutyExecuteMsg(duty, pubKey)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	dec, err := queue.DecodeSSVMessage(ssvMsg)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	v.Queues[duty.Type].Q.Push(dec)
+	// } else {
+	// 	logger.Warn("could not find validator")
+	// }
 
 	return nil
 }
@@ -149,28 +164,54 @@ func (dc *dutyController) listenToTicker(slots <-chan phase0.Slot) {
 	for currentSlot := range slots {
 		dc.logger.Debug("slot", zap.Uint64("slot", uint64(currentSlot)))
 		// execute duties
-		duties, err := dc.fetcher.GetDuties(currentSlot)
-		if err != nil {
-			dc.logger.Warn("failed to get duties", zap.Error(err))
+		// duties, err := dc.fetcher.GetDuties(currentSlot)
+		// if err != nil {
+		// 	dc.logger.Warn("failed to get duties", zap.Error(err))
+		// }
+
+		duty := &spectypes.Duty{
+			Type:           spectypes.BNRoleSyncCommittee,
+			Slot:           currentSlot,
+			ValidatorIndex: dc.validatorController.GetValidatorsIndices()[0],
 		}
-		for i := range duties {
-			go dc.onDuty(&duties[i])
-		}
+		go dc.onDuty(duty)
+		// // Type is the duty type (attest, propose)
+		// Type BeaconRole
+		// // PubKey is the public key of the validator that should attest.
+		// PubKey spec.BLSPubKey
+		// // Slot is the slot in which the validator should attest.
+		// Slot spec.Slot
+		// // ValidatorIndex is the index of the validator that should attest.
+		// ValidatorIndex spec.ValidatorIndex
+		// // CommitteeIndex is the index of the committee in which the attesting validator has been placed.
+		// CommitteeIndex spec.CommitteeIndex
+		// // CommitteeLength is the length of the committee in which the attesting validator has been placed.
+		// CommitteeLength uint64
+		// // CommitteesAtSlot is the number of committees in the slot.
+		// CommitteesAtSlot uint64
+		// // ValidatorCommitteeIndex is the index of the validator in the list of validators in the committee.
+		// ValidatorCommitteeIndex uint64
+		// // ValidatorSyncCommitteeIndices is the index of the validator in the list of validators in the committee.
+		// ValidatorSyncCommitteeIndices []spec.CommitteeIndex
+
+		// for i := range duties {
+		// 	go dc.onDuty(&duties[i])
+		// }
 	}
 }
 
 // onDuty handles next duty
 func (dc *dutyController) onDuty(duty *spectypes.Duty) {
 	logger := dc.loggerWithDutyContext(dc.logger, duty)
-	if dc.shouldExecute(duty) {
-		logger.Debug("duty was sent to execution")
-		if err := dc.ExecuteDuty(duty); err != nil {
-			logger.Warn("could not dispatch duty", zap.Error(err))
-			return
-		}
+	// if dc.shouldExecute(duty) {
+	// 	logger.Debug("duty was sent to execution")
+	if err := dc.ExecuteDuty(duty); err != nil {
+		logger.Warn("could not dispatch duty", zap.Error(err))
 		return
 	}
-	logger.Warn("slot is irrelevant, ignoring duty")
+	// 	return
+	// }
+	// logger.Warn("slot is irrelevant, ignoring duty")
 }
 
 func (dc *dutyController) shouldExecute(duty *spectypes.Duty) bool {

@@ -88,6 +88,7 @@ type Controller interface {
 	StartValidators()
 	GetValidatorsIndices() []phase0.ValidatorIndex
 	GetValidator(pubKey string) (*validator.Validator, bool)
+	GetValidator0() (*validator.Validator, bool)
 	UpdateValidatorMetaDataLoop()
 	StartNetworkHandlers()
 	Eth1EventHandler(ongoingSync bool) eth1.SyncEventHandler
@@ -488,6 +489,11 @@ func (c *controller) UpdateValidatorMetadata(pk string, metadata *beaconprotocol
 // GetValidator returns a validator instance from validatorsMap
 func (c *controller) GetValidator(pubKey string) (*validator.Validator, bool) {
 	return c.validatorsMap.GetValidator(pubKey)
+}
+
+// GetValidator returns a validator instance from validatorsMap
+func (c *controller) GetValidator0() (*validator.Validator, bool) {
+	return c.validatorsMap.GetValidator0()
 }
 
 // GetValidatorsIndices returns a list of all the active validators indices
