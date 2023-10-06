@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 	"os"
+	"strconv"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
@@ -146,18 +147,24 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 	log(fmt.Sprintf("Setting true for %vslot %v,%v due to duty %v", cBlue, int(slot), reset, duty.Type.String()))
 	v.DoneDutyForSlot[int(slot)] = true
 	if v.SystemLoad == 0 {
-		v.SystemLoad = 1
+		sload,err := strconv.Atoi(os.Getenv("SLOAD"))
+		if err != nil {
+			panic(err)
+		}
+		v.SystemLoad = sload
 	} else {
 		// panic("QUITING")
+		log("TERMINATING")
+		os.Exit(0)
 		if v.SystemLoad == 1 {
 			v.SystemLoad = 0
 		}
 		v.SystemLoad += 20
 	}
-	if v.SystemLoad == 20 {
-		log("TERMINATING")
-		os.Exit(0)
-	}
+	// if v.SystemLoad == 20 {
+	// 	log("TERMINATING")
+	// 	os.Exit(0)
+	// }
 	log(fmt.Sprintf("%vSystem load: %v %v", cYellow, v.SystemLoad, reset))
 
 	dutyRunner.SetSystemLoad(v.SystemLoad)

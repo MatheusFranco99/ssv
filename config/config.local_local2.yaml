@@ -11,7 +11,7 @@ eth2:
   ### replace with your beacon node address
   BeaconNodeAddr: 146.193.41.55:8000
   Network: prater
-  MinGenesisTime: 1695171300
+  MinGenesisTime: 1696582246
 
 
 eth1:

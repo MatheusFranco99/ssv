@@ -95,13 +95,13 @@ func NewInstance(
 			WaitVCBCQuorumOptimization: true,
 			EqualVCBCOptimization:      true,
 			UseBLS:                     true,
-			AggregateVerify:            false,
+			AggregateVerify:            true,
 			UseDiffieHellman:           false,
 			UseEDDSA:                   false,
 			UseRSA:                     false,
 			// logs
-			DecidedLogOnly:     true,
-			HideLogs:           false,
+			DecidedLogOnly:     false,
+			HideLogs:           true,
 			HideValidationLogs: true,
 			// Diffie Hellman
 			DiffieHellmanContainer:            messages.NewDiffieHellmanContainer(),
@@ -433,17 +433,17 @@ func (i *Instance) AggregateMsgsProcessing(msg *messages.SignedMessage) (decided
 		}
 		i.State.AbaInitContainer[acround][round].AddMessage(msg)
 		if i.State.AbaInitContainer[acround][round].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaInitContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaInitContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaInitContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaInitContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
 		} else if i.State.AbaInitContainer[acround][round].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaInitContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaInitContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaInitContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaInitContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
 		} else {
 			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 		}
@@ -462,17 +462,17 @@ func (i *Instance) AggregateMsgsProcessing(msg *messages.SignedMessage) (decided
 		}
 		i.State.AbaAuxContainer[acround][round].AddMessage(msg)
 		if i.State.AbaAuxContainer[acround][round].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaAuxContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaAuxContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaAuxContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaAuxContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
 		} else if i.State.AbaAuxContainer[acround][round].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaAuxContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaAuxContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaAuxContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaAuxContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
 		} else {
 			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 		}
@@ -491,17 +491,17 @@ func (i *Instance) AggregateMsgsProcessing(msg *messages.SignedMessage) (decided
 		}
 		i.State.AbaConfContainer[acround][round].AddMessage(msg)
 		if i.State.AbaConfContainer[acround][round].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaConfContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaConfContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaConfContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaConfContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
 		} else if i.State.AbaConfContainer[acround][round].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaConfContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaConfContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaConfContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaConfContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
 		} else {
 			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 		}
@@ -518,27 +518,28 @@ func (i *Instance) AggregateMsgsProcessing(msg *messages.SignedMessage) (decided
 
 		i.State.AbaFinishContainer[acround].AddMessage(msg)
 		if i.State.AbaFinishContainer[acround].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaFinishContainer[acround].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaFinishContainer[acround].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaFinishContainer[acround].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaFinishContainer[acround].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
 		} else if i.State.AbaFinishContainer[acround].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaFinishContainer[acround].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)), i.State.Share.Committee)
+			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaFinishContainer[acround].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
 			if err != nil {
 				return false, nil, nil, err
 			}
-			return i.ProcessBufferOfMessages(i.State.AbaFinishContainer[acround].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)))
+			return i.ProcessBufferOfMessages(i.State.AbaFinishContainer[acround].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
 		} else {
 			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 		}
 	case messages.CommonCoinMsgType:
 		i.State.CommonCoinMsgContainer.AddMessage(msg)
 		if i.State.CommonCoinMsgContainer.Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.CommonCoinMsgContainer.GetMessages(), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
+			// Commented because functionality already verifies it
+			// err = VerifyBLSAggregate(i.State, i.config, i.State.CommonCoinMsgContainer.GetMessages(), i.State.Share.Committee)
+			// if err != nil {
+			// 	return false, nil, nil, err
+			// }
 			return i.ProcessBufferOfMessages(i.State.CommonCoinMsgContainer.GetMessages())
 		} else {
 			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil

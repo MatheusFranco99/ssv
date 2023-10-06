@@ -79,7 +79,7 @@ func (ncv *NonCommitteeValidator) ProcessMessage(msg *spectypes.SSVMessage) {
 				if err = ncv.qbftController.SaveInstance(inst, signedMsg); err != nil {
 					logger.Debug("failed to save instance", zap.Error(err))
 				} else {
-					logger.Debug("saved instance")
+					// logger.Debug("saved instance")
 				}
 			}
 		}

@@ -142,7 +142,7 @@ func (b *BaseRunner) baseConsensusMsgProcessing(runner Runner, msg *messages.Sig
 			if err = b.QBFTController.SaveInstance(inst, decidedMsg); err != nil {
 				logger.Debug("failed to save instance", zap.Error(err))
 			} else {
-				logger.Debug("saved instance")
+				// logger.Debug("saved instance")
 			}
 		}
 	}

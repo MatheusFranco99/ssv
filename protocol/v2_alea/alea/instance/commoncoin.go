@@ -62,7 +62,7 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 		}
 		log("recalculated root")
 
-		signature, err := i.State.CommonCoinContainer.ReconstructSignature(root.Value, i.State.Share.ValidatorPubKey)
+		signature, err := i.State.CommonCoinContainer.ReconstructSignatureAndVerify(root.Value, i.State.Share.ValidatorPubKey)
 		if err != nil {
 			return errors.Wrap(err, "UponCommonCoin: error reconstructing signature")
 		}

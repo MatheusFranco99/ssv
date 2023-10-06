@@ -11,7 +11,7 @@ eth2:
   ### replace with your beacon node address
   BeaconNodeAddr: 146.193.41.55:8000
   Network: prater
-  MinGenesisTime: 1695171300
+  MinGenesisTime: 1696582246
 
 
 eth1:
@@ -30,8 +30,8 @@ p2p:
 ### mdns for local network setup
   # Bootnodes: enr:-LK4QMmL9hLJ1csDN4rQoSjlJGE2SvsXOETfcLH8uAVrxlHaELF0u3NeKCTY2eO_X1zy5eEKcHruyaAsGNiyyG4QWUQBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpD1pf1CAAAAAP__________gmlkgnY0gmlwhCLdu_SJc2VjcDI1NmsxoQO8KQz5L1UEXzEr-CXFFq1th0eG6gopbdul2OQVMuxfMoN0Y3CCE4iDdWRwgg-g
 
-# bootnode:
-#   ExternalIP: 146.193.41.55
+bootnode:
+  ExternalIP: 146.193.41.55
 
 ssv:
   GenesisEpoch: 1
