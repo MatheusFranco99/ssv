@@ -158,9 +158,9 @@ func (b *BaseRunner) baseConsensusMsgProcessing(runner Runner, msg *messages.Sig
 		return true, nil, errors.Wrap(err, "failed to parse decided value to ConsensusData")
 	}
 
-	if err := b.validateDecidedConsensusData(runner, decidedValue); err != nil {
-		return true, nil, errors.Wrap(err, "decided ConsensusData invalid")
-	}
+	// if err := b.validateDecidedConsensusData(runner, decidedValue); err != nil {
+	// 	return true, nil, errors.Wrap(err, "decided ConsensusData invalid")
+	// }
 
 	runner.GetBaseRunner().State.DecidedValue = decidedValue
 
@@ -239,9 +239,9 @@ func (b *BaseRunner) decide(runner Runner, input *spectypes.ConsensusData) error
 		return errors.Wrap(err, "could not encode ConsensusData")
 	}
 
-	if err := runner.GetValCheckF()(byts); err != nil {
-		return errors.Wrap(err, "input data invalid")
-	}
+	// if err := runner.GetValCheckF()(byts); err != nil {
+	// 	return errors.Wrap(err, "input data invalid")
+	// }
 
 	if err := runner.GetBaseRunner().QBFTController.StartNewInstance(byts); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")

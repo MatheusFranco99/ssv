@@ -8,6 +8,7 @@ import (
 
 	"fmt"
 	"time"
+	"os"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
@@ -147,13 +148,17 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 	if v.SystemLoad == 0 {
 		v.SystemLoad = 1
 	} else {
-		panic("QUITING")
+		// panic("QUITING")
 		if v.SystemLoad == 1 {
 			v.SystemLoad = 0
 		}
 		v.SystemLoad += 20
 	}
-	log(fmt.Sprintf("%vSystem load: %v%v", cYellow, v.SystemLoad, reset))
+	if v.SystemLoad == 20 {
+		log("TERMINATING")
+		os.Exit(0)
+	}
+	log(fmt.Sprintf("%vSystem load: %v %v", cYellow, v.SystemLoad, reset))
 
 	dutyRunner.SetSystemLoad(v.SystemLoad)
 

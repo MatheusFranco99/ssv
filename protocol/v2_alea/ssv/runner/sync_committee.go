@@ -141,9 +141,9 @@ func (r *SyncCommitteeRunner) ProcessPostConsensus(signedMsg *specssv.SignedPart
 			ValidatorIndex:  r.GetState().DecidedValue.Duty.ValidatorIndex,
 			Signature:       specSig,
 		}
-		if err := r.GetBeaconNode().SubmitSyncMessage(msg); err != nil {
-			return errors.Wrap(err, "could not submit to Beacon chain reconstructed signed sync committee")
-		}
+		// if err := r.GetBeaconNode().SubmitSyncMessage(msg); err != nil {
+		// 	return errors.Wrap(err, "could not submit to Beacon chain reconstructed signed sync committee")
+		// }
 		r.logger.Debug("successfully submitted sync committee!", zap.Any("slot", msg.Slot),
 			zap.Any("height", r.BaseRunner.QBFTController.Height))
 	}

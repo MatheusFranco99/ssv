@@ -94,11 +94,11 @@ func NewInstance(
 			FastABAOptimization:        true,
 			WaitVCBCQuorumOptimization: true,
 			EqualVCBCOptimization:      true,
-			UseBLS:                     false,
+			UseBLS:                     true,
 			AggregateVerify:            false,
 			UseDiffieHellman:           false,
 			UseEDDSA:                   false,
-			UseRSA:                     true,
+			UseRSA:                     false,
 			// logs
 			DecidedLogOnly:     true,
 			HideLogs:           false,
