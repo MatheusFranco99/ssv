@@ -44,7 +44,7 @@ type Instance struct {
 	StartValue  []byte
 
 	logger    *zap.Logger
-	vcbcNum   int
+
 	priority  specalea.Priority
 	initTime  int64
 	finalTime int64
@@ -206,8 +206,6 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		i.StartValue = value
 		i.State.Round = specalea.FirstRound
 		i.State.Height = height
-
-		i.vcbcNum = 0
 
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))

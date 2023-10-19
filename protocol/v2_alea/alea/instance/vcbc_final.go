@@ -29,7 +29,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	hash := vcbcFinalData.Hash
 	aggregated_msg := vcbcFinalData.AggregatedMessage
 
-	//funciton identifier
+	//function identifier
 	i.State.VCBCFinalLogTag += 1
 
 	// logger

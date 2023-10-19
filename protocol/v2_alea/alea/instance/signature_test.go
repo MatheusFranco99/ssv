@@ -8,8 +8,9 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"testing"
-
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/stretchr/testify/require"
+	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
 func TestEddsaSigningMock(t *testing.T) {
@@ -94,4 +95,89 @@ func TestGenerateRSA(t *testing.T) {
 		panic(err)
 	}
 	fmt.Printf("Mock signature: %x\n", si)
+}
+
+
+
+func BenchmarkBLSVerification(b *testing.B) {
+	// Initialize BLS library
+	if err := bls.Init(bls.BLS12_381); err != nil {
+		b.Fatal(err)
+	}
+
+	// Generate a BLS key pair
+	secretKey := new(bls.SecretKey)
+	secretKey.SetByCSPRNG()
+	publicKey := secretKey.GetPublicKey()
+
+	// Create a message to sign
+	message := []byte("Hello, world!")
+
+	// Sign the message
+	signature := secretKey.Sign(string(message))
+
+	// Reset the timer
+	b.ResetTimer()
+
+	// Perform signature verification in the benchmark
+	for i := 0; i < b.N; i++ {
+		if !signature.Verify(publicKey, string(message)) {
+			b.Fatal("Signature verification failed")
+		}
+	}
+}
+
+func BenchmarkBLSSignature(b *testing.B) {
+	// Initialize BLS library
+	if err := bls.Init(bls.BLS12_381); err != nil {
+		b.Fatal(err)
+	}
+
+	// Generate a BLS key pair
+	secretKey := new(bls.SecretKey)
+	secretKey.SetByCSPRNG()
+
+	// Create a message to sign
+	message := []byte("Hello, world!")
+
+	// Reset the timer
+	b.ResetTimer()
+
+	// Perform signature verification in the benchmark
+	for i := 0; i < b.N; i++ {
+		// Sign the message
+		secretKey.Sign(string(message))
+	}
+}
+
+
+func BenchmarkBLSAggregate(b *testing.B) {
+
+	inst := BaseInstance(1)
+	inst2 := BaseInstance(2)
+	inst3 := BaseInstance(3)
+	inst4 := BaseInstance(4)
+
+	inst.Start(TestingContent, TestingHeight)
+	inst2.Start(TestingContent, TestingHeight)
+	inst3.Start(TestingContent, TestingHeight)
+	inst4.Start(TestingContent, TestingHeight)
+
+	
+
+	vcbc_ready_message_1_1 := VCBCReadyMessage(1, TestingHeight, 1, 1, TestingContentHash, inst.State)
+	vcbc_ready_message_1_2 := VCBCReadyMessage(2, TestingHeight, 1, 1, TestingContentHash, inst2.State)
+	vcbc_ready_message_1_3 := VCBCReadyMessage(3, TestingHeight, 1, 1, TestingContentHash, inst3.State)
+	// vcbc_ready_message_1_4 := VCBCReadyMessage(4, TestingHeight, 1, 1, TestingContentHash, inst4.State)
+
+	b.ResetTimer()
+
+	// Perform signature verification in the benchmark
+	for i := 0; i < b.N; i++ {
+		_, err := AggregateMsgs([]*messages.SignedMessage{vcbc_ready_message_1_1, vcbc_ready_message_1_2, vcbc_ready_message_1_3})
+		if err != nil {
+			panic(err)
+		}
+	}
+
 }
