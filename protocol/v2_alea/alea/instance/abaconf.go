@@ -105,7 +105,7 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 
 		if !has_sent_init {
 
-			initMsg, err := CreateABAInit(i.State, i.config, init_vote, round+1, acround)
+			initMsg, err := i.CreateABAInit(init_vote, round+1, acround)
 			if err != nil {
 				return errors.Wrap(err, "uponABAConf: failed to create ABA Init message")
 			}
@@ -124,7 +124,7 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 			log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
 			if !has_sent_finish {
 
-				finishMsg, err := CreateABAFinish(i.State, i.config, coin, acround)
+				finishMsg, err := i.CreateABAFinish(coin, acround)
 				if err != nil {
 					return errors.Wrap(err, "uponABAConf: failed to create ABA Finish message")
 				}
@@ -214,7 +214,10 @@ func isValidABAConf(
 	return nil
 }
 
-func CreateABAConf(state *messages.State, config alea.IConfig, votes []byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+func (i *Instance) CreateABAConf(votes []byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	ABAConfData := &messages.ABAConfData{
 		Votes:   votes,
 		Round:   round,
@@ -231,7 +234,7 @@ func CreateABAConf(state *messages.State, config alea.IConfig, votes []byte, rou
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

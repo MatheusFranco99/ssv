@@ -85,7 +85,7 @@ func (i *Instance) uponABAAux(signedABAAux *messages.SignedMessage) error {
 		confValues := abaround.GetConfValues()
 		log(fmt.Sprintf("conf values: %v", confValues))
 
-		confMsg, err := CreateABAConf(i.State, i.config, confValues, round, acround)
+		confMsg, err := i.CreateABAConf(confValues, round, acround)
 		if err != nil {
 			return errors.Wrap(err, "uponABAAux: failed to create ABA Conf message after strong support")
 		}
@@ -161,7 +161,10 @@ func isValidABAAux(
 	return nil
 }
 
-func CreateABAAux(state *messages.State, config alea.IConfig, vote byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+func (i *Instance) CreateABAAux(vote byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	ABAAuxData := &messages.ABAAuxData{
 		Vote:    vote,
 		Round:   round,
@@ -178,7 +181,7 @@ func CreateABAAux(state *messages.State, config alea.IConfig, vote byte, round s
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

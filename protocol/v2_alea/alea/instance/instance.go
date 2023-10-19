@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"os"
 	"strconv"
+	"sync"
 
 	// "time"
 
@@ -43,7 +43,7 @@ type Instance struct {
 	startOnce   sync.Once
 	StartValue  []byte
 
-	logger    *zap.Logger
+	logger *zap.Logger
 
 	priority  specalea.Priority
 	initTime  int64
@@ -68,28 +68,27 @@ func NewInstance(
 	share.Quorum = uint64(2*f + 1)
 	share.PartialQuorum = uint64(f + 1)
 
-
-	bls,err := strconv.Atoi(os.Getenv("BLS"))
+	bls, err := strconv.Atoi(os.Getenv("BLS"))
 	if err != nil {
 		bls = 1
 		// panic(err)
 	}
-	blsagg,err := strconv.Atoi(os.Getenv("BLSAGG"))
+	blsagg, err := strconv.Atoi(os.Getenv("BLSAGG"))
 	if err != nil {
 		blsagg = 0
 		// panic(err)
 	}
-	dh,err := strconv.Atoi(os.Getenv("DH"))
+	dh, err := strconv.Atoi(os.Getenv("DH"))
 	if err != nil {
 		dh = 0
 		// panic(err)
 	}
-	eddsa,err := strconv.Atoi(os.Getenv("EDDSA"))
+	eddsa, err := strconv.Atoi(os.Getenv("EDDSA"))
 	if err != nil {
 		eddsa = 0
 		// panic(err)
 	}
-	rsa,err := strconv.Atoi(os.Getenv("RSA"))
+	rsa, err := strconv.Atoi(os.Getenv("RSA"))
 	if err != nil {
 		rsa = 0
 		// panic(err)
@@ -197,7 +196,7 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 			if i.State.HideLogs || (i.State.DecidedLogOnly && !strings.Contains(str, "start")) {
 				return
 			}
-			i.logger.Debug("$$$$$$" + cGreen + " UponStart " + reset + "1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
+			i.logger.Debug("$$$$$$"+cGreen+" UponStart "+reset+"1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 		}
 
 		// log("starting alea instance")
@@ -217,7 +216,7 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 func (i *Instance) SendFinalForDecisionPurpose() {
 
 	acround := i.State.ACState.ACRound
-	finishMsg, err := CreateABAFinish(i.State, i.config, byte(1), acround)
+	finishMsg, err := i.CreateABAFinish(byte(1), acround)
 	if err != nil {
 		panic(err)
 	}
@@ -249,144 +248,6 @@ func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
 		Data:    byts,
 	}
 	return i.config.GetNetwork().Broadcast(msgToBroadcast)
-}
-
-func (i *Instance) ProcessMsgLogic(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-
-	decided = false
-	decidedValue = nil
-	aggregatedCommit = nil
-	res := i.processMsgF.Run(func() interface{} {
-		switch msg.Message.MsgType {
-		case messages.ABAInitMsgType:
-			return i.uponABAInit(msg)
-		case messages.ABAAuxMsgType:
-			return i.uponABAAux(msg)
-		case messages.ABAConfMsgType:
-			return i.uponABAConf(msg)
-		case messages.ABAFinishMsgType:
-			return i.uponABAFinish(msg)
-		case messages.VCBCSendMsgType:
-			return i.uponVCBCSend(msg)
-		case messages.VCBCReadyMsgType:
-			return i.uponVCBCReady(msg)
-		case messages.VCBCFinalMsgType:
-			return i.uponVCBCFinal(msg)
-		case messages.CommonCoinMsgType:
-			return i.uponCommonCoin(msg)
-		default:
-			return errors.New("signed message type not supported")
-		}
-	})
-	if res != nil {
-		return false, nil, nil, res.(error)
-	}
-
-	decided = i.State.Decided
-	decidedValue = i.State.DecidedValue
-	aggregatedCommit = i.State.DecidedMessage
-	return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-}
-
-// ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
-func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-
-	if !i.State.HasStarted {
-		return false, nil, nil, nil
-	}
-
-	// special treatment to ready msg -> if you're not the author, don't process it
-	// this is occurs due to the pubsub topology
-	if msg.Message.MsgType == messages.VCBCReadyMsgType {
-
-		// get Data
-		vcbcReadyData, err := msg.Message.GetVCBCReadyData()
-		if err != nil {
-			return false, nil, nil, errors.Wrap(err, "UponProcessMsg: could not get vcbcReadyData data from signedMessage")
-		}
-
-		// get attributes
-		author := vcbcReadyData.Author
-		if author != i.State.Share.OperatorID {
-			return false, nil, nil, nil
-		}
-		
-		// If already sent final, don't process more readys
-		if i.State.ReceivedReadys.HasSentFinal() {
-			return false, nil, nil, nil
-		}
-	}
-
-	if err := i.BaseMsgValidation(msg); err != nil {
-		return false, nil, nil, errors.Wrap(err, "invalid signed message")
-	}
-
-	if i.State.AggregateVerify {
-		// performs signature verification only for quorum (for msgs types that allows this functionality) and process the quorum
-		// If msg type doesn't allow this (VCBCSend and VCBCFinal), verify and process
-		return i.AggregateMsgsProcessing(msg)
-	} else {
-		if (msg.Message.MsgType != messages.VCBCFinalMsgType) || (i.State.UseBLS == false && i.State.AggregateVerify == false && i.State.UseDiffieHellman == false) {
-			// verify and process
-			err = Verify(i.State, i.config, msg, i.State.Share.Committee)
-			if err != nil {
-				return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
-			}
-		} else {
-			err = VerifyVCBCFinal(i.State, i.config, msg, i.State.Share.Committee)
-			if err != nil {
-				return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
-			}
-		}
-		return i.ProcessMsgLogic(msg)
-	}
-}
-
-func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
-
-	// logger
-	log := func(str string) {
-		if i.State.HideLogs || i.State.HideValidationLogs || i.State.DecidedLogOnly {
-			return
-		}
-		return
-		i.logger.Debug("$$$$$$ UponMessageValidation : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
-	}
-
-	log("start")
-
-	if err := msg.Validate(); err != nil {
-		return errors.Wrap(err, "invalid signed message")
-	}
-
-	if msg.Message.Round < i.State.Round {
-		return errors.New("past round")
-	}
-
-	var err error
-	switch msg.Message.MsgType {
-	case messages.VCBCSendMsgType:
-		err = isValidVCBCSend(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.VCBCReadyMsgType:
-		err = isValidVCBCReady(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.VCBCFinalMsgType:
-		err = isValidVCBCFinal(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.ABAInitMsgType:
-		err = isValidABAInit(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.ABAAuxMsgType:
-		err = isValidABAAux(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.ABAConfMsgType:
-		err = isValidABAConf(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.ABAFinishMsgType:
-		err = isValidABAFinish(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	case messages.CommonCoinMsgType:
-		err = isValidCommonCoin(i.State, i.config, msg, i.config.GetValueCheckF(), i.State.Share.Committee, i.logger)
-	default:
-		err = errors.New(fmt.Sprintf("signed message type not supported: %v", msg.Message.MsgType))
-	}
-
-	log("finish")
-	return err
 }
 
 // IsDecided interface implementation
@@ -450,202 +311,4 @@ func (i *Instance) GetStatsString() string {
 
 	i.logger.Debug(fmt.Sprintf("Instance: GetStats outputting: %v", stats))
 	return stats
-}
-
-func (i *Instance) AggregateMsgsProcessing(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-	switch msg.Message.MsgType {
-	case messages.VCBCReadyMsgType:
-		i.State.ReadyContainer.AddMessage(msg)
-		if i.State.ReadyContainer.Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.ReadyContainer.GetMessages(), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.ReadyContainer.GetMessages())
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	case messages.VCBCFinalMsgType:
-		i.State.FinalContainer.AddMessage(msg)
-		if i.State.FinalContainer.Len() == int(i.State.Share.Quorum) {
-			if i.State.FinalContainer.AllFinalEqual() {
-				err = VerifyBLSAggregateFinals(i.State, i.config, i.State.FinalContainer.GetMessages(), i.State.Share.Committee)
-				if err != nil {
-					return false, nil, nil, err
-				}
-				return i.ProcessBufferOfMessages(i.State.FinalContainer.GetMessages())
-			} else {
-				for _, msg_i := range i.State.FinalContainer.GetMessages() {
-					err = Verify(i.State, i.config, msg_i, i.State.Share.Committee)
-					if err != nil {
-						return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
-					}
-					i.ProcessMsgLogic(msg_i)
-				}
-			}
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		} else if i.State.FinalContainer.Len() > int(i.State.Share.Quorum) {
-			err = Verify(i.State, i.config, msg, i.State.Share.Committee)
-			if err != nil {
-				return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
-			}
-			return i.ProcessMsgLogic(msg)
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	case messages.ABAInitMsgType:
-		data, err := msg.Message.GetABAInitData()
-		if err != nil {
-			return false, nil, nil, err
-		}
-		acround := data.ACRound
-		round := data.Round
-		if _, ok := i.State.AbaInitContainer[acround]; !ok {
-			i.State.AbaInitContainer[acround] = make(map[specalea.Round]*messages.MessageContainer)
-		}
-		if _, ok := i.State.AbaInitContainer[acround][round]; !ok {
-			i.State.AbaInitContainer[acround][round] = messages.NewMsgContainer()
-		}
-		i.State.AbaInitContainer[acround][round].AddMessage(msg)
-		if i.State.AbaInitContainer[acround][round].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaInitContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaInitContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
-		} else if i.State.AbaInitContainer[acround][round].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaInitContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaInitContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	case messages.ABAAuxMsgType:
-		data, err := msg.Message.GetABAAuxData()
-		if err != nil {
-			return false, nil, nil, err
-		}
-		acround := data.ACRound
-		round := data.Round
-		if _, ok := i.State.AbaAuxContainer[acround]; !ok {
-			i.State.AbaAuxContainer[acround] = make(map[specalea.Round]*messages.MessageContainer)
-		}
-		if _, ok := i.State.AbaAuxContainer[acround][round]; !ok {
-			i.State.AbaAuxContainer[acround][round] = messages.NewMsgContainer()
-		}
-		i.State.AbaAuxContainer[acround][round].AddMessage(msg)
-		if i.State.AbaAuxContainer[acround][round].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaAuxContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaAuxContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
-		} else if i.State.AbaAuxContainer[acround][round].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaAuxContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaAuxContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	case messages.ABAConfMsgType:
-		data, err := msg.Message.GetABAConfData()
-		if err != nil {
-			return false, nil, nil, err
-		}
-		acround := data.ACRound
-		round := data.Round
-		if _, ok := i.State.AbaConfContainer[acround]; !ok {
-			i.State.AbaConfContainer[acround] = make(map[specalea.Round]*messages.MessageContainer)
-		}
-		if _, ok := i.State.AbaConfContainer[acround][round]; !ok {
-			i.State.AbaConfContainer[acround][round] = messages.NewMsgContainer()
-		}
-		i.State.AbaConfContainer[acround][round].AddMessage(msg)
-		if i.State.AbaConfContainer[acround][round].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaConfContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaConfContainer[acround][round].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
-		} else if i.State.AbaConfContainer[acround][round].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaConfContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaConfContainer[acround][round].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	case messages.ABAFinishMsgType:
-		data, err := msg.Message.GetABAFinishData()
-		if err != nil {
-			return false, nil, nil, err
-		}
-		acround := data.ACRound
-
-		if _, ok := i.State.AbaFinishContainer[acround]; !ok {
-			i.State.AbaFinishContainer[acround] = messages.NewMsgContainer()
-		}
-
-		i.State.AbaFinishContainer[acround].AddMessage(msg)
-		if i.State.AbaFinishContainer[acround].Len() == int(i.State.Share.PartialQuorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaFinishContainer[acround].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaFinishContainer[acround].GetMessagesSlice(0, int(i.State.Share.PartialQuorum)-1))
-		} else if i.State.AbaFinishContainer[acround].Len() == int(i.State.Share.Quorum) {
-			err = VerifyBLSAggregate(i.State, i.config, i.State.AbaFinishContainer[acround].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1), i.State.Share.Committee)
-			if err != nil {
-				return false, nil, nil, err
-			}
-			return i.ProcessBufferOfMessages(i.State.AbaFinishContainer[acround].GetMessagesSlice(int(i.State.Share.PartialQuorum), int(i.State.Share.Quorum)-1))
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	case messages.CommonCoinMsgType:
-		i.State.CommonCoinMsgContainer.AddMessage(msg)
-		if i.State.CommonCoinMsgContainer.Len() == int(i.State.Share.Quorum) {
-			// Commented because functionality already verifies it
-			// err = VerifyBLSAggregate(i.State, i.config, i.State.CommonCoinMsgContainer.GetMessages(), i.State.Share.Committee)
-			// if err != nil {
-			// 	return false, nil, nil, err
-			// }
-			return i.ProcessBufferOfMessages(i.State.CommonCoinMsgContainer.GetMessages())
-		} else {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
-		}
-	default:
-		err = Verify(i.State, i.config, msg, i.State.Share.Committee)
-		if err != nil {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
-		}
-		return i.ProcessMsgLogic(msg)
-	}
-}
-
-func (i *Instance) ProcessBufferOfMessages(msgs []*messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-	decided = false
-	decidedValue = nil
-	aggregatedCommit = nil
-	err = nil
-	for _, m := range msgs {
-		decidedM, decidedValueM, aggregatedCommitM, errM := i.ProcessMsgLogic(m)
-
-		decided = decided || decidedM
-		if decidedValue == nil {
-			decidedValue = decidedValueM
-		}
-		if aggregatedCommit == nil {
-			aggregatedCommit = aggregatedCommitM
-		}
-		if err == nil {
-			err = errM
-		}
-	}
-	return decided, decidedValue, aggregatedCommit, err
 }

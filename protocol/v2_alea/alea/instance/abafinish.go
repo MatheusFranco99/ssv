@@ -80,7 +80,7 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 		log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
 		if !has_sent_finish {
 
-			finishMsg, err := CreateABAFinish(i.State, i.config, vote, acround)
+			finishMsg, err := i.CreateABAFinish(vote, acround)
 			if err != nil {
 				return errors.Wrap(err, "uponABAFinish: failed to create ABA Finish message")
 			}
@@ -201,7 +201,10 @@ func isValidABAFinish(
 	return nil
 }
 
-func CreateABAFinish(state *messages.State, config alea.IConfig, vote byte, acround specalea.ACRound) (*messages.SignedMessage, error) {
+func (i *Instance) CreateABAFinish(vote byte, acround specalea.ACRound) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	ABAFinishData := &messages.ABAFinishData{
 		Vote:    vote,
 		ACRound: acround,
@@ -217,7 +220,7 @@ func CreateABAFinish(state *messages.State, config alea.IConfig, vote byte, acro
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

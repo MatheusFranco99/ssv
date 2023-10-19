@@ -46,7 +46,7 @@ func (i *Instance) StartABA() error {
 	}
 	log(fmt.Sprintf("vote: %v", int(vote)))
 
-	initMsg, err := CreateABAInit(i.State, i.config, vote, specalea.FirstRound, acround)
+	initMsg, err := i.CreateABAInit(vote, specalea.FirstRound, acround)
 	if err != nil {
 		return errors.Wrap(err, "UponStartABA: failed to create ABA Init message")
 	}

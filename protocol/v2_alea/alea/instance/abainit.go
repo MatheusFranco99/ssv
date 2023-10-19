@@ -90,7 +90,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 				log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
 				if !has_sent_finish {
 
-					finishMsg, err := CreateABAFinish(i.State, i.config, vote, acround)
+					finishMsg, err := i.CreateABAFinish(vote, acround)
 					if err != nil {
 						return errors.Wrap(err, "UponABASpecialVote: failed to create ABA Finish message")
 					}
@@ -153,7 +153,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 			i.SendCommonCoinShare()
 		}
 
-		auxMsg, err := CreateABAAux(i.State, i.config, vote, round, acround)
+		auxMsg, err := i.CreateABAAux(vote, round, acround)
 		if err != nil {
 			return errors.Wrap(err, "uponABAInit: failed to create ABA Aux message after strong init support")
 		}
@@ -178,7 +178,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 		log("got init partial quorum.")
 
 		// send INIT
-		initMsg, err := CreateABAInit(i.State, i.config, vote, round, acround)
+		initMsg, err := i.CreateABAInit(vote, round, acround)
 		if err != nil {
 			return errors.Wrap(err, "uponABAInit: failed to create ABA Init message after weak support")
 		}
@@ -254,7 +254,10 @@ func isValidABAInit(
 	return nil
 }
 
-func CreateABAInit(state *messages.State, config alea.IConfig, vote byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+func (i *Instance) CreateABAInit(vote byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	ABAInitData := &messages.ABAInitData{
 		Vote:    vote,
 		Round:   round,
@@ -271,7 +274,7 @@ func CreateABAInit(state *messages.State, config alea.IConfig, vote byte, round 
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

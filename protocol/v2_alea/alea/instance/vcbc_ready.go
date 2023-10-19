@@ -40,7 +40,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$" + cPurple + " UponVCBCReady " + reset +fmt.Sprint(i.State.VCBCReadyLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$"+cPurple+" UponVCBCReady "+reset+fmt.Sprint(i.State.VCBCReadyLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
@@ -88,7 +88,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 		}
 	}
 
-	vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, hash, aggregated_msg)
+	vcbcFinalMsg, err := i.CreateVCBCFinal(hash, aggregated_msg)
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
 	}
@@ -99,8 +99,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	i.State.ReceivedReadys.SetSentFinal()
 	// log("set sent final.")
-	log(fmt.Sprintf("%v sent final.",int(i.State.Share.OperatorID)))
-
+	log(fmt.Sprintf("%v sent final.", int(i.State.Share.OperatorID)))
 
 	return nil
 }
@@ -195,7 +194,10 @@ func isValidVCBCReady(
 	return nil
 }
 
-func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, author types.OperatorID) (*messages.SignedMessage, error) {
+func (i *Instance) CreateVCBCReady(hash []byte, author types.OperatorID) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	vcbcReadyData := &messages.VCBCReadyData{
 		Hash:   hash,
 		Author: author,
@@ -212,7 +214,7 @@ func CreateVCBCReady(state *messages.State, config alea.IConfig, hash []byte, au
 		Data:       dataByts,
 	}
 
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

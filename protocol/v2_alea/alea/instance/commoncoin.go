@@ -136,7 +136,7 @@ func (i *Instance) SendCommonCoinShare() error {
 	}
 	log("get common coin share")
 
-	msg, err := CreateCommonCoin(i.State, i.config, shareSign)
+	msg, err := i.CreateCommonCoin(shareSign)
 	if err != nil {
 		return errors.Wrap(err, "SendCommonCoinShare: failed to create common coin message")
 	}
@@ -170,7 +170,10 @@ func (i *Instance) GetCommonCoinShare() (types.Signature, error) {
 }
 
 // CreateCommonCoin
-func CreateCommonCoin(state *messages.State, config alea.IConfig, shareSign types.Signature) (*messages.SignedMessage, error) {
+func (i *Instance) CreateCommonCoin(shareSign types.Signature) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	msgData := &messages.CommonCoinData{
 		ShareSign: shareSign,
 	}
@@ -186,7 +189,7 @@ func CreateCommonCoin(state *messages.State, config alea.IConfig, shareSign type
 		Data:       dataByts,
 	}
 
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

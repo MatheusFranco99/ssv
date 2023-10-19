@@ -85,9 +85,9 @@ func (d *DiffieHellmanData) Validate() error {
 // =========================
 
 type ABAInitData struct {
-	ACRound  alea.ACRound
-	Round    alea.Round
-	Vote     byte
+	ACRound alea.ACRound
+	Round   alea.Round
+	Vote    byte
 }
 
 // Encode returns a msg encoded bytes or error
@@ -114,9 +114,9 @@ func (d *ABAInitData) Validate() error {
 // =========================
 
 type ABAAuxData struct {
-	ACRound  alea.ACRound
-	Round    alea.Round
-	Vote     byte
+	ACRound alea.ACRound
+	Round   alea.Round
+	Vote    byte
 }
 
 // Encode returns a msg encoded bytes or error
@@ -143,9 +143,9 @@ func (d *ABAAuxData) Validate() error {
 // =========================
 
 type ABAConfData struct {
-	ACRound  alea.ACRound
-	Round    alea.Round
-	Votes    []byte
+	ACRound alea.ACRound
+	Round   alea.Round
+	Votes   []byte
 }
 
 // Encode returns a msg encoded bytes or error
@@ -180,8 +180,8 @@ func (d *ABAConfData) Validate() error {
 // =========================
 
 type ABAFinishData struct {
-	ACRound  alea.ACRound
-	Vote     byte
+	ACRound alea.ACRound
+	Vote    byte
 }
 
 // Encode returns a msg encoded bytes or error
@@ -208,7 +208,7 @@ func (d *ABAFinishData) Validate() error {
 // =========================
 
 type VCBCSendData struct {
-	Data     []byte
+	Data []byte
 }
 
 // Encode returns a msg encoded bytes or error
@@ -235,8 +235,8 @@ func (d *VCBCSendData) Validate() error {
 // =========================
 
 type VCBCReadyData struct {
-	Hash     []byte
-	Author   types.OperatorID
+	Hash   []byte
+	Author types.OperatorID
 }
 
 // Encode returns a msg encoded bytes or error
@@ -263,7 +263,7 @@ func (d *VCBCReadyData) Validate() error {
 // =========================
 
 type VCBCFinalData struct {
-	Hash          []byte
+	Hash              []byte
 	AggregatedMessage *SignedMessage
 }
 
@@ -285,7 +285,7 @@ func (d *VCBCFinalData) Validate() error {
 	}
 	err := d.AggregatedMessage.Validate()
 	if err != nil {
-		return errors.Wrap(err,"VCBCFinalData Validate: aggregated message is invalid.")
+		return errors.Wrap(err, "VCBCFinalData Validate: aggregated message is invalid.")
 	}
 	return nil
 }
@@ -295,7 +295,7 @@ func (d *VCBCFinalData) Validate() error {
 // =========================
 
 type CommonCoinData struct {
-	ShareSign		  types.Signature
+	ShareSign types.Signature
 }
 
 // Encode returns a msg encoded bytes or error
@@ -318,8 +318,6 @@ func (d *CommonCoinData) Validate() error {
 
 	return nil
 }
-
-
 
 // =========================
 //			Message
@@ -404,6 +402,7 @@ func (msg *Message) GetVCBCFinalData() (*VCBCFinalData, error) {
 	}
 	return ret, nil
 }
+
 // CommonCoinData returns common coin specific data
 func (msg *Message) GetCommonCoinData() (*CommonCoinData, error) {
 	ret := &CommonCoinData{}
@@ -449,9 +448,9 @@ func (msg *Message) Validate() error {
 }
 
 type SignedMessage struct {
-	Signature types.Signature
-	Signers   []types.OperatorID
-	Message   *Message // message for which this signature is for
+	Signature          types.Signature
+	Signers            []types.OperatorID
+	Message            *Message // message for which this signature is for
 	DiffieHellmanProof map[types.OperatorID][32]byte
 }
 

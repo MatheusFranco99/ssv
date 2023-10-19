@@ -10,7 +10,6 @@ import (
 	"encoding/pem"
 
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/pkg/errors"
 )
@@ -41,7 +40,11 @@ tAboUGBxTDq3ZroNism3DaMIbKPyYrAqhKov1h5V
 	RSASignature  = "8351441e84e57ed96080df8d19e5755901879a1672e791d63b90de872e609f2e7cf578813dda3a2fcf27474ee978ac5a8df5c29d65b69fb9ac244cf543627646500da0a4f2d825ca61fadf14dc7407e13cbebafc125a05ac5a321ab4210bff11063a846c1a587a981a43340e3599a2a51cf9c895854175e4b3b84a23c83d2b03a3831196b679669399c971afd1296a8bfc9e29bae66013f1bdb37872e504233beeaf3f068649a29c93b3e47a790e07736950ff34b674973e23ec965ba48d54bb904b41100665e9f40baad34960fb17f18de4115b0d0de59fe3830fb361af59c2e01b1ba886e58e3082cdc510a50a51da4ad6f7cbb25d5b36af3e166220a603ff"
 )
 
-func Sign(state *messages.State, config alea.IConfig, msg *messages.Message) ([]byte, map[types.OperatorID][32]byte, error) {
+func (i *Instance) Sign(msg *messages.Message) ([]byte, map[types.OperatorID][32]byte, error) {
+
+	state := i.State
+	config := i.config
+
 	sig := []byte{}
 	hash_map := make(map[types.OperatorID][32]byte)
 	var err error
@@ -65,7 +68,11 @@ func Sign(state *messages.State, config alea.IConfig, msg *messages.Message) ([]
 	return sig, hash_map, nil
 }
 
-func Verify(state *messages.State, config alea.IConfig, signedMsg *messages.SignedMessage, operators []*types.Operator) error {
+func (i *Instance) Verify(signedMsg *messages.SignedMessage) error {
+
+	state := i.State
+	config := i.config
+	operators := i.State.Share.Committee
 
 	if state.UseBLS {
 		if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
@@ -89,8 +96,10 @@ func Verify(state *messages.State, config alea.IConfig, signedMsg *messages.Sign
 	return nil
 }
 
-func VerifyVCBCFinal(state *messages.State, config alea.IConfig, signedMsg *messages.SignedMessage, operators []*types.Operator) error {
+func (i *Instance) VerifyVCBCFinal(signedMsg *messages.SignedMessage) error {
 
+	config := i.config
+	operators := i.State.Share.Committee
 
 	vcbcFinalData, err := signedMsg.Message.GetVCBCFinalData()
 	if err != nil {
@@ -106,33 +115,36 @@ func VerifyVCBCFinal(state *messages.State, config alea.IConfig, signedMsg *mess
 	return nil
 }
 
-func VerifyBLSAggregate(state *messages.State, config alea.IConfig, signedMsgs []*messages.SignedMessage, operators []*types.Operator) error {
-	// aggregated_msg, err := aggregateMsgs(signedMsgs)
-	// if err != nil {
-	// 	return err
-	// }
+func (i *Instance) VerifyBLSAggregate(signedMsgs []*messages.SignedMessage) error {
+	aggregated_msg, err := aggregateMsgs(signedMsgs)
+	if err != nil {
+		return err
+	}
+
+	config := i.config
+	operators := i.State.Share.Committee
 
 	// verify signature
-	if err := signedMsgs[0].Signature.VerifyByOperators(signedMsgs[0], config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return nil
+	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+		// return nil
 		return errors.Wrap(err, "aggregated msg signature invalid")
 	}
 	return nil
 }
 
+func (i *Instance) VerifyBLSAggregateFinals(signedMsgs []*messages.SignedMessage) error {
 
-func VerifyBLSAggregateFinals(state *messages.State, config alea.IConfig, signedMsgs []*messages.SignedMessage, operators []*types.Operator) error {
+	config := i.config
+	operators := i.State.Share.Committee
+
 	aggregate_msgs := make([]*messages.SignedMessage, len(signedMsgs))
 	for i, _ := range signedMsgs {
 
-		vcbcFinalData, err := signedMsgs[i].Message.GetVCBCFinalData()
+		aggregated_msg_i, err := GetAggregatedMessageFromVCBCFinal(signedMsgs[i])
 		if err != nil {
 			return errors.Wrap(err, "VerifyBLSAggregateFinals: could not get vcbcFinalData data from signedMessage")
 		}
 
-		// get sender ID
-		aggregated_msg_i := vcbcFinalData.AggregatedMessage
-		
 		aggregate_msgs[i] = aggregated_msg_i
 	}
 	aggregated_msg, err := aggregateMsgs(aggregate_msgs)
@@ -142,7 +154,7 @@ func VerifyBLSAggregateFinals(state *messages.State, config alea.IConfig, signed
 
 	// verify signature
 	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return nil
+		// return nil
 		return errors.Wrap(err, "aggregated msg signature invalid")
 	}
 	return nil

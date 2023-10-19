@@ -39,7 +39,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 			return
 		}
 
-		i.logger.Debug("$$$$$$" + cCyan + " UponVCBCFinal " + reset +fmt.Sprint(i.State.VCBCFinalLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$"+cCyan+" UponVCBCFinal "+reset+fmt.Sprint(i.State.VCBCFinalLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
@@ -57,7 +57,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	// log("get data")
 
 	i.State.VCBCState.SetVCBCData(senderID, data, hash, aggregated_msg) //aggregatedSignature,nodeIDs)
-	log(fmt.Sprintf("%v saved vcbc data from %v",int(i.State.Share.OperatorID),int(senderID)))
+	log(fmt.Sprintf("%v saved vcbc data from %v", int(i.State.Share.OperatorID), int(senderID)))
 
 	if i.State.WaitForVCBCAfterDecided {
 		if i.State.WaitForVCBCAfterDecided_Author == senderID {
@@ -98,6 +98,16 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	}
 
 	return nil
+}
+
+// Returns aggregated msg in vcbc final
+func GetAggregatedMessageFromVCBCFinal(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+	// get Data
+	vcbcFinalData, err := msg.Message.GetVCBCFinalData()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetAggregatedMessageFromVCBCFinal: could not get vcbcFinalData data from signedMessage")
+	}
+	return vcbcFinalData.AggregatedMessage, nil
 }
 
 func isValidVCBCFinal(
@@ -160,7 +170,9 @@ func isValidVCBCFinal(
 	return nil
 }
 
-func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, aggregated_msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (i *Instance) CreateVCBCFinal(hash []byte, aggregated_msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+
+	state := i.State
 
 	vcbcFinalData := &messages.VCBCFinalData{
 		Hash:              hash,
@@ -178,16 +190,15 @@ func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, ag
 		Data:       dataByts,
 	}
 
-	
-	sig := make([]byte,46)
+	sig := make([]byte, 46)
 	hash_map := make(map[types.OperatorID][32]byte)
-	if (!(state.UseBLS || state.UseDiffieHellman)) {
-		sig, hash_map, err = Sign(state, config, msg)
+	if !(state.UseBLS || state.UseDiffieHellman) {
+		sig, hash_map, err = i.Sign(msg)
 		if err != nil {
 			panic(err)
 		}
 	}
-	
+
 	signedMsg := &messages.SignedMessage{
 		Signature:          sig,
 		Signers:            []types.OperatorID{state.Share.OperatorID},

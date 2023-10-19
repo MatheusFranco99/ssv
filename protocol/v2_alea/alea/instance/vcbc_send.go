@@ -33,7 +33,7 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$" + cYellow + " UponVCBCSend " + reset + fmt.Sprint(i.State.VCBCSendLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)), zap.Int("own operator id", int(i.State.Share.OperatorID)))
+		i.logger.Debug("$$$$$$"+cYellow+" UponVCBCSend "+reset+fmt.Sprint(i.State.VCBCSendLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 	}
 
 	log("start")
@@ -58,7 +58,7 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 		}
 		// log("computed hash")
 
-		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, sender)
+		vcbcReadyMsg, err := i.CreateVCBCReady(hash, sender)
 		if err != nil {
 			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
 		}
@@ -67,7 +67,7 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 		// FIX ME : send specifically to author
 		i.Broadcast(vcbcReadyMsg)
 		// log("broadcasted")
-		log(fmt.Sprintf("%v sent ready to %v",int(i.State.Share.OperatorID), int(sender)))
+		log(fmt.Sprintf("%v sent ready to %v", int(i.State.Share.OperatorID), int(sender)))
 	}
 
 	return nil
@@ -124,7 +124,10 @@ func isValidVCBCSend(
 	return nil
 }
 
-func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte) (*messages.SignedMessage, error) {
+func (i *Instance) CreateVCBCSend(data []byte) (*messages.SignedMessage, error) {
+
+	state := i.State
+
 	vcbcSendData := &messages.VCBCSendData{
 		Data: data,
 	}
@@ -140,7 +143,7 @@ func CreateVCBCSend(state *messages.State, config alea.IConfig, data []byte) (*m
 		Data:       dataByts,
 	}
 
-	sig, hash_map, err := Sign(state, config, msg)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
 		panic(err)
 	}

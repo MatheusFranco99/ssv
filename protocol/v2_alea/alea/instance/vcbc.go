@@ -15,13 +15,13 @@ func (i *Instance) StartVCBC(data []byte) error {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$" + cBlue + " UponVCBCStart " + reset + "1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
+		i.logger.Debug("$$$$$$"+cBlue+" UponVCBCStart "+reset+"1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 	}
 
 	log("start")
 
 	// create VCBCSend message and broadcasts
-	msgToBroadcast, err := CreateVCBCSend(i.State, i.config, data)
+	msgToBroadcast, err := i.CreateVCBCSend(data)
 	if err != nil {
 		return errors.Wrap(err, "StartVCBC: failed to create VCBCSend message")
 	}
