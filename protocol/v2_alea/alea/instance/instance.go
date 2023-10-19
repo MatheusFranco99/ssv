@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime/pprof"
 	"strconv"
 	"sync"
 
@@ -48,6 +49,8 @@ type Instance struct {
 	priority  specalea.Priority
 	initTime  int64
 	finalTime int64
+
+	GenerateCPUProfile bool
 }
 
 func NewInstance(
@@ -171,8 +174,9 @@ func NewInstance(
 		processMsgF: spectypesalea.NewThreadSafeF(),
 		logger: logger.With(zap.String("publicKey", hex.EncodeToString(msgId.GetPubKey())), zap.String("role", msgId.GetRoleType().String()),
 			zap.Uint64("height", uint64(height))),
-		initTime:  -1,
-		finalTime: -1,
+		initTime:           -1,
+		finalTime:          -1,
+		GenerateCPUProfile: true,
 	}
 	return inst
 }
@@ -188,6 +192,18 @@ func (i *Instance) GetFinalTime() int64 {
 // Start is an interface implementation
 func (i *Instance) Start(value []byte, height specalea.Height) {
 	i.startOnce.Do(func() {
+
+		if i.GenerateCPUProfile {
+			cpuProfileFile, err := os.Create("profile.out")
+			if err != nil {
+				panic(err)
+			}
+
+			err = pprof.StartCPUProfile(cpuProfileFile)
+			if err != nil {
+				panic(err)
+			}
+		}
 
 		i.State.HasStarted = true
 
@@ -231,6 +247,10 @@ func (i *Instance) Decide(value []byte, msg *messages.SignedMessage) {
 	i.State.Decided = true
 	i.State.DecidedValue = value
 	i.State.DecidedMessage = msg
+
+	if i.GenerateCPUProfile {
+		pprof.StopCPUProfile()
+	}
 }
 
 func (i *Instance) Broadcast(msg *messages.SignedMessage) error {
