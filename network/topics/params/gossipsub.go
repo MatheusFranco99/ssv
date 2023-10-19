@@ -7,9 +7,9 @@ import (
 
 var (
 	// gsD topic stable mesh target count
-	gsD = 8
+	gsD = 3
 	// gsDlo topic stable mesh low watermark
-	gsDlo = 6
+	gsDlo = 3
 	// gsDhi topic stable mesh high watermark
 	gsDhi = 12
 
@@ -26,7 +26,7 @@ var (
 	gsMcacheGossip = 4
 
 	// HeartbeatInterval interval frequency of heartbeat, milliseconds
-	HeartbeatInterval = 700 * time.Millisecond
+	HeartbeatInterval = 30 * time.Millisecond
 )
 
 // GossipSubParams creates a gossipsub parameter set.
@@ -40,6 +40,7 @@ func GossipSubParams() pubsub.GossipSubParams {
 	params.HistoryGossip = gsMcacheGossip
 	params.MaxIHaveLength = gsMaxIHaveLength
 	params.MaxIHaveMessages = gsMaxIHaveMessages
+	params.Dout = 0
 
 	return params
 }

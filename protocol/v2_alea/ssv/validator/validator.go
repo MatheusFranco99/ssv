@@ -149,7 +149,7 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 	if v.SystemLoad == 0 {
 		sload,err := strconv.Atoi(os.Getenv("SLOAD"))
 		if err != nil {
-			panic(err)
+			sload = 1
 		}
 		v.SystemLoad = sload
 	} else {

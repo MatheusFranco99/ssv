@@ -4,11 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 )
@@ -40,6 +40,10 @@ func NewValidatorRegistrationRunner(
 		network: network,
 		signer:  signer,
 	}
+}
+
+func (r *ValidatorRegistrationRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
 }
 
 func (r *ValidatorRegistrationRunner) StartNewDuty(duty *spectypes.Duty) error {

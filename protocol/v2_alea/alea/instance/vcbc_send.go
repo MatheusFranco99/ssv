@@ -33,7 +33,7 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponVCBCSend "+fmt.Sprint(i.State.VCBCSendLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)))
+		i.logger.Debug("$$$$$$" + cYellow + " UponVCBCSend " + reset + fmt.Sprint(i.State.VCBCSendLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(sender)), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 	}
 
 	log("start")
@@ -43,30 +43,31 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 	}
 
 	has_sent := i.State.SentReadys.Has(sender)
-	log(fmt.Sprintf("check if has sent %v", has_sent))
+	// log(fmt.Sprintf("check if has sent %v", has_sent))
 
 	// if never sent ready, or have already sent and the data is equal
 	if !has_sent || (has_sent && i.State.SentReadys.EqualData(sender, data)) {
 
 		i.State.SentReadys.Add(sender, data)
-		log("added to sent readys structure")
+		// log("added to sent readys structure")
 
 		// create VCBCReady message with hash
 		hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(data)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 		if err != nil {
 			return errors.Wrap(err, "uponVCBCSend: could not compute data hash")
 		}
-		log("computed hash")
+		// log("computed hash")
 
 		vcbcReadyMsg, err := CreateVCBCReady(i.State, i.config, hash, sender)
 		if err != nil {
 			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
 		}
-		log("created VCBCReady")
+		// log("created VCBCReady")
 
 		// FIX ME : send specifically to author
 		i.Broadcast(vcbcReadyMsg)
-		log("broadcasted")
+		// log("broadcasted")
+		log(fmt.Sprintf("%v sent ready to %v",int(i.State.Share.OperatorID), int(sender)))
 	}
 
 	return nil

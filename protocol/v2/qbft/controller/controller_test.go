@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+
 	"github.com/stretchr/testify/require"
 )
 

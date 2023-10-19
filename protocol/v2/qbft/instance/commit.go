@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"sort"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
 )
 
 // UponCommit returns true if a quorum of commit messages was received.
 // Assumes commit message is valid!
-func (i *Instance) UponCommit(signedCommit *messages.SignedMessage, commitMsgContainer *specalea.MsgContainer) (bool, []byte, *messages.SignedMessage, error) {
+func (i *Instance) UponCommit(signedCommit *specqbft.SignedMessage, commitMsgContainer *specqbft.MsgContainer) (bool, []byte, *specqbft.SignedMessage, error) {
 
 	senderID := int(signedCommit.GetSigners()[0])
 	msg_round := signedCommit.Message.Round
@@ -27,14 +26,18 @@ func (i *Instance) UponCommit(signedCommit *messages.SignedMessage, commitMsgCon
 
 	// logger
 	log := func(str string) {
+		return 
 		i.logger.Debug("$$$$$$ UponCommit "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(msg_round)))
+	}
+
+	if i.State.Decided {
+		return false, nil, nil, nil
 	}
 
 	log("start")
 
 	// i.logger.Debug("$$$$$$ UponCommit start.", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(signedCommit.Message.Round)))
 
-	log("add signed message")
 
 	addMsg, err := commitMsgContainer.AddFirstMsgForSignerAndRound(signedCommit)
 	if err != nil {
@@ -43,7 +46,7 @@ func (i *Instance) UponCommit(signedCommit *messages.SignedMessage, commitMsgCon
 	if !addMsg {
 		return false, nil, nil, nil // UponCommit was already called
 	}
-	log("calculate commit")
+	// log("added signed message")
 
 	// calculate commit quorum and act upon it
 	quorum, commitMsgs, err := commitQuorumForRoundValue(i.State, commitMsgContainer, signedCommit.Message.Data, signedCommit.Message.Round)
@@ -51,20 +54,22 @@ func (i *Instance) UponCommit(signedCommit *messages.SignedMessage, commitMsgCon
 		return false, nil, nil, errors.Wrap(err, "could not calculate commit quorum")
 	}
 	if quorum {
-		log("got quorum. Getting commit data")
+		// log("got quorum")
 
 		msgCommitData, err := signedCommit.Message.GetCommitData()
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not get msg commit data")
 		}
+		// log("got commit data")
 
 		// i.logger.Debug("$$$$$$ UponCommit start aggregate.", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(signedCommit.Message.Round)))
-		log("aggregate commit")
 
 		agg, err := aggregateCommitMsgs(commitMsgs)
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
 		}
+		// log("aggregated commit")
+
 		// i.logger.Debug("$$$$$$ UponCommit finish aggregate.", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(signedCommit.Message.Round)))
 
 		// i.logger.Debug("got commit quorum",
@@ -75,29 +80,28 @@ func (i *Instance) UponCommit(signedCommit *messages.SignedMessage, commitMsgCon
 		// i.logger.Debug("$$$$$$ UponCommit return with quorum.", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(signedCommit.Message.Round)))
 		i.finalTime = makeTimestamp()
 		duration := i.finalTime - i.initTime
-		// log(fmt.Sprintf("return decided, total time: %v", duration))
+		log(fmt.Sprintf("return decided, total time: %v", duration))
 		// log("return decided, total time:")
 
 		return true, msgCommitData.Data, agg, nil
 	}
-	log("finish no quorum. Current value:")
 
 	// i.logger.Debug("$$$$$$ UponCommit return no quorum.", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", senderID), zap.Int("round", int(signedCommit.Message.Round)))
 	return false, nil, nil, nil
 }
 
 // returns true if there is a quorum for the current round for this provided value
-func commitQuorumForRoundValue(state *specalea.State, commitMsgContainer *specalea.MsgContainer, value []byte, round specalea.Round) (bool, []*messages.SignedMessage, error) {
+func commitQuorumForRoundValue(state *specqbft.State, commitMsgContainer *specqbft.MsgContainer, value []byte, round specqbft.Round) (bool, []*specqbft.SignedMessage, error) {
 	signers, msgs := commitMsgContainer.LongestUniqueSignersForRoundAndValue(round, value)
 	return state.Share.HasQuorum(len(signers)), msgs, nil
 }
 
-func aggregateCommitMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessage, error) {
+func aggregateCommitMsgs(msgs []*specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
 	if len(msgs) == 0 {
 		return nil, errors.New("can't aggregate zero commit msgs")
 	}
 
-	var ret *messages.SignedMessage
+	var ret *specqbft.SignedMessage
 	for _, m := range msgs {
 		if ret == nil {
 			ret = m.DeepCopy()
@@ -123,7 +127,7 @@ func aggregateCommitMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessag
                             && uPayload.round == current.round
                             && recoverSignedCommitAuthor(m.commitPayload) == current.id
 */
-func didSendCommitForHeightAndRound(state *specalea.State, commitMsgContainer *specalea.MsgContainer) bool {
+func didSendCommitForHeightAndRound(state *specqbft.State, commitMsgContainer *specqbft.MsgContainer) bool {
 	for _, msg := range commitMsgContainer.MessagesForRound(state.Round) {
 		if msg.MatchedSigners([]spectypes.OperatorID{state.Share.OperatorID}) {
 			return true
@@ -145,16 +149,16 @@ Commit(
                         )
                     );
 */
-func CreateCommit(state *specalea.State, config alea.IConfig, value []byte) (*messages.SignedMessage, error) {
-	commitData := &specalea.CommitData{
+func CreateCommit(state *specqbft.State, config qbft.IConfig, value []byte) (*specqbft.SignedMessage, error) {
+	commitData := &specqbft.CommitData{
 		Data: value,
 	}
 	dataByts, err := commitData.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed encoding prepare data")
 	}
-	msg := &specalea.Message{
-		MsgType:    specalea.CommitMsgType,
+	msg := &specqbft.Message{
+		MsgType:    specqbft.CommitMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
@@ -166,7 +170,7 @@ func CreateCommit(state *specalea.State, config alea.IConfig, value []byte) (*me
 		return nil, errors.Wrap(err, "failed signing commit msg")
 	}
 
-	signedMsg := &messages.SignedMessage{
+	signedMsg := &specqbft.SignedMessage{
 		Signature: sig,
 		Signers:   []spectypes.OperatorID{state.Share.OperatorID},
 		Message:   msg,
@@ -175,12 +179,12 @@ func CreateCommit(state *specalea.State, config alea.IConfig, value []byte) (*me
 }
 
 func BaseCommitValidation(
-	config alea.IConfig,
-	signedCommit *messages.SignedMessage,
-	height specalea.Height,
+	config qbft.IConfig,
+	signedCommit *specqbft.SignedMessage,
+	height specqbft.Height,
 	operators []*spectypes.Operator,
 ) error {
-	if signedCommit.Message.MsgType != specalea.CommitMsgType {
+	if signedCommit.Message.MsgType != specqbft.CommitMsgType {
 		return errors.New("commit msg type is wrong")
 	}
 	if signedCommit.Message.Height != height {
@@ -204,11 +208,11 @@ func BaseCommitValidation(
 }
 
 func validateCommit(
-	config alea.IConfig,
-	signedCommit *messages.SignedMessage,
-	height specalea.Height,
-	round specalea.Round,
-	proposedMsg *messages.SignedMessage,
+	config qbft.IConfig,
+	signedCommit *specqbft.SignedMessage,
+	height specqbft.Height,
+	round specqbft.Round,
+	proposedMsg *specqbft.SignedMessage,
 	operators []*spectypes.Operator,
 ) error {
 	if err := BaseCommitValidation(config, signedCommit, height, operators); err != nil {

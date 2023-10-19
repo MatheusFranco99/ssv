@@ -40,7 +40,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponVCBCReady "+fmt.Sprint(i.State.VCBCReadyLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$" + cPurple + " UponVCBCReady " + reset +fmt.Sprint(i.State.VCBCReadyLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
@@ -53,15 +53,15 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: could not compute own hash")
 	}
-	log("computed own hash")
+	// log("computed own hash")
 
 	if !bytes.Equal(own_hash, hash) {
 		log("hash not equal. quitting.")
 	}
-	log("compared hashes")
+	// log("compared hashes")
 
 	i.State.ReceivedReadys.Add(senderID, signedMessage)
-	log("added to received readys")
+	// log("added to received readys")
 
 	has_sent_final := i.State.ReceivedReadys.HasSentFinal()
 	if has_sent_final {
@@ -69,8 +69,8 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 		return nil
 	}
 
-	len_readys := i.State.ReceivedReadys.GetLen()
-	log(fmt.Sprintf("len readys: %v", len_readys))
+	// len_readys := i.State.ReceivedReadys.GetLen()
+	// log(fmt.Sprintf("len readys: %v", len_readys))
 
 	has_quorum := i.State.ReceivedReadys.HasQuorum()
 	if !has_quorum {
@@ -92,13 +92,15 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
 	}
-	log("created vcbc final")
+	// log("created vcbc final")
 
 	i.Broadcast(vcbcFinalMsg)
-	log("broadcasted")
+	// log("broadcasted")
 
 	i.State.ReceivedReadys.SetSentFinal()
-	log("set sent final.")
+	// log("set sent final.")
+	log(fmt.Sprintf("%v sent final.",int(i.State.Share.OperatorID)))
+
 
 	return nil
 }

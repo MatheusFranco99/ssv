@@ -5,14 +5,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"go.uber.org/zap"
 )
 
-type RoundTimeoutFunc func(specalea.Round) time.Duration
+type RoundTimeoutFunc func(specqbft.Round) time.Duration
 
 var (
-	quickTimeoutThreshold = specalea.Round(8)
+	quickTimeoutThreshold = specqbft.Round(8)
 	quickTimeout          = 2 * time.Second
 	slowTimeout           = 2 * time.Minute
 )
@@ -20,7 +20,7 @@ var (
 // RoundTimeout returns the number of seconds until next timeout for a give round.
 // if the round is smaller than 8 -> 2s; otherwise -> 2m
 // see SIP https://github.com/bloxapp/SIPs/pull/22
-func RoundTimeout(r specalea.Round) time.Duration {
+func RoundTimeout(r specqbft.Round) time.Duration {
 	if r <= quickTimeoutThreshold {
 		return quickTimeout
 	}
@@ -62,12 +62,12 @@ func (t *RoundTimer) OnTimeout(done func()) {
 }
 
 // Round returns a round.
-func (t *RoundTimer) Round() specalea.Round {
-	return specalea.Round(atomic.LoadInt64(&t.round))
+func (t *RoundTimer) Round() specqbft.Round {
+	return specqbft.Round(atomic.LoadInt64(&t.round))
 }
 
 // TimeoutForRound times out for a given round.
-func (t *RoundTimer) TimeoutForRound(round specalea.Round) {
+func (t *RoundTimer) TimeoutForRound(round specqbft.Round) {
 	atomic.StoreInt64(&t.round, int64(round))
 	timeout := t.roundTimeout(round)
 	// preparing the underlying timer
@@ -87,7 +87,7 @@ func (t *RoundTimer) TimeoutForRound(round specalea.Round) {
 	go t.waitForRound(round, timer.C)
 }
 
-func (t *RoundTimer) waitForRound(round specalea.Round, timeout <-chan time.Time) {
+func (t *RoundTimer) waitForRound(round specqbft.Round, timeout <-chan time.Time) {
 	ctx, cancel := context.WithCancel(t.ctx)
 	defer cancel()
 	select {

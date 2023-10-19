@@ -126,9 +126,9 @@ func consensusTypeScore(state *State, m *DecodedSSVMessage) int {
 	if isConsensusMessage(state, m) {
 		return scoreByPrecedence(state, m,
 			isMessageOfType(messages.DiffieHellmanMsgType),
-			isMessageOfType(messages.VCBCFinalMsgType),
 			isMessageOfType(messages.VCBCSendMsgType),
 			isMessageOfType(messages.VCBCReadyMsgType),
+			isMessageOfType(messages.VCBCFinalMsgType),
 			isMessageOfType(messages.ABAFinishMsgType),
 			isMessageOfType(messages.ABAInitMsgType),
 			isMessageOfType(messages.CommonCoinMsgType),

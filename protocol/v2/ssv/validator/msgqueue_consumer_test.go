@@ -2,10 +2,10 @@ package validator
 
 //
 //import (
-//	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/testing"
+//	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2/testing"
 //	"testing"
 //
-//	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+//	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 //	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 //	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 //	"github.com/stretchr/testify/require"

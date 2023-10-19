@@ -1,16 +1,15 @@
-package aleastorage
+package qbftstorage
 
 import (
 	"encoding/json"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 )
 
 // StoredInstance contains instance state alongside with a decided message (aggregated commits).
 type StoredInstance struct {
-	State          *specalea.State
-	DecidedMessage *messages.SignedMessage
+	State          *specqbft.State
+	DecidedMessage *specqbft.SignedMessage
 }
 
 // Encode returns a StoredInstance encoded bytes or error.
@@ -29,7 +28,7 @@ type InstanceStore interface {
 	GetHighestInstance(identifier []byte) (*StoredInstance, error)
 
 	// GetInstancesInRange returns historical instances in the given range.
-	GetInstancesInRange(identifier []byte, from specalea.Height, to specalea.Height) ([]*StoredInstance, error)
+	GetInstancesInRange(identifier []byte, from specqbft.Height, to specqbft.Height) ([]*StoredInstance, error)
 
 	// SaveInstance updates/inserts the given instance to it's identifier's history.
 	SaveInstance(instance *StoredInstance) error
@@ -41,13 +40,13 @@ type InstanceStore interface {
 	SaveHighestAndHistoricalInstance(instance *StoredInstance) error
 
 	// GetInstance returns an historical instance for the given identifier and height.
-	GetInstance(identifier []byte, height specalea.Height) (*StoredInstance, error)
+	GetInstance(identifier []byte, height specqbft.Height) (*StoredInstance, error)
 
 	// CleanAllInstances removes all historical and highest instances for the given identifier.
 	CleanAllInstances(msgID []byte) error
 }
 
-// ALEAStore is the store used by QBFT components
-type ALEAStore interface {
+// QBFTStore is the store used by QBFT components
+type QBFTStore interface {
 	InstanceStore
 }

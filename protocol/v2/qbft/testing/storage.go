@@ -7,7 +7,7 @@ import (
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"go.uber.org/zap"
 
-	aleastorage "github.com/MatheusFranco99/ssv/ibft/storage"
+	qbftstorage "github.com/MatheusFranco99/ssv/ibft/storage"
 	"github.com/MatheusFranco99/ssv/storage"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
@@ -41,6 +41,6 @@ var allRoles = []spectypes.BeaconRole{
 	spectypes.BNRoleSyncCommitteeContribution,
 }
 
-func TestingStores() *aleastorage.ALEAStores {
-	return aleastorage.NewStoresFromRoles(getDB(), zap.L(), allRoles...)
+func TestingStores() *qbftstorage.QBFTStores {
+	return qbftstorage.NewStoresFromRoles(getDB(), zap.L(), allRoles...)
 }

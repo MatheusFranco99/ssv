@@ -1,33 +1,32 @@
 package qbft
 
 import (
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-var TestingMessage = &specalea.Message{
-	MsgType:    specalea.ProposalMsgType,
-	Height:     specalea.FirstHeight,
-	Round:      specalea.FirstRound,
+var TestingMessage = &specqbft.Message{
+	MsgType:    specqbft.ProposalMsgType,
+	Height:     specqbft.FirstHeight,
+	Round:      specqbft.FirstRound,
 	Identifier: []byte{1, 2, 3, 4},
 	Data:       []byte{1, 2, 3, 4},
 }
 
-var TestingSignedMsg = func() *messages.SignedMessage {
+var TestingSignedMsg = func() *specqbft.SignedMessage {
 	return SignMsg(TestingSK, 1, TestingMessage)
 }()
 
-var SignMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *specalea.Message) *messages.SignedMessage {
+var SignMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *specqbft.Message) *specqbft.SignedMessage {
 	domain := types.PrimusTestnet
 	sigType := types.QBFTSignatureType
 
 	r, _ := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(domain, sigType))
 	sig := sk.SignByte(r)
 
-	return &messages.SignedMessage{
+	return &specqbft.SignedMessage{
 		Message:   msg,
 		Signers:   []types.OperatorID{id},
 		Signature: sig.Serialize(),
@@ -58,8 +57,8 @@ var testingShare = &types.Share{
 	},
 }
 
-var TestingInstanceStruct = &specalea.Instance{
-	State: &specalea.State{
+var TestingInstanceStruct = &specqbft.Instance{
+	State: &specqbft.State{
 		Share:                           testingShare,
 		ID:                              []byte{1, 2, 3, 4},
 		Round:                           1,
@@ -70,29 +69,29 @@ var TestingInstanceStruct = &specalea.Instance{
 		Decided:                         false,
 		DecidedValue:                    []byte{1, 2, 3, 4},
 
-		ProposeContainer: &specalea.MsgContainer{
-			Msgs: map[specalea.Round][]*messages.SignedMessage{
+		ProposeContainer: &specqbft.MsgContainer{
+			Msgs: map[specqbft.Round][]*specqbft.SignedMessage{
 				1: {
 					TestingSignedMsg,
 				},
 			},
 		},
-		PrepareContainer: &specalea.MsgContainer{
-			Msgs: map[specalea.Round][]*messages.SignedMessage{
+		PrepareContainer: &specqbft.MsgContainer{
+			Msgs: map[specqbft.Round][]*specqbft.SignedMessage{
 				1: {
 					TestingSignedMsg,
 				},
 			},
 		},
-		CommitContainer: &specalea.MsgContainer{
-			Msgs: map[specalea.Round][]*messages.SignedMessage{
+		CommitContainer: &specqbft.MsgContainer{
+			Msgs: map[specqbft.Round][]*specqbft.SignedMessage{
 				1: {
 					TestingSignedMsg,
 				},
 			},
 		},
-		RoundChangeContainer: &specalea.MsgContainer{
-			Msgs: map[specalea.Round][]*messages.SignedMessage{
+		RoundChangeContainer: &specqbft.MsgContainer{
+			Msgs: map[specqbft.Round][]*specqbft.SignedMessage{
 				1: {
 					TestingSignedMsg,
 				},
@@ -101,9 +100,9 @@ var TestingInstanceStruct = &specalea.Instance{
 	},
 }
 
-var TestingControllerStruct = &specalea.Controller{
+var TestingControllerStruct = &specqbft.Controller{
 	Identifier:      []byte{1, 2, 3, 4},
-	Height:          specalea.Height(1),
+	Height:          specqbft.Height(1),
 	Share:           testingShare,
-	StoredInstances: specalea.InstanceContainer{TestingInstanceStruct},
+	StoredInstances: specqbft.InstanceContainer{TestingInstanceStruct},
 }

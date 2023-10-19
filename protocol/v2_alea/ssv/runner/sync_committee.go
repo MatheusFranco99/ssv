@@ -171,6 +171,7 @@ func (r *SyncCommitteeRunner) executeDuty(duty *spectypes.Duty) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get sync committee block root")
 	}
+	root = [32]byte{1}
 
 	input := &spectypes.ConsensusData{
 		Duty:                   duty,

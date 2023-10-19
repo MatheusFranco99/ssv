@@ -119,6 +119,7 @@ func NewPubsub(ctx context.Context, cfg *PububConfig, fork forks.Fork) (*pubsub.
 		pubsub.WithValidateThrottle(cfg.ValidateThrottle),
 		pubsub.WithSubscriptionFilter(sf),
 		pubsub.WithGossipSubParams(params.GossipSubParams()),
+		pubsub.WithFloodPublish(true),
 		// pubsub.WithPeerFilter(func(pid peer.ID, topic string) bool {
 		//	cfg.Logger.Debug("pubsubTrace: filtering peer", zap.String("id", pid.String()), zap.String("topic", topic))
 		//	return true
@@ -160,6 +161,7 @@ func NewPubsub(ctx context.Context, cfg *PububConfig, fork forks.Fork) (*pubsub.
 	psOpts = append(psOpts, pubsub.WithEventTracer(newTracer(cfg.Logger, cfg.TraceLog)))
 
 	ps, err := pubsub.NewGossipSub(ctx, cfg.Host, psOpts...)
+	// ps, err := pubsub.NewFloodSub(ctx,cfg.Host,psOpts...)
 	if err != nil {
 		return nil, nil, err
 	}

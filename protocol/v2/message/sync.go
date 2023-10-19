@@ -3,9 +3,8 @@ package message
 import (
 	"encoding/json"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 // StatusCode is the response status code
@@ -54,7 +53,7 @@ func (sc *StatusCode) String() string {
 // SyncParams holds parameters for sync operations
 type SyncParams struct {
 	// Height of the message, it can hold up to 2 items to specify a range or a single item for specific height
-	Height []specalea.Height
+	Height []specqbft.Height
 	// Identifier of the message
 	Identifier spectypes.MessageID
 }
@@ -78,7 +77,7 @@ type SyncMessage struct {
 	// Params holds request parameters
 	Params *SyncParams
 	// Data holds the results
-	Data []*messages.SignedMessage
+	Data []*specqbft.SignedMessage
 	// Status is the status code of the operation
 	Status StatusCode
 }
@@ -94,19 +93,19 @@ func (sm *SyncMessage) Decode(data []byte) error {
 }
 
 // UpdateResults updates the given sync message with results or potential error
-func (sm *SyncMessage) UpdateResults(err error, results ...*messages.SignedMessage) {
+func (sm *SyncMessage) UpdateResults(err error, results ...*specqbft.SignedMessage) {
 	if err != nil {
 		sm.Status = StatusInternalError
 	} else if len(results) == 0 || results[0] == nil {
 		sm.Status = StatusNotFound
 	} else {
-		sm.Data = make([]*messages.SignedMessage, len(results))
+		sm.Data = make([]*specqbft.SignedMessage, len(results))
 		copy(sm.Data, results)
 		nResults := len(sm.Data)
 		// updating params with the actual height of the messages
-		sm.Params.Height = []specalea.Height{sm.Data[0].Message.Height}
+		sm.Params.Height = []specqbft.Height{sm.Data[0].Message.Height}
 		if nResults > 1 {
-			sm.Params.Height = []specalea.Height{sm.Data[0].Message.Height, sm.Data[nResults-1].Message.Height}
+			sm.Params.Height = []specqbft.Height{sm.Data[0].Message.Height, sm.Data[nResults-1].Message.Height}
 		}
 		sm.Status = StatusSuccess
 	}

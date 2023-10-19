@@ -39,7 +39,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 			return
 		}
 
-		i.logger.Debug("$$$$$$ UponVCBCFinal "+fmt.Sprint(i.State.VCBCFinalLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
+		i.logger.Debug("$$$$$$" + cCyan + " UponVCBCFinal " + reset +fmt.Sprint(i.State.VCBCFinalLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("sender", int(senderID)))
 	}
 
 	log("start")
@@ -54,10 +54,10 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 	}
 
 	data := i.State.SentReadys.Get(senderID)
-	log("get data")
+	// log("get data")
 
 	i.State.VCBCState.SetVCBCData(senderID, data, hash, aggregated_msg) //aggregatedSignature,nodeIDs)
-	log("saved vcbc data")
+	log(fmt.Sprintf("%v saved vcbc data from %v",int(i.State.Share.OperatorID),int(senderID)))
 
 	if i.State.WaitForVCBCAfterDecided {
 		if i.State.WaitForVCBCAfterDecided_Author == senderID {
@@ -178,10 +178,16 @@ func CreateVCBCFinal(state *messages.State, config alea.IConfig, hash []byte, ag
 		Data:       dataByts,
 	}
 
-	sig, hash_map, err := Sign(state, config, msg)
-	if err != nil {
-		panic(err)
+	
+	sig := make([]byte,46)
+	hash_map := make(map[types.OperatorID][32]byte)
+	if (!(state.UseBLS || state.UseDiffieHellman)) {
+		sig, hash_map, err = Sign(state, config, msg)
+		if err != nil {
+			panic(err)
+		}
 	}
+	
 	signedMsg := &messages.SignedMessage{
 		Signature:          sig,
 		Signers:            []types.OperatorID{state.Share.OperatorID},

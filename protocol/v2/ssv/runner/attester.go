@@ -5,18 +5,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"go.uber.org/zap"
 
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 )
 
 type AttesterRunner struct {
@@ -25,7 +24,7 @@ type AttesterRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck specalea.ProposedValueCheckF
+	valCheck specqbft.ProposedValueCheckF
 	logger   *zap.Logger
 }
 
@@ -36,7 +35,7 @@ func NewAttesterRunnner(
 	beacon specssv.BeaconNode,
 	network specssv.Network,
 	signer spectypes.KeyManager,
-	valCheck specalea.ProposedValueCheckF,
+	valCheck specqbft.ProposedValueCheckF,
 ) Runner {
 	logger := logger.With(zap.String("validator", hex.EncodeToString(share.ValidatorPubKey)))
 	return &AttesterRunner{
@@ -57,6 +56,11 @@ func NewAttesterRunnner(
 	}
 }
 
+
+func (r *AttesterRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *AttesterRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }
@@ -70,7 +74,7 @@ func (r *AttesterRunner) ProcessPreConsensus(signedMsg *specssv.SignedPartialSig
 	return errors.New("no pre consensus sigs required for attester role")
 }
 
-func (r *AttesterRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
+func (r *AttesterRunner) ProcessConsensus(signedMsg *specqbft.SignedMessage) error {
 	decided, decidedValue, err := r.BaseRunner.baseConsensusMsgProcessing(r, signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -217,7 +221,7 @@ func (r *AttesterRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *AttesterRunner) GetValCheckF() specalea.ProposedValueCheckF {
+func (r *AttesterRunner) GetValCheckF() specqbft.ProposedValueCheckF {
 	return r.valCheck
 }
 

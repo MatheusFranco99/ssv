@@ -149,7 +149,7 @@ func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 		log("got init quorum.")
 
 		// Common coin for Conf quorum step
-		if i.State.SendCommonCoin {
+		if i.State.SendCommonCoin && acround == 1 {
 			i.SendCommonCoinShare()
 		}
 

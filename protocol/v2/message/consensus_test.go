@@ -4,11 +4,10 @@ import (
 	"sort"
 	"testing"
 
-	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2_alea/testing"
+	protocoltesting "github.com/MatheusFranco99/ssv/protocol/v2/testing"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,9 +17,9 @@ func TestAggregateSorting(t *testing.T) {
 
 	identifier := []byte("pk")
 
-	generateSignedMsg := func(operatorId spectypes.OperatorID) *messages.SignedMessage {
-		return protocoltesting.SignMsg(t, secretKeys, []spectypes.OperatorID{operatorId}, &specalea.Message{
-			MsgType:    specalea.CommitMsgType,
+	generateSignedMsg := func(operatorId spectypes.OperatorID) *specqbft.SignedMessage {
+		return protocoltesting.SignMsg(t, secretKeys, []spectypes.OperatorID{operatorId}, &specqbft.Message{
+			MsgType:    specqbft.CommitMsgType,
 			Height:     0,
 			Round:      1,
 			Identifier: identifier,

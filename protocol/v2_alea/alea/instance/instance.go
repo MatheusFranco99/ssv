@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"os"
+	"strconv"
 
 	// "time"
 
@@ -66,6 +68,39 @@ func NewInstance(
 	share.Quorum = uint64(2*f + 1)
 	share.PartialQuorum = uint64(f + 1)
 
+
+	bls,err := strconv.Atoi(os.Getenv("BLS"))
+	if err != nil {
+		bls = 1
+		// panic(err)
+	}
+	blsagg,err := strconv.Atoi(os.Getenv("BLSAGG"))
+	if err != nil {
+		blsagg = 0
+		// panic(err)
+	}
+	dh,err := strconv.Atoi(os.Getenv("DH"))
+	if err != nil {
+		dh = 0
+		// panic(err)
+	}
+	eddsa,err := strconv.Atoi(os.Getenv("EDDSA"))
+	if err != nil {
+		eddsa = 0
+		// panic(err)
+	}
+	rsa,err := strconv.Atoi(os.Getenv("RSA"))
+	if err != nil {
+		rsa = 0
+		// panic(err)
+	}
+
+	bls_f := (bls == 1)
+	blsagg_f := (blsagg == 1)
+	dh_f := (dh == 1)
+	eddsa_f := (eddsa == 1)
+	rsa_f := (rsa == 1)
+
 	inst := &Instance{
 		State: &messages.State{
 			Share:             share,
@@ -94,26 +129,28 @@ func NewInstance(
 			FastABAOptimization:        true,
 			WaitVCBCQuorumOptimization: true,
 			EqualVCBCOptimization:      true,
-			UseBLS:                     true,
-			AggregateVerify:            true,
-			UseDiffieHellman:           false,
-			UseEDDSA:                   false,
-			UseRSA:                     false,
+			UseBLS:                     bls_f,
+			AggregateVerify:            blsagg_f,
+			UseDiffieHellman:           dh_f,
+			UseEDDSA:                   eddsa_f,
+			UseRSA:                     rsa_f,
 			// logs
 			DecidedLogOnly:     false,
-			HideLogs:           true,
-			HideValidationLogs: true,
+			HideLogs:           false,
+			HideValidationLogs: false,
 			// Diffie Hellman
 			DiffieHellmanContainer:            messages.NewDiffieHellmanContainer(),
 			DiffieHellmanContainerOneTimeCost: messages.NewDiffieHellmanContainerOneTimeCost(int(share.OperatorID), nodeIDs),
 			// Message Containers and counters
 			ReadyContainer:         messages.NewMsgContainer(),
+			FinalContainer:         messages.NewMsgContainer(),
 			AbaInitContainer:       make(map[specalea.ACRound]map[specalea.Round]*messages.MessageContainer),
 			AbaAuxContainer:        make(map[specalea.ACRound]map[specalea.Round]*messages.MessageContainer),
 			AbaConfContainer:       make(map[specalea.ACRound]map[specalea.Round]*messages.MessageContainer),
 			AbaFinishContainer:     make(map[specalea.ACRound]*messages.MessageContainer),
 			CommonCoinMsgContainer: messages.NewMsgContainer(),
 			ReadyCounter:           make(map[types.OperatorID]uint64),
+			FinalCounter:           make(map[types.OperatorID]uint64),
 			AbaInitCounter:         make(map[specalea.ACRound]map[specalea.Round]uint64),
 			AbaAuxCounter:          make(map[specalea.ACRound]map[specalea.Round]uint64),
 			AbaConfCounter:         make(map[specalea.ACRound]map[specalea.Round]uint64),
@@ -160,7 +197,7 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 			if i.State.HideLogs || (i.State.DecidedLogOnly && !strings.Contains(str, "start")) {
 				return
 			}
-			i.logger.Debug("$$$$$$ UponStart : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
+			i.logger.Debug("$$$$$$" + cGreen + " UponStart " + reset + "1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 		}
 
 		// log("starting alea instance")
@@ -171,7 +208,6 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 		i.State.Height = height
 
 		i.vcbcNum = 0
-		log("set values")
 
 		i.initTime = makeTimestamp()
 		log(fmt.Sprintf("i.initTime: %v", i.initTime))
@@ -276,21 +312,33 @@ func (i *Instance) ProcessMsg(msg *messages.SignedMessage) (decided bool, decide
 		if author != i.State.Share.OperatorID {
 			return false, nil, nil, nil
 		}
+		
+		// If already sent final, don't process more readys
+		if i.State.ReceivedReadys.HasSentFinal() {
+			return false, nil, nil, nil
+		}
 	}
 
 	if err := i.BaseMsgValidation(msg); err != nil {
 		return false, nil, nil, errors.Wrap(err, "invalid signed message")
 	}
 
-	if i.State.UseBLS && i.State.AggregateVerify {
+	if i.State.AggregateVerify {
 		// performs signature verification only for quorum (for msgs types that allows this functionality) and process the quorum
 		// If msg type doesn't allow this (VCBCSend and VCBCFinal), verify and process
 		return i.AggregateMsgsProcessing(msg)
 	} else {
-		// verify and process
-		err = Verify(i.State, i.config, msg, i.State.Share.Committee)
-		if err != nil {
-			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
+		if (msg.Message.MsgType != messages.VCBCFinalMsgType) || (i.State.UseBLS == false && i.State.AggregateVerify == false && i.State.UseDiffieHellman == false) {
+			// verify and process
+			err = Verify(i.State, i.config, msg, i.State.Share.Committee)
+			if err != nil {
+				return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
+			}
+		} else {
+			err = VerifyVCBCFinal(i.State, i.config, msg, i.State.Share.Committee)
+			if err != nil {
+				return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
+			}
 		}
 		return i.ProcessMsgLogic(msg)
 	}
@@ -303,6 +351,7 @@ func (i *Instance) BaseMsgValidation(msg *messages.SignedMessage) error {
 		if i.State.HideLogs || i.State.HideValidationLogs || i.State.DecidedLogOnly {
 			return
 		}
+		return
 		i.logger.Debug("$$$$$$ UponMessageValidation : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
 
@@ -415,6 +464,34 @@ func (i *Instance) AggregateMsgsProcessing(msg *messages.SignedMessage) (decided
 				return false, nil, nil, err
 			}
 			return i.ProcessBufferOfMessages(i.State.ReadyContainer.GetMessages())
+		} else {
+			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
+		}
+	case messages.VCBCFinalMsgType:
+		i.State.FinalContainer.AddMessage(msg)
+		if i.State.FinalContainer.Len() == int(i.State.Share.Quorum) {
+			if i.State.FinalContainer.AllFinalEqual() {
+				err = VerifyBLSAggregateFinals(i.State, i.config, i.State.FinalContainer.GetMessages(), i.State.Share.Committee)
+				if err != nil {
+					return false, nil, nil, err
+				}
+				return i.ProcessBufferOfMessages(i.State.FinalContainer.GetMessages())
+			} else {
+				for _, msg_i := range i.State.FinalContainer.GetMessages() {
+					err = Verify(i.State, i.config, msg_i, i.State.Share.Committee)
+					if err != nil {
+						return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
+					}
+					i.ProcessMsgLogic(msg_i)
+				}
+			}
+			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
+		} else if i.State.FinalContainer.Len() > int(i.State.Share.Quorum) {
+			err = Verify(i.State, i.config, msg, i.State.Share.Committee)
+			if err != nil {
+				return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, err
+			}
+			return i.ProcessMsgLogic(msg)
 		} else {
 			return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 		}

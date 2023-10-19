@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -23,6 +22,11 @@ type queueContainer struct {
 	Q          queue.Queue
 	queueState *queue.State
 }
+
+func (qc queueContainer) ClearQ() {
+	qc.Q = queue.New()
+}
+
 
 // HandleMessage handles a spectypes.SSVMessage.
 // TODO: accept DecodedSSVMessage once p2p is upgraded to decode messages during validation.
@@ -106,7 +110,7 @@ func (v *Validator) logMsg(msg *queue.DecodedSSVMessage, logMsg string, fields .
 	}, fields...)
 	switch msg.SSVMessage.MsgType {
 	case spectypes.SSVConsensusMsgType:
-		sm := msg.Body.(*messages.SignedMessage)
+		sm := msg.Body.(*specqbft.SignedMessage)
 		fields = append(append([]zap.Field{}, zap.Int64("msg_height", int64(sm.Message.Height)),
 			zap.Int64("msg_round", int64(sm.Message.Round)),
 			zap.Int64("consensus_msg_type", int64(sm.Message.MsgType)),
@@ -119,19 +123,19 @@ func (v *Validator) logMsg(msg *queue.DecodedSSVMessage, logMsg string, fields .
 }
 
 // GetLastHeight returns the last height for the given identifier
-func (v *Validator) GetLastHeight(identifier spectypes.MessageID) specalea.Height {
+func (v *Validator) GetLastHeight(identifier spectypes.MessageID) specqbft.Height {
 	r := v.DutyRunners.DutyRunnerForMsgID(identifier)
 	if r == nil {
-		return specalea.Height(0)
+		return specqbft.Height(0)
 	}
 	return r.GetBaseRunner().QBFTController.Height
 }
 
 // GetLastRound returns the last height for the given identifier
-func (v *Validator) GetLastRound(identifier spectypes.MessageID) specalea.Round {
+func (v *Validator) GetLastRound(identifier spectypes.MessageID) specqbft.Round {
 	r := v.DutyRunners.DutyRunnerForMsgID(identifier)
 	if r == nil {
-		return specalea.Round(1)
+		return specqbft.Round(1)
 	}
 	if r != nil && r.HasRunningDuty() {
 		inst := r.GetBaseRunner().State.RunningInstance
@@ -139,5 +143,5 @@ func (v *Validator) GetLastRound(identifier spectypes.MessageID) specalea.Round 
 			return inst.State.Round
 		}
 	}
-	return specalea.Round(1)
+	return specqbft.Round(1)
 }

@@ -15,7 +15,7 @@ func (i *Instance) StartVCBC(data []byte) error {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-		i.logger.Debug("$$$$$$ UponVCBCStart : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+		i.logger.Debug("$$$$$$" + cBlue + " UponVCBCStart " + reset + "1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 	}
 
 	log("start")
@@ -25,7 +25,7 @@ func (i *Instance) StartVCBC(data []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "StartVCBC: failed to create VCBCSend message")
 	}
-	log("created vcbc send")
+	// log("created vcbc send")
 
 	i.Broadcast(msgToBroadcast)
 	log("broadcasted")

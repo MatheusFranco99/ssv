@@ -9,7 +9,7 @@ import (
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/stretchr/testify/require"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
 )
 
 type StartNewRunnerDutySpecTest struct {

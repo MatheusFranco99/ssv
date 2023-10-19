@@ -6,6 +6,7 @@ import (
 
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+
 	"github.com/pkg/errors"
 )
 
@@ -134,12 +135,14 @@ type State struct {
 
 	// Message Containers and counters
 	ReadyContainer         *MessageContainer
+	FinalContainer         *MessageContainer
 	AbaInitContainer       map[alea.ACRound]map[alea.Round]*MessageContainer
 	AbaAuxContainer        map[alea.ACRound]map[alea.Round]*MessageContainer
 	AbaConfContainer       map[alea.ACRound]map[alea.Round]*MessageContainer
 	AbaFinishContainer     map[alea.ACRound]*MessageContainer
 	CommonCoinMsgContainer *MessageContainer
 	ReadyCounter           map[types.OperatorID]uint64
+	FinalCounter           map[types.OperatorID]uint64
 	AbaInitCounter         map[alea.ACRound]map[alea.Round]uint64
 	AbaAuxCounter          map[alea.ACRound]map[alea.Round]uint64
 	AbaConfCounter         map[alea.ACRound]map[alea.Round]uint64

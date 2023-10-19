@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
 	"github.com/pkg/errors"
 )
 

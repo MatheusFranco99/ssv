@@ -3,21 +3,28 @@ package validator
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"time"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	"strconv"
+	"os"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"github.com/google/uuid"
+
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	// "bytes"
 )
 
 var logger = logging.Logger("ssv/protocol/ssv/validator").Desugar()
@@ -31,15 +38,25 @@ type Validator struct {
 	logger *zap.Logger
 
 	DutyRunners runner.DutyRunners
-	Network     specalea.Network
+	Network     specqbft.Network
 	Beacon      specssv.BeaconNode
 	Share       *types.SSVShare
 	Signer      spectypes.KeyManager
 
-	Storage *storage.ALEAStores
+	Storage *storage.QBFTStores
 	Queues  map[spectypes.BeaconRole]queueContainer
 
 	state uint32
+
+	// test variable -> do only one duty per slot
+	DoneDutyForSlot map[int]bool
+	// increment system load
+	SystemLoad int
+}
+
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
 // NewValidator creates a new instance of Validator.
@@ -60,6 +77,8 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 		Signer:      options.Signer,
 		Queues:      make(map[spectypes.BeaconRole]queueContainer),
 		state:       uint32(NotStarted),
+		DoneDutyForSlot: make(map[int]bool),
+		SystemLoad: 0,
 	}
 
 	for _, dutyRunner := range options.DutyRunners {
@@ -81,10 +100,67 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 
 // StartDuty starts a duty for the validator
 func (v *Validator) StartDuty(duty *spectypes.Duty) error {
+
+
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		v.logger.Debug("$$$$$$ UponValidatorStartDuty "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+	
+
+	log("start")
+
+	if duty.Type.String() != "SYNC_COMMITTEE" {
+		// log("duty not sync committee. Quitting.")
+		return nil
+	}
+
+	slot := duty.Slot
+	if _,ok := v.DoneDutyForSlot[int(slot)]; ok {
+
+		// log(fmt.Sprintf("already did duty in this slot. %v not going to start. Quitting.",duty.Type.String()))
+		return nil
+	} else {
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.ShowStats(int(slot)-1)
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.SetCurrentSlot(int(slot))
+	}
 	dutyRunner := v.DutyRunners[duty.Type]
 	if dutyRunner == nil {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
+
+	log(fmt.Sprintf("Setting true for slot %v, due to duty %v",int(slot),duty.Type.String()))
+	v.DoneDutyForSlot[int(slot)] = true
+	if v.SystemLoad == 0 {
+		v.SystemLoad = 1
+		sload,err := strconv.Atoi(os.Getenv("SLOAD"))
+		if err != nil {
+			panic(err)
+		}
+		v.SystemLoad = sload
+	} else {
+		// panic("QUITING")
+		log("TERMINATING")
+		os.Exit(0)
+		if v.SystemLoad == 1 {
+			v.SystemLoad = 0
+		}
+		v.SystemLoad += 20
+	}
+	// if v.SystemLoad == 20 {
+	// 	log("TERMINATING")
+	// 	os.Exit(0)
+	// }
+
+	log(fmt.Sprintf("System load: %v",v.SystemLoad))
+
+	dutyRunner.SetSystemLoad(v.SystemLoad)
+
+	v.Queues[dutyRunner.GetBaseRunner().BeaconRoleType].ClearQ()
+
 	return dutyRunner.StartNewDuty(duty)
 }
 
@@ -101,7 +177,7 @@ func (v *Validator) ProcessMessage(msg *queue.DecodedSSVMessage) error {
 
 	switch msg.GetType() {
 	case spectypes.SSVConsensusMsgType:
-		signedMsg, ok := msg.Body.(*messages.SignedMessage)
+		signedMsg, ok := msg.Body.(*specqbft.SignedMessage)
 		if !ok {
 			return errors.New("could not decode consensus message from network message")
 		}

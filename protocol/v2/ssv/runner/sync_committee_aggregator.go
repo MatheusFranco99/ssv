@@ -6,17 +6,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
 )
 
 type SyncCommitteeAggregatorRunner struct {
@@ -25,7 +24,7 @@ type SyncCommitteeAggregatorRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck specalea.ProposedValueCheckF
+	valCheck specqbft.ProposedValueCheckF
 	logger   *zap.Logger
 }
 
@@ -36,7 +35,7 @@ func NewSyncCommitteeAggregatorRunner(
 	beacon specssv.BeaconNode,
 	network specssv.Network,
 	signer spectypes.KeyManager,
-	valCheck specalea.ProposedValueCheckF,
+	valCheck specqbft.ProposedValueCheckF,
 ) Runner {
 	logger := logger.With(zap.String("validator", hex.EncodeToString(share.ValidatorPubKey)))
 	return &SyncCommitteeAggregatorRunner{
@@ -54,6 +53,12 @@ func NewSyncCommitteeAggregatorRunner(
 		valCheck: valCheck,
 		logger:   logger.With(zap.String("who", "SyncCommitteeAggregatorRunner")),
 	}
+}
+
+
+
+func (r *SyncCommitteeAggregatorRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
 }
 
 func (r *SyncCommitteeAggregatorRunner) StartNewDuty(duty *spectypes.Duty) error {
@@ -126,7 +131,7 @@ func (r *SyncCommitteeAggregatorRunner) ProcessPreConsensus(signedMsg *specssv.S
 	return nil
 }
 
-func (r *SyncCommitteeAggregatorRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
+func (r *SyncCommitteeAggregatorRunner) ProcessConsensus(signedMsg *specqbft.SignedMessage) error {
 	decided, decidedValue, err := r.BaseRunner.baseConsensusMsgProcessing(r, signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -352,7 +357,7 @@ func (r *SyncCommitteeAggregatorRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *SyncCommitteeAggregatorRunner) GetValCheckF() specalea.ProposedValueCheckF {
+func (r *SyncCommitteeAggregatorRunner) GetValCheckF() specqbft.ProposedValueCheckF {
 	return r.valCheck
 }
 

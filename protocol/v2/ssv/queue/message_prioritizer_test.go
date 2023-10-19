@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aquasecurity/table"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
-	"github.com/aquasecurity/table"
 	"github.com/stretchr/testify/require"
 )
 

@@ -1,12 +1,12 @@
 package testing
 
 import (
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	spectestingutils "github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/testing"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/testing"
+	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
 )
 
 var AttesterRunner = func(keySet *spectestingutils.TestKeySet) runner.Runner {
@@ -51,7 +51,7 @@ var UnknownDutyTypeRunner = func(keySet *spectestingutils.TestKeySet) runner.Run
 	return baseRunner(spectestingutils.UnknownDutyType, spectestingutils.UnknownDutyValueCheck(), keySet)
 }
 
-var baseRunner = func(role spectypes.BeaconRole, valCheck specalea.ProposedValueCheckF, keySet *spectestingutils.TestKeySet) runner.Runner {
+var baseRunner = func(role spectypes.BeaconRole, valCheck specqbft.ProposedValueCheckF, keySet *spectestingutils.TestKeySet) runner.Runner {
 	share := spectestingutils.TestingShare(keySet)
 	identifier := spectypes.NewMsgID(spectestingutils.TestingValidatorPubKey[:], role)
 	net := spectestingutils.NewTestingNetwork()
@@ -59,7 +59,7 @@ var baseRunner = func(role spectypes.BeaconRole, valCheck specalea.ProposedValue
 
 	config := testing.TestingConfig(keySet, identifier.GetRoleType())
 	config.ValueCheckF = valCheck
-	config.ProposerF = func(state *specalea.State, round specalea.Round) spectypes.OperatorID {
+	config.ProposerF = func(state *specqbft.State, round specqbft.Round) spectypes.OperatorID {
 		return 1
 	}
 	config.Network = net
@@ -150,18 +150,18 @@ var baseRunner = func(role spectypes.BeaconRole, valCheck specalea.ProposedValue
 
 //
 //var DecidedRunner = func(keySet *spectestingutils.TestKeySet) runner.Runner {
-//	return decideRunner(spectestingutils.TestAttesterConsensusData, specalea.FirstHeight, keySet)
+//	return decideRunner(spectestingutils.TestAttesterConsensusData, specqbft.FirstHeight, keySet)
 //}
 //
-//var DecidedRunnerWithHeight = func(height specalea.Height, keySet *spectestingutils.TestKeySet) runner.Runner {
+//var DecidedRunnerWithHeight = func(height specqbft.Height, keySet *spectestingutils.TestKeySet) runner.Runner {
 //	return decideRunner(spectestingutils.TestAttesterConsensusData, height, keySet)
 //}
 //
 //var DecidedRunnerUnknownDutyType = func(keySet *spectestingutils.TestKeySet) runner.Runner {
-//	return decideRunner(spectestingutils.TestConsensusUnkownDutyTypeData, specalea.FirstHeight, keySet)
+//	return decideRunner(spectestingutils.TestConsensusUnkownDutyTypeData, specqbft.FirstHeight, keySet)
 //}
 //
-//var decideRunner = func(consensusInput *spectypes.ConsensusData, height specalea.Height, keySet *spectestingutils.TestKeySet) runner.Runner {
+//var decideRunner = func(consensusInput *spectypes.ConsensusData, height specqbft.Height, keySet *spectestingutils.TestKeySet) runner.Runner {
 //	v := BaseValidator(keySet)
 //	consensusDataByts, _ := consensusInput.Encode()
 //	msgs := DecidingMsgsForHeight(consensusDataByts, []byte{1, 2, 3, 4}, height, keySet)
@@ -182,7 +182,7 @@ var baseRunner = func(role spectypes.BeaconRole, valCheck specalea.ProposedValue
 //var SSVDecidingMsgs = func(consensusData []byte, ks *spectestingutils.TestKeySet, role spectypes.BeaconRole) []*spectypes.SSVMessage {
 //	id := spectypes.NewMsgID(spectestingutils.TestingValidatorPubKey[:], role)
 //
-//	ssvMsgF := func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+//	ssvMsgF := func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 //		var byts []byte
 //		var msgType spectypes.MsgType
 //		if partialSigMsg != nil {
@@ -218,40 +218,40 @@ var baseRunner = func(role spectypes.BeaconRole, valCheck specalea.ProposedValue
 //		}
 //	}
 //
-//	qbftMsgs := DecidingMsgsForHeight(consensusData, id[:], specalea.FirstHeight, ks)
+//	qbftMsgs := DecidingMsgsForHeight(consensusData, id[:], specqbft.FirstHeight, ks)
 //	for _, msg := range qbftMsgs {
 //		base = append(base, ssvMsgF(msg, nil))
 //	}
 //	return base
 //}
 //
-//var DecidingMsgsForHeight = func(consensusData, msgIdentifier []byte, height specalea.Height, keySet *spectestingutils.TestKeySet) []*messages.SignedMessage {
-//	msgs := make([]*messages.SignedMessage, 0)
-//	for h := specalea.FirstHeight; h <= height; h++ {
-//		msgs = append(msgs, spectestingutils.SignQBFTMsg(keySet.Shares[1], 1, &specalea.Message{
-//			MsgType:    specalea.ProposalMsgType,
+//var DecidingMsgsForHeight = func(consensusData, msgIdentifier []byte, height specqbft.Height, keySet *spectestingutils.TestKeySet) []*specqbft.SignedMessage {
+//	msgs := make([]*specqbft.SignedMessage, 0)
+//	for h := specqbft.FirstHeight; h <= height; h++ {
+//		msgs = append(msgs, spectestingutils.SignQBFTMsg(keySet.Shares[1], 1, &specqbft.Message{
+//			MsgType:    specqbft.ProposalMsgType,
 //			Height:     h,
-//			Round:      specalea.FirstRound,
+//			Round:      specqbft.FirstRound,
 //			Identifier: msgIdentifier,
 //			Data:       spectestingutils.ProposalDataBytes(consensusData, nil, nil),
 //		}))
 //
 //		// prepare
 //		for i := uint64(1); i <= keySet.Threshold; i++ {
-//			msgs = append(msgs, spectestingutils.SignQBFTMsg(keySet.Shares[spectypes.OperatorID(i)], spectypes.OperatorID(i), &specalea.Message{
-//				MsgType:    specalea.PrepareMsgType,
+//			msgs = append(msgs, spectestingutils.SignQBFTMsg(keySet.Shares[spectypes.OperatorID(i)], spectypes.OperatorID(i), &specqbft.Message{
+//				MsgType:    specqbft.PrepareMsgType,
 //				Height:     h,
-//				Round:      specalea.FirstRound,
+//				Round:      specqbft.FirstRound,
 //				Identifier: msgIdentifier,
 //				Data:       spectestingutils.PrepareDataBytes(consensusData),
 //			}))
 //		}
 //		// commit
 //		for i := uint64(1); i <= keySet.Threshold; i++ {
-//			msgs = append(msgs, spectestingutils.SignQBFTMsg(keySet.Shares[spectypes.OperatorID(i)], spectypes.OperatorID(i), &specalea.Message{
-//				MsgType:    specalea.CommitMsgType,
+//			msgs = append(msgs, spectestingutils.SignQBFTMsg(keySet.Shares[spectypes.OperatorID(i)], spectypes.OperatorID(i), &specqbft.Message{
+//				MsgType:    specqbft.CommitMsgType,
 //				Height:     h,
-//				Round:      specalea.FirstRound,
+//				Round:      specqbft.FirstRound,
 //				Identifier: msgIdentifier,
 //				Data:       spectestingutils.CommitDataBytes(consensusData),
 //			}))

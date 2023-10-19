@@ -8,13 +8,13 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
 )
 
 // LastDecidedHandler handler for last-decided protocol
 // TODO: add msg validation and report scores
-func LastDecidedHandler(plogger *zap.Logger, storeMap *storage.ALEAStores, reporting protocolp2p.ValidationReporting) protocolp2p.RequestHandler {
+func LastDecidedHandler(plogger *zap.Logger, storeMap *storage.QBFTStores, reporting protocolp2p.ValidationReporting) protocolp2p.RequestHandler {
 	plogger = plogger.With(zap.String("who", "LastDecidedHandler"))
 	return func(msg *spectypes.SSVMessage) (*spectypes.SSVMessage, error) {
 		logger := plogger.With(zap.String("identifier", msg.MsgID.String()))

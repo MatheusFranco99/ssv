@@ -6,37 +6,65 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 	logging "github.com/ipfs/go-log"
+
+	"fmt"
+	"math"
+	"time"
+)
+
+
+const (
+
+    reset = "\033[0m"
+    bold = "\033[1m"
+    underline = "\033[4m"
+    strike = "\033[9m"
+    italic = "\033[3m"
+
+    cRed = "\033[31m"
+    cGreen = "\033[32m"
+    cYellow = "\033[33m"
+    cBlue = "\033[34m"
+    cPurple = "\033[35m"
+    cCyan = "\033[36m"
+    cWhite = "\033[37m"
 )
 
 var logger = logging.Logger("ssv/protocol/qbft/controller").Desugar()
 
 // NewDecidedHandler handles newly saved decided messages.
 // it will be called in a new goroutine to avoid concurrency issues
-type NewDecidedHandler func(msg *messages.SignedMessage)
+type NewDecidedHandler func(msg *specqbft.SignedMessage)
 
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT InstanceContainer
 type Controller struct {
 	Identifier []byte
-	Height     specalea.Height // incremental Height for InstanceContainer
+	Height     specqbft.Height // incremental Height for InstanceContainer
 	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	StoredInstances InstanceContainer
 	// FutureMsgsContainer holds all msgs from a higher height
-	FutureMsgsContainer map[spectypes.OperatorID]specalea.Height // maps msg signer to height of higher height received msgs
+	FutureMsgsContainer map[spectypes.OperatorID]specqbft.Height // maps msg signer to height of higher height received msgs
 	Domain              spectypes.DomainType
 	Share               *spectypes.Share
 	NewDecidedHandler   NewDecidedHandler `json:"-"`
 	config              qbft.IConfig
 	fullNode            bool
 	logger              *zap.Logger
+	HeightCountMap		map[int]int
+	CurrSlot			int
+	Latencies			map[int]map[specqbft.Height]int64
+	SlotStartTime		map[int]int64
+	ThroughputHistogram map[int][]int
+	SlotDivision		int
+	HeightsStored		map[int][]*instance.Instance
 }
 
 func NewController(
@@ -49,23 +77,114 @@ func NewController(
 	msgId := spectypes.MessageIDFromBytes(identifier)
 	return &Controller{
 		Identifier:          identifier,
-		Height:              specalea.FirstHeight,
+		Height:              specqbft.FirstHeight,
 		Domain:              domain,
 		Share:               share,
 		StoredInstances:     make(InstanceContainer, 0, InstanceContainerDefaultCapacity),
-		FutureMsgsContainer: make(map[spectypes.OperatorID]specalea.Height),
+		FutureMsgsContainer: make(map[spectypes.OperatorID]specqbft.Height),
 		config:              config,
 		fullNode:            fullNode,
 		logger: logger.With(zap.String("publicKey", hex.EncodeToString(msgId.GetPubKey())),
 			zap.String("role", msgId.GetRoleType().String())),
+		HeightCountMap:  make(map[int]int),
+		CurrSlot: 0,
+		Latencies: make(map[int]map[specqbft.Height]int64),
+		SlotStartTime: make(map[int]int64),
+		ThroughputHistogram: make(map[int][]int),
+		SlotDivision: 12,
+		HeightsStored: make(map[int][]*instance.Instance),
 	}
 }
+	
+func (c *Controller) ShowStats(slot_value int) {
+	if v, ok := c.HeightCountMap[slot_value]; ok {
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Throughput:%v, slot:%v, $$$$$$",v, slot_value))
+	} else {
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Throughput, slot:%v, $$$$$$", slot_value))
+	}
+
+	if _,ok := c.Latencies[slot_value]; !ok {
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Latency list, slot:%v, $$$$$$", slot_value))
+	} else {
+		latency_lst := make([]int64,len(c.Latencies[slot_value]))
+		mean_value := float64(0)
+		idx := 0
+		for _,v := range c.Latencies[slot_value] {
+			mean_value += float64(v)
+			latency_lst[idx] = v
+			idx += 1
+		}
+		num_points := len(c.Latencies[slot_value])
+		mean_value = mean_value / float64(num_points)
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Latency mean:%v, num_points:%v, slot:%v, $$$$$$", mean_value, num_points, slot_value))
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Latency list:%v, slot:%v, $$$$$$", latency_lst, slot_value))
+	}
+
+	if _, ok := c.ThroughputHistogram[slot_value]; !ok {
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No Histogram list, slot:%v, $$$$$$", slot_value))
+	} else {
+		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Histogram:%v, slot:%v, $$$$$$", c.ThroughputHistogram[slot_value], slot_value))
+	}
+
+	// if _, ok := c.HeightsStored[c.CurrSlot]; !ok {
+	// 	c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: No HeightsStored list, slot:%v, $$$$$$", slot_value))
+	// } else {
+	// 	c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: HeightsStored:%v, slot:%v, $$$$$$", c.HeightsStored[slot_value], slot_value))
+
+	// 	num_not_decided := 0
+	// 	for _,v := range c.HeightsStored[slot_value] {
+	// 		if !v.State.Decided {
+	// 			num_not_decided += 1
+	// 		}
+	// 	}
+	// 	c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vNumber of not decided:%v%v, slot:%v, $$$$$$", cYellow,num_not_decided,reset, slot_value))
+
+	// 	// v_idx := 0
+	// 	// for _,v := range c.HeightsStored[slot_value] {
+	// 	// 	if v_idx > 2 {
+	// 	// 		break
+	// 	// 	}
+	// 	// 	if !v.State.Decided {
+	// 	// 		v_idx += 1
+	// 	// 		i := v
+	// 	// 		acround := i.State.ACState.CurrentACRound()
+
+	// 	// 		aba := i.State.ACState.GetABA(acround)
+	// 	// 		round := aba.GetRound()
+	// 	// 		abaround := aba.GetABARound(round)
+
+	// 	// 		stats := fmt.Sprintf("Stats for H:%v\n\tNumber of Vcbc finals: %v. Authors: %v.\n\tCurrent Agreement round: %v.\n\tCurrent aba round: %v.\n\t\tABA INITs 0 received: %v. 1s received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA AUXs received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n\t\tABA CONFs received: %v. From: %v. HasSent: %v.\n\t\tABA Finish 0 received: %v. Finish 1 received: %v. From: %v. HasSent 0: %v. HasSent 1: %v.\n",	
+	// 	// 			i.State.Height,
+	// 	// 			i.State.VCBCState.GetLen(), i.State.VCBCState.GetNodeIDs(), 
+	// 	// 			acround,
+	// 	// 			round,
+	// 	// 			abaround.LenInit(byte(0)), abaround.LenInit(byte(1)), abaround.GetInit(), abaround.HasSentInit(byte(0)), abaround.HasSentInit(byte(1)),
+	// 	// 			abaround.LenAux(), abaround.GetAux(), abaround.HasSentAux(byte(0)), abaround.HasSentAux(byte(1)),
+	// 	// 			abaround.LenConf(), abaround.GetConf(), abaround.HasSentConf(),
+	// 	// 			aba.LenFinish(byte(0)), aba.LenFinish(byte(1)), aba.GetFinish(), aba.HasSentFinish(byte(0)), aba.HasSentFinish(byte(1)),
+	// 	// 			)
+	// 	// 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: Instance stats:%v, slot:%v, $$$$$$", stats, slot_value))
+	// 	// 	}
+	// 	// }
+	// }
+
+}
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
+}
+
+func (c *Controller) SetCurrentSlot(slot_value int) {
+	c.CurrSlot = slot_value
+	c.SlotStartTime[slot_value] = makeTimestamp()
+}
+	
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
 func (c *Controller) StartNewInstance(value []byte) error {
-	if err := c.canStartInstanceForValue(value); err != nil {
-		return errors.Wrap(err, "can't start new QBFT instance")
-	}
+	// if err := c.canStartInstanceForValue(value); err != nil {
+	// 	return errors.Wrap(err, "can't start new QBFT instance")
+	// }
 
 	// only if current height's instance exists (and decided since passed can start instance) bump
 	if c.StoredInstances.FindInstance(c.Height) != nil {
@@ -75,11 +194,17 @@ func (c *Controller) StartNewInstance(value []byte) error {
 	newInstance := c.addAndStoreNewInstance()
 	newInstance.Start(value, c.Height)
 
+	if _, ok := c.HeightsStored[c.CurrSlot]; !ok {
+		c.HeightsStored[c.CurrSlot] = make([]*instance.Instance,0)
+	}
+	c.HeightsStored[c.CurrSlot] = append(c.HeightsStored[c.CurrSlot],newInstance)
+
+
 	return nil
 }
 
 // ProcessMsg processes a new msg, returns decided message or error
-func (c *Controller) ProcessMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) ProcessMsg(msg *specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
 	if err := c.BaseMsgValidation(msg); err != nil {
 		return nil, errors.Wrap(err, "invalid msg")
 	}
@@ -100,7 +225,7 @@ func (c *Controller) ProcessMsg(msg *messages.SignedMessage) (*messages.SignedMe
 	}
 }
 
-func (c *Controller) UponExistingInstanceMsg(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) UponExistingInstanceMsg(msg *specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
 	inst := c.InstanceForHeight(msg.Message.Height)
 	if inst == nil {
 		return nil, errors.New("instance not found")
@@ -133,11 +258,29 @@ func (c *Controller) UponExistingInstanceMsg(msg *messages.SignedMessage) (*mess
 		return nil, err
 	}
 
+	if _, ok := c.HeightCountMap[c.CurrSlot]; !ok {
+		c.HeightCountMap[c.CurrSlot] = 0
+	}
+	c.HeightCountMap[c.CurrSlot] += 1
+
+	if _, ok := c.Latencies[c.CurrSlot]; !ok {
+		c.Latencies[c.CurrSlot] = make(map[specqbft.Height]int64)
+	}
+	c.Latencies[c.CurrSlot][inst.State.Height] = (inst.GetFinalTime() - inst.GetInitTime())
+
+	if _, ok := c.ThroughputHistogram[c.CurrSlot]; !ok {
+		c.ThroughputHistogram[c.CurrSlot] = make([]int,c.SlotDivision)
+	}
+	slot_init_time := c.SlotStartTime[c.CurrSlot]//c.config.GetNetwork().GetSlotStartTime()
+	diff := inst.GetFinalTime()-slot_init_time
+	dividor := int64(12_000_000) / int64(c.SlotDivision)
+	c.ThroughputHistogram[c.CurrSlot][int(math.Floor( float64(diff) / float64(dividor)  ))] += 1
+
 	return decidedMsg, nil
 }
 
 // BaseMsgValidation returns error if msg is invalid (base validation)
-func (c *Controller) BaseMsgValidation(msg *messages.SignedMessage) error {
+func (c *Controller) BaseMsgValidation(msg *specqbft.SignedMessage) error {
 	// verify msg belongs to controller
 	if !bytes.Equal(c.Identifier, msg.Message.Identifier) {
 		return errors.New("message doesn't belong to Identifier")
@@ -146,7 +289,7 @@ func (c *Controller) BaseMsgValidation(msg *messages.SignedMessage) error {
 	return nil
 }
 
-func (c *Controller) InstanceForHeight(height specalea.Height) *instance.Instance {
+func (c *Controller) InstanceForHeight(height specqbft.Height) *instance.Instance {
 	// Search in memory.
 	if inst := c.StoredInstances.FindInstance(height); inst != nil {
 		return inst
@@ -204,9 +347,9 @@ func (c *Controller) CanStartInstance() error {
 	if inst == nil {
 		return nil
 	}
-	if decided, _ := inst.IsDecided(); !decided {
-		return errors.New("previous instance hasn't Decided")
-	}
+	// if decided, _ := inst.IsDecided(); !decided {
+	// 	return errors.New("previous instance hasn't Decided")
+	// }
 
 	return nil
 }
@@ -243,7 +386,7 @@ func (c *Controller) Decode(data []byte) error {
 	return nil
 }
 
-func (c *Controller) broadcastDecided(aggregatedCommit *messages.SignedMessage) error {
+func (c *Controller) broadcastDecided(aggregatedCommit *specqbft.SignedMessage) error {
 	// Broadcast Decided msg
 	byts, err := aggregatedCommit.Encode()
 	if err != nil {
@@ -252,7 +395,7 @@ func (c *Controller) broadcastDecided(aggregatedCommit *messages.SignedMessage) 
 
 	msgToBroadcast := &spectypes.SSVMessage{
 		MsgType: spectypes.SSVConsensusMsgType,
-		MsgID:   specalea.ControllerIdToMessageID(c.Identifier),
+		MsgID:   specqbft.ControllerIdToMessageID(c.Identifier),
 		Data:    byts,
 	}
 	if err := c.GetConfig().GetNetwork().Broadcast(msgToBroadcast); err != nil {

@@ -3,13 +3,12 @@ package protocolp2p
 import (
 	"errors"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/p2p"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2/message"
 )
 
 var (
@@ -58,7 +57,7 @@ type SyncResult struct {
 
 type SyncResults []SyncResult
 
-func (results SyncResults) ForEachSignedMessage(iterator func(message *messages.SignedMessage) (stop bool)) {
+func (results SyncResults) ForEachSignedMessage(iterator func(message *specqbft.SignedMessage) (stop bool)) {
 	for _, res := range results {
 		if res.Msg == nil {
 			continue
@@ -105,16 +104,16 @@ func WithHandler(protocol SyncProtocol, handler RequestHandler) *SyncHandler {
 
 // Syncer holds the interface for syncing data from other peers
 type Syncer interface {
-	specalea.Syncer
+	specqbft.Syncer
 	// GetHistory sync the given range from a set of peers that supports history for the given identifier
 	// it accepts a list of targets for the request.
-	GetHistory(mid spectypes.MessageID, from, to specalea.Height, targets ...string) ([]SyncResult, specalea.Height, error)
+	GetHistory(mid spectypes.MessageID, from, to specqbft.Height, targets ...string) ([]SyncResult, specqbft.Height, error)
 
 	// RegisterHandlers registers handler for the given protocol
 	RegisterHandlers(handlers ...*SyncHandler)
 
 	// LastDecided fetches last decided from a random set of peers
-	// TODO: replace with specalea.SyncHighestDecided
+	// TODO: replace with specqbft.SyncHighestDecided
 	LastDecided(mid spectypes.MessageID) ([]SyncResult, error)
 }
 

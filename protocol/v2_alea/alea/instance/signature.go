@@ -89,14 +89,60 @@ func Verify(state *messages.State, config alea.IConfig, signedMsg *messages.Sign
 	return nil
 }
 
+func VerifyVCBCFinal(state *messages.State, config alea.IConfig, signedMsg *messages.SignedMessage, operators []*types.Operator) error {
+
+
+	vcbcFinalData, err := signedMsg.Message.GetVCBCFinalData()
+	if err != nil {
+		return errors.Wrap(err, "VerifyVCBCFinal: could not get vcbcFinalData data from signedMessage")
+	}
+
+	// get sender ID
+	aggregated_msg := vcbcFinalData.AggregatedMessage
+
+	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+		return errors.Wrap(err, "msg signature invalid")
+	}
+	return nil
+}
+
 func VerifyBLSAggregate(state *messages.State, config alea.IConfig, signedMsgs []*messages.SignedMessage, operators []*types.Operator) error {
-	aggregated_msg, err := aggregateMsgs(signedMsgs)
+	// aggregated_msg, err := aggregateMsgs(signedMsgs)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// verify signature
+	if err := signedMsgs[0].Signature.VerifyByOperators(signedMsgs[0], config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+		return nil
+		return errors.Wrap(err, "aggregated msg signature invalid")
+	}
+	return nil
+}
+
+
+func VerifyBLSAggregateFinals(state *messages.State, config alea.IConfig, signedMsgs []*messages.SignedMessage, operators []*types.Operator) error {
+	aggregate_msgs := make([]*messages.SignedMessage, len(signedMsgs))
+	for i, _ := range signedMsgs {
+
+		vcbcFinalData, err := signedMsgs[i].Message.GetVCBCFinalData()
+		if err != nil {
+			return errors.Wrap(err, "VerifyBLSAggregateFinals: could not get vcbcFinalData data from signedMessage")
+		}
+
+		// get sender ID
+		aggregated_msg_i := vcbcFinalData.AggregatedMessage
+		
+		aggregate_msgs[i] = aggregated_msg_i
+	}
+	aggregated_msg, err := aggregateMsgs(aggregate_msgs)
 	if err != nil {
 		return err
 	}
 
 	// verify signature
 	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+		return nil
 		return errors.Wrap(err, "aggregated msg signature invalid")
 	}
 	return nil

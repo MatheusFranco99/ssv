@@ -2,7 +2,7 @@
 # protocol
 p=$1
 
-go test -run="^BenchmarkAlea$" -v -bench=. -benchmem > ${p}.txt
+go test -run="^BenchmarkAlea$" -v -bench=. -benchmem -benchtime 30s > ${p}.txt
 
 cat ${p}.txt
 

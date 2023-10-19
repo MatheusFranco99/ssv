@@ -1,9 +1,9 @@
 package qbft
 
 import (
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	aleastorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
 )
 
 type signing interface {
@@ -16,26 +16,26 @@ type signing interface {
 type IConfig interface {
 	signing
 	// GetValueCheckF returns value check function
-	GetValueCheckF() specalea.ProposedValueCheckF
+	GetValueCheckF() specqbft.ProposedValueCheckF
 	// GetProposerF returns func used to calculate proposer
-	GetProposerF() specalea.ProposerF
+	GetProposerF() specqbft.ProposerF
 	// GetNetwork returns a p2p Network instance
-	GetNetwork() specalea.Network
+	GetNetwork() specqbft.Network
 	// GetStorage returns a storage instance
-	GetStorage() aleastorage.ALEAStore
+	GetStorage() qbftstorage.QBFTStore
 	// GetTimer returns round timer
-	GetTimer() specalea.Timer
+	GetTimer() specqbft.Timer
 }
 
 type Config struct {
 	Signer      spectypes.SSVSigner
 	SigningPK   []byte
 	Domain      spectypes.DomainType
-	ValueCheckF specalea.ProposedValueCheckF
-	ProposerF   specalea.ProposerF
-	Storage     aleastorage.ALEAStore
-	Network     specalea.Network
-	Timer       specalea.Timer
+	ValueCheckF specqbft.ProposedValueCheckF
+	ProposerF   specqbft.ProposerF
+	Storage     qbftstorage.QBFTStore
+	Network     specqbft.Network
+	Timer       specqbft.Timer
 }
 
 // GetSigner returns a Signer instance
@@ -54,26 +54,26 @@ func (c *Config) GetSignatureDomainType() spectypes.DomainType {
 }
 
 // GetValueCheckF returns value check instance
-func (c *Config) GetValueCheckF() specalea.ProposedValueCheckF {
+func (c *Config) GetValueCheckF() specqbft.ProposedValueCheckF {
 	return c.ValueCheckF
 }
 
 // GetProposerF returns func used to calculate proposer
-func (c *Config) GetProposerF() specalea.ProposerF {
+func (c *Config) GetProposerF() specqbft.ProposerF {
 	return c.ProposerF
 }
 
 // GetNetwork returns a p2p Network instance
-func (c *Config) GetNetwork() specalea.Network {
+func (c *Config) GetNetwork() specqbft.Network {
 	return c.Network
 }
 
 // GetStorage returns a storage instance
-func (c *Config) GetStorage() aleastorage.ALEAStore {
+func (c *Config) GetStorage() qbftstorage.QBFTStore {
 	return c.Storage
 }
 
 // GetTimer returns round timer
-func (c *Config) GetTimer() specalea.Timer {
+func (c *Config) GetTimer() specqbft.Timer {
 	return c.Timer
 }

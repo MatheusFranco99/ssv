@@ -1,14 +1,13 @@
 package testing
 
 import (
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types/testingutils"
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
@@ -90,35 +89,35 @@ var TestConsensusWrongDutyPKData = &spectypes.ConsensusData{
 }
 var TestConsensusWrongDutyPKDataByts, _ = TestConsensusWrongDutyPKData.Encode()
 
-var SSVMsgAttester = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgAttester = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingValidatorPubKey[:], spectypes.BNRoleAttester))
 }
 
-var SSVMsgWrongID = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgWrongID = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingWrongValidatorPubKey[:], spectypes.BNRoleAttester))
 }
 
-var SSVMsgProposer = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgProposer = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingValidatorPubKey[:], spectypes.BNRoleProposer))
 }
 
-var SSVMsgAggregator = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgAggregator = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingValidatorPubKey[:], spectypes.BNRoleAggregator))
 }
 
-var SSVMsgSyncCommittee = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgSyncCommittee = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingValidatorPubKey[:], spectypes.BNRoleSyncCommittee))
 }
 
-var SSVMsgSyncCommitteeContribution = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgSyncCommitteeContribution = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingValidatorPubKey[:], spectypes.BNRoleSyncCommitteeContribution))
 }
 
-var SSVMsgValidatorRegistration = func(qbftMsg *messages.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
+var SSVMsgValidatorRegistration = func(qbftMsg *specqbft.SignedMessage, partialSigMsg *specssv.SignedPartialSignatureMessage) *spectypes.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, spectypes.NewMsgID(testingutils.TestingValidatorPubKey[:], spectypes.BNRoleValidatorRegistration))
 }
 
-var ssvMsg = func(qbftMsg *messages.SignedMessage, postMsg *specssv.SignedPartialSignatureMessage, msgID spectypes.MessageID) *spectypes.SSVMessage {
+var ssvMsg = func(qbftMsg *specqbft.SignedMessage, postMsg *specssv.SignedPartialSignatureMessage, msgID spectypes.MessageID) *spectypes.SSVMessage {
 	var msgType spectypes.MsgType
 	var data []byte
 	if qbftMsg != nil {
@@ -138,22 +137,22 @@ var ssvMsg = func(qbftMsg *messages.SignedMessage, postMsg *specssv.SignedPartia
 	}
 }
 
-var PostConsensusAttestationMsgWithWrongSig = func(sk *bls.SecretKey, id spectypes.OperatorID, height specalea.Height) *specssv.SignedPartialSignatureMessage {
+var PostConsensusAttestationMsgWithWrongSig = func(sk *bls.SecretKey, id spectypes.OperatorID, height specqbft.Height) *specssv.SignedPartialSignatureMessage {
 	return postConsensusAttestationMsg(sk, id, height, true, false)
 }
 
-var PostConsensusAttestationMsgWithWrongRoot = func(sk *bls.SecretKey, id spectypes.OperatorID, height specalea.Height) *specssv.SignedPartialSignatureMessage {
+var PostConsensusAttestationMsgWithWrongRoot = func(sk *bls.SecretKey, id spectypes.OperatorID, height specqbft.Height) *specssv.SignedPartialSignatureMessage {
 	return postConsensusAttestationMsg(sk, id, height, true, false)
 }
 
-var PostConsensusAttestationMsg = func(sk *bls.SecretKey, id spectypes.OperatorID, height specalea.Height) *specssv.SignedPartialSignatureMessage {
+var PostConsensusAttestationMsg = func(sk *bls.SecretKey, id spectypes.OperatorID, height specqbft.Height) *specssv.SignedPartialSignatureMessage {
 	return postConsensusAttestationMsg(sk, id, height, false, false)
 }
 
 var postConsensusAttestationMsg = func(
 	sk *bls.SecretKey,
 	id spectypes.OperatorID,
-	height specalea.Height,
+	height specqbft.Height,
 	wrongRoot bool,
 	wrongBeaconSig bool,
 ) *specssv.SignedPartialSignatureMessage {

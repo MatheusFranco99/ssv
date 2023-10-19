@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
-	aleastorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
+	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/pkg/errors"
 )
 
@@ -41,8 +41,8 @@ func (c *Controller) getHighestInstance(identifier []byte) (*instance.Instance, 
 }
 
 // SaveInstance saves the given instance to the storage.
-func (c *Controller) SaveInstance(i *instance.Instance, msg *messages.SignedMessage) error {
-	storedInstance := &aleastorage.StoredInstance{
+func (c *Controller) SaveInstance(i *instance.Instance, msg *specqbft.SignedMessage) error {
+	storedInstance := &qbftstorage.StoredInstance{
 		State:          i.State,
 		DecidedMessage: msg,
 	}

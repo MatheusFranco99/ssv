@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 )
 
 const (
 	// InstanceContainerDefaultCapacity is the default capacity for InstanceContainer.
-	InstanceContainerDefaultCapacity int = 5
+	InstanceContainerDefaultCapacity int = 1024
 
 	// InstanceContainerTestCapacity is the capacity for InstanceContainer used in tests.
 	InstanceContainerTestCapacity int = 1024
@@ -20,7 +20,7 @@ const (
 // InstanceContainer is a fixed-capacity container for instances.
 type InstanceContainer []*instance.Instance
 
-func (i InstanceContainer) FindInstance(height specalea.Height) *instance.Instance {
+func (i InstanceContainer) FindInstance(height specqbft.Height) *instance.Instance {
 	for _, inst := range i {
 		if inst != nil {
 			if inst.GetHeight() == height {

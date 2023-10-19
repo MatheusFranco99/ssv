@@ -1,18 +1,17 @@
 package controller
 
 import (
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/instance"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/instance"
 )
 
 // UponDecided returns decided msg if decided, nil otherwise
-func (c *Controller) UponDecided(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
+func (c *Controller) UponDecided(msg *specqbft.SignedMessage) (*specqbft.SignedMessage, error) {
 	if err := ValidateDecided(
 		c.config,
 		msg,
@@ -87,7 +86,7 @@ func (c *Controller) UponDecided(msg *messages.SignedMessage) (*messages.SignedM
 
 func ValidateDecided(
 	config qbft.IConfig,
-	signedDecided *messages.SignedMessage,
+	signedDecided *specqbft.SignedMessage,
 	share *spectypes.Share,
 ) error {
 	if !IsDecidedMsg(share, signedDecided) {
@@ -114,6 +113,6 @@ func ValidateDecided(
 }
 
 // IsDecidedMsg returns true if signed commit has all quorum sigs
-func IsDecidedMsg(share *spectypes.Share, signedDecided *messages.SignedMessage) bool {
-	return share.HasQuorum(len(signedDecided.Signers)) && signedDecided.Message.MsgType == specalea.CommitMsgType
+func IsDecidedMsg(share *spectypes.Share, signedDecided *specqbft.SignedMessage) bool {
+	return share.HasQuorum(len(signedDecided.Signers)) && signedDecided.Message.MsgType == specqbft.CommitMsgType
 }
