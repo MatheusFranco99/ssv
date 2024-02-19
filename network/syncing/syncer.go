@@ -11,11 +11,11 @@ import (
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 	"github.com/MatheusFranco99/ssv/utils/tasks"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 //go:generate mockgen -package=mocks -destination=./mocks/syncer.go -source=./syncer.go
