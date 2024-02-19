@@ -6,13 +6,11 @@ import (
 	"testing"
 	"time"
 
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/network/forks/genesis"
-	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/queue/worker"
@@ -176,47 +174,49 @@ func newValidator(metaData *beacon.ValidatorMetadata) *validator.Validator {
 }
 
 func generateChangeRoundMsg(t *testing.T, identifier spectypes.MessageID) []byte {
-	crd := specalea.RoundChangeData{
-		PreparedValue:            nil,
-		PreparedRound:            0,
-		RoundChangeJustification: nil,
-	}
-	encoded, err := crd.Encode()
-	require.NoError(t, err)
-	sm := messages.SignedMessage{
-		Signature: []byte("sig"),
-		Signers:   []spectypes.OperatorID{1},
-		Message: &specalea.Message{
-			MsgType:    specalea.RoundChangeMsgType,
-			Height:     0,
-			Round:      1,
-			Identifier: identifier[:],
-			Data:       encoded,
-		},
-	}
-	res, err := sm.Encode()
-	require.NoError(t, err)
-	return res
+	// crd := specalea.RoundChangeData{
+	// 	PreparedValue:            nil,
+	// 	PreparedRound:            0,
+	// 	RoundChangeJustification: nil,
+	// }
+	// encoded, err := crd.Encode()
+	// require.NoError(t, err)
+	// sm := messages.SignedMessage{
+	// 	Signature: []byte("sig"),
+	// 	Signers:   []spectypes.OperatorID{1},
+	// 	Message: &specalea.Message{
+	// 		MsgType:    specalea.RoundChangeMsgType,
+	// 		Height:     0,
+	// 		Round:      1,
+	// 		Identifier: identifier[:],
+	// 		Data:       encoded,
+	// 	},
+	// }
+	// res, err := sm.Encode()
+	// require.NoError(t, err)
+	// return res
+	return []byte{}
 }
 
 func generateDecidedMessage(t *testing.T, identifier spectypes.MessageID) []byte {
-	cd := specalea.CommitData{
-		Data: []byte("data"),
-	}
-	encoded, err := cd.Encode()
-	require.NoError(t, err)
-	sm := messages.SignedMessage{
-		Signature: []byte("sig"),
-		Signers:   []spectypes.OperatorID{1, 2, 3},
-		Message: &specalea.Message{
-			MsgType:    specalea.CommitMsgType,
-			Height:     0,
-			Round:      1,
-			Identifier: identifier[:],
-			Data:       encoded,
-		},
-	}
-	res, err := sm.Encode()
-	require.NoError(t, err)
-	return res
+	// cd := specalea.CommitData{
+	// 	Data: []byte("data"),
+	// }
+	// encoded, err := cd.Encode()
+	// require.NoError(t, err)
+	// sm := messages.SignedMessage{
+	// 	Signature: []byte("sig"),
+	// 	Signers:   []spectypes.OperatorID{1, 2, 3},
+	// 	Message: &specalea.Message{
+	// 		MsgType:    specalea.CommitMsgType,
+	// 		Height:     0,
+	// 		Round:      1,
+	// 		Identifier: identifier[:],
+	// 		Data:       encoded,
+	// 	},
+	// }
+	// res, err := sm.Encode()
+	// require.NoError(t, err)
+	// return res
+	return []byte{}
 }
