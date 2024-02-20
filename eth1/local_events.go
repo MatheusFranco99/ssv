@@ -3,6 +3,7 @@ package eth1
 import (
 	"encoding/hex"
 	"strings"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -115,19 +116,19 @@ type eventDataUnmarshaler struct {
 func (u *eventDataUnmarshaler) UnmarshalYAML(value *yaml.Node) error {
 	var err error
 	switch u.name {
-	case "OperatorRegistration":
+	case "OperatorAdded":
 		var v operatorRegistrationEventYAML
 		err = value.Decode(&v)
 		u.data = &v
-	case "OperatorRemoval":
+	case "OperatorRemoved":
 		var v operatorRemovalEventYAML
 		err = value.Decode(&v)
 		u.data = &v
-	case "ValidatorRegistration":
+	case "ValidatorAdded":
 		var v validatorRegistrationEventYAML
 		err = value.Decode(&v)
 		u.data = &v
-	case "ValidatorRemoval":
+	case "ValidatorRemoved":
 		var v validatorRemovalEventYAML
 		err = value.Decode(&v)
 		u.data = &v
@@ -140,7 +141,7 @@ func (u *eventDataUnmarshaler) UnmarshalYAML(value *yaml.Node) error {
 		err = value.Decode(&v)
 		u.data = &v
 	default:
-		return errors.New("event unknown")
+		return errors.New(fmt.Sprintf("event unknown: %v", u.name))
 	}
 
 	return err
