@@ -116,7 +116,7 @@ type eventDataUnmarshaler struct {
 func (u *eventDataUnmarshaler) UnmarshalYAML(value *yaml.Node) error {
 	var err error
 	switch u.name {
-	case "OperatorAdded":
+	case "OperatorRegistration":
 		var v operatorRegistrationEventYAML
 		err = value.Decode(&v)
 		u.data = &v
@@ -124,7 +124,7 @@ func (u *eventDataUnmarshaler) UnmarshalYAML(value *yaml.Node) error {
 		var v operatorRemovalEventYAML
 		err = value.Decode(&v)
 		u.data = &v
-	case "ValidatorAdded":
+	case "ValidatorRegistration":
 		var v validatorRegistrationEventYAML
 		err = value.Decode(&v)
 		u.data = &v
