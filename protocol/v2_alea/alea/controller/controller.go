@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"os"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
@@ -95,7 +96,41 @@ func NewController(
 	}
 }
 
+func (c *Controller) AppendResultsToFile(slot_value int) {
+	filePath := fmt.Sprintf("data_output%v.txt", c.Share.OperatorID)
+
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString(fmt.Sprintf("Slot: %v\n", slot_value)); err != nil {
+		return
+	}
+	throughput := 0
+	if v, ok := c.HeightCountMap[slot_value]; ok {
+		throughput = v
+	}
+	if _, err := file.WriteString(fmt.Sprintf("Throughput: %v\n", throughput)); err != nil {
+		return
+	}
+
+	latency_lst_str := "["
+	for _, l := range c.Latencies[slot_value] {
+		latency_lst_str = fmt.Sprintf("%v %v,", latency_lst_str, l)
+	}
+	latency_lst_str += "]"
+
+	if _, err := file.WriteString(fmt.Sprintf("Latency: %v\n", latency_lst_str)); err != nil {
+		return
+	}
+}
+
 func (c *Controller) ShowStats(slot_value int) {
+
+	c.AppendResultsToFile(slot_value)
+
 	if v, ok := c.HeightCountMap[slot_value]; ok {
 		c.logger.Debug(fmt.Sprintf("$$$$$$ Controller:ShowStats: %vThroughput:%v, slot:%v, %v$$$$$$", cBlue, v, slot_value, reset))
 	} else {

@@ -176,7 +176,7 @@ func NewInstance(
 			zap.Uint64("height", uint64(height))),
 		initTime:           -1,
 		finalTime:          -1,
-		GenerateCPUProfile: true,
+		GenerateCPUProfile: false,
 	}
 	return inst
 }
