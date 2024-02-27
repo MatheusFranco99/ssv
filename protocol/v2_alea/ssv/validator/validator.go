@@ -11,7 +11,7 @@ import (
 	"time"
 
 	// "os"
-	// "strconv"
+	"strconv"
 
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
@@ -98,8 +98,8 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 		Queues:          make(map[spectypes.BeaconRole]queueContainer),
 		state:           uint32(NotStarted),
 		DoneDutyForSlot: make(map[int]bool),
-		SystemLoad:      1,  // 0 to read from environment
-		Repetitions:     10, // 0 not to stop
+		SystemLoad:      0,  // 0 to read from environment
+		Repetitions:     4, // 0 not to stop
 		Repetition_v:    0,
 	}
 
@@ -152,32 +152,32 @@ func (v *Validator) StartDuty(duty *spectypes.Duty) error {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
 
-	v.Repetition_v += 1
-	if v.Repetition_v > v.Repetitions {
-		os.Exit(0)
-	}
+	// v.Repetition_v += 1
+	// if v.Repetition_v > v.Repetitions {
+	// 	os.Exit(0)
+	// }
 
 	log(fmt.Sprintf("Setting true for %vslot %v,%v due to duty %v. %vRepetition: %v.%v", cBlue, int(slot), reset, duty.Type.String(), cPurple, v.Repetition_v, reset))
 	v.DoneDutyForSlot[int(slot)] = true
-	// if v.SystemLoad == 0 {
-	// 	sload,err := strconv.Atoi(os.Getenv("SLOAD"))
-	// 	if err != nil {
-	// 		sload = 1
-	// 	}
-	// 	v.SystemLoad = sload
-	// } else {
-	// 	// panic("QUITING")
-	// 	log("TERMINATING")
-	// 	os.Exit(0)
-	// 	if v.SystemLoad == 1 {
-	// 		v.SystemLoad = 0
-	// 	}
-	// 	v.SystemLoad += 20
-	// }
-	// if v.SystemLoad == 20 {
-	// 	log("TERMINATING")
-	// 	os.Exit(0)
-	// }
+	if v.SystemLoad == 0 {
+		sload,err := strconv.Atoi(os.Getenv("SLOAD"))
+		if err != nil {
+			sload = 1
+		}
+		v.SystemLoad = sload
+	} else {
+		// panic("QUITING")
+		// log("TERMINATING")
+		// os.Exit(0)
+		if v.SystemLoad == 1 {
+			v.SystemLoad = 0
+		}
+		v.SystemLoad += 20
+	}
+	if v.SystemLoad == 220 {
+		log("TERMINATING")
+		os.Exit(0)
+	}
 	log(fmt.Sprintf("%vSystem load: %v %v", cYellow, v.SystemLoad, reset))
 
 	dutyRunner.SetSystemLoad(v.SystemLoad)
