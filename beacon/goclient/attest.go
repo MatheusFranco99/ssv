@@ -3,8 +3,8 @@ package goclient
 import (
 	"time"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 

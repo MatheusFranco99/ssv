@@ -1,6 +1,6 @@
 module github.com/MatheusFranco99/ssv
 
-go 1.19
+go 1.20
 
 require (
 	github.com/MatheusFranco99/ssv-spec-AleaBFT v0.3.9

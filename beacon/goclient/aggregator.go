@@ -72,7 +72,10 @@ func (gc *goClient) SubmitSignedAggregateSelectionProof(msg *phase0.SignedAggreg
 //	 return bytes_to_uint64(hash(slot_signature)[0:8]) % modulo == 0
 func isAggregator(committeeCount uint64, slotSig []byte) (bool, error) {
 	modulo := uint64(1)
-	if TargetAggregatorsPerCommittee > 1 {
+	// if TargetAggregatorsPerCommittee > 1 {
+	// 	modulo = committeeCount / TargetAggregatorsPerCommittee
+	// }
+	if TargetAggregatorsPerCommittee > 1 && committeeCount != 0 {
 		modulo = committeeCount / TargetAggregatorsPerCommittee
 	}
 

@@ -100,7 +100,7 @@ func (df *dutyFetcher) updateDutiesFromBeacon(slot phase0.Slot) error {
 	for _, d := range duties {
 		toPrint = append(toPrint, toSerialized(d))
 	}
-	df.logger.Debug("got duties", zap.Int("count", len(duties)), zap.Any("duties", toPrint))
+	// df.logger.Debug("got duties", zap.Int("count", len(duties)), zap.Any("duties", toPrint))
 
 	if err := df.processFetchedDuties(duties); err != nil {
 		return errors.Wrap(err, "failed to process fetched duties")
