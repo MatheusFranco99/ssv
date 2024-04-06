@@ -3,7 +3,7 @@ package beacon
 import (
 	"context"
 
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssvqbft"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	eth2apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
