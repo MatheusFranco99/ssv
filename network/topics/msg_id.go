@@ -23,7 +23,7 @@ const (
 )
 
 const (
-	msgIDHandlerBufferSize = 32
+	msgIDHandlerBufferSize = 16384
 )
 
 // MsgPeersResolver will resolve the sending peers of the given message

@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/queue"
 	"github.com/MatheusFranco99/ssv/utils/logex"
 )
 

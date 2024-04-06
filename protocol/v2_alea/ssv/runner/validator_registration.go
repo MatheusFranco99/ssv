@@ -4,11 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 )
@@ -19,7 +20,7 @@ type ValidatorRegistrationRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck qbft.ProposedValueCheckF
+	valCheck alea.ProposedValueCheckF
 }
 
 func NewValidatorRegistrationRunner(
@@ -40,6 +41,11 @@ func NewValidatorRegistrationRunner(
 		network: network,
 		signer:  signer,
 	}
+}
+
+
+func (r *ValidatorRegistrationRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
 }
 
 func (r *ValidatorRegistrationRunner) StartNewDuty(duty *spectypes.Duty) error {
@@ -66,7 +72,7 @@ func (r *ValidatorRegistrationRunner) ProcessPreConsensus(signedMsg *specssv.Sig
 	return nil
 }
 
-func (r *ValidatorRegistrationRunner) ProcessConsensus(signedMsg *qbft.SignedMessage) error {
+func (r *ValidatorRegistrationRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
 	return errors.New("no consensus phase for validator registration")
 }
 
@@ -164,7 +170,7 @@ func (r *ValidatorRegistrationRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *ValidatorRegistrationRunner) GetValCheckF() qbft.ProposedValueCheckF {
+func (r *ValidatorRegistrationRunner) GetValCheckF() alea.ProposedValueCheckF {
 	return r.valCheck
 }
 

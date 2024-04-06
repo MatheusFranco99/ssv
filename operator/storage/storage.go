@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/eth1"
-	registry "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/eth1"
+	registry "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/eth1"
 	registrystorage "github.com/MatheusFranco99/ssv/registry/storage"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 	"github.com/MatheusFranco99/ssv/utils/rsaencryption"

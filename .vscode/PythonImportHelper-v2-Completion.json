@@ -1,0 +1,29 @@
+[
+    {
+        "label": "statistics",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "statistics",
+        "description": "statistics",
+        "detail": "statistics",
+        "documentation": {}
+    },
+    {
+        "label": "text",
+        "kind": 5,
+        "importPath": "protocol.v2_alea.alea.testing.parsing",
+        "description": "protocol.v2_alea.alea.testing.parsing",
+        "peekOfCode": "text = \"\"\"    alea_test.go:109: Per-operation time: 2.843489ms\n    alea_test.go:109: Per-operation time: 2.93219ms\n    alea_test.go:109: Per-operation time: 1.378969ms\n    alea_test.go:109: Per-operation time: 1.398275ms\n    alea_test.go:109: Per-operation time: 1.40099ms\n    alea_test.go:109: Per-operation time: 3.046502ms\n    alea_test.go:109: Per-operation time: 1.399077ms\n    alea_test.go:109: Per-operation time: 1.418404ms\n    alea_test.go:109: Per-operation time: 1.636286ms\n    alea_test.go:109: Per-operation time: 1.402195ms",
+        "detail": "protocol.v2_alea.alea.testing.parsing",
+        "documentation": {}
+    },
+    {
+        "label": "v",
+        "kind": 5,
+        "importPath": "protocol.v2_alea.alea.testing.parsing",
+        "description": "protocol.v2_alea.alea.testing.parsing",
+        "peekOfCode": "v = []\nfor l in text.split(\"\\n\"):\n    if \"ms\" in l:\n        v += [float(l.split(\"time: \")[1].split(\"ms\")[0])]\n    else:\n        v += [float(l.split(\"time: \")[1].split(\"µs\")[0])/1e3]\nimport statistics\nprint(statistics.mean(v))\nprint(statistics.stdev(v))",
+        "detail": "protocol.v2_alea.alea.testing.parsing",
+        "documentation": {}
+    }
+]

@@ -3,20 +3,29 @@ package validator
 import (
 	"context"
 	"encoding/hex"
+	"os"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"fmt"
+	"time"
+
+	// "os"
+	"strconv"
+
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	"github.com/google/uuid"
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/ibft/storage"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/queue"
-	"github.com/MatheusFranco99/ssv/protocol/v2/ssv/runner"
-	"github.com/MatheusFranco99/ssv/protocol/v2/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/runner"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 )
 
 var logger = logging.Logger("ssv/protocol/ssv/validator").Desugar()
@@ -30,15 +39,44 @@ type Validator struct {
 	logger *zap.Logger
 
 	DutyRunners runner.DutyRunners
-	Network     specqbft.Network
+	Network     specalea.Network
 	Beacon      specssv.BeaconNode
 	Share       *types.SSVShare
 	Signer      spectypes.KeyManager
 
-	Storage *storage.QBFTStores
+	Storage *storage.ALEAStores
 	Queues  map[spectypes.BeaconRole]queueContainer
 
 	state uint32
+
+	// test variable -> do only one duty per slot
+	DoneDutyForSlot map[int]bool
+	// increment system load
+	SystemLoad int
+
+	// Repetitions
+	Repetitions  int
+	Repetition_v int
+}
+
+const (
+	reset     = "\033[0m"
+	bold      = "\033[1m"
+	underline = "\033[4m"
+	strike    = "\033[9m"
+	italic    = "\033[3m"
+
+	cRed    = "\033[31m"
+	cGreen  = "\033[32m"
+	cYellow = "\033[33m"
+	cBlue   = "\033[34m"
+	cPurple = "\033[35m"
+	cCyan   = "\033[36m"
+	cWhite  = "\033[37m"
+)
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
 // NewValidator creates a new instance of Validator.
@@ -48,17 +86,21 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 	logger := logger.With(zap.String("validator", hex.EncodeToString(options.SSVShare.ValidatorPubKey)))
 
 	v := &Validator{
-		ctx:         pctx,
-		cancel:      cancel,
-		logger:      logger,
-		DutyRunners: options.DutyRunners,
-		Network:     options.Network,
-		Beacon:      options.Beacon,
-		Storage:     options.Storage,
-		Share:       options.SSVShare,
-		Signer:      options.Signer,
-		Queues:      make(map[spectypes.BeaconRole]queueContainer),
-		state:       uint32(NotStarted),
+		ctx:             pctx,
+		cancel:          cancel,
+		logger:          logger,
+		DutyRunners:     options.DutyRunners,
+		Network:         options.Network,
+		Beacon:          options.Beacon,
+		Storage:         options.Storage,
+		Share:           options.SSVShare,
+		Signer:          options.Signer,
+		Queues:          make(map[spectypes.BeaconRole]queueContainer),
+		state:           uint32(NotStarted),
+		DoneDutyForSlot: make(map[int]bool),
+		SystemLoad:      0,  // 0 to read from environment
+		Repetitions:     4, // 0 not to stop
+		Repetition_v:    0,
 	}
 
 	for _, dutyRunner := range options.DutyRunners {
@@ -80,10 +122,68 @@ func NewValidator(pctx context.Context, cancel func(), options Options) *Validat
 
 // StartDuty starts a duty for the validator
 func (v *Validator) StartDuty(duty *spectypes.Duty) error {
+	//funciton identifier
+	functionID := uuid.New().String()
+
+	// logger
+	log := func(str string) {
+		v.logger.Debug("$$$$$$ UponValidatorStartDuty "+functionID+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
+	if duty.Type.String() != "SYNC_COMMITTEE" {
+		// log("duty not sync committee. Quitting.")
+		return nil
+	}
+
+	slot := duty.Slot
+	if _, ok := v.DoneDutyForSlot[int(slot)]; ok {
+
+		log(fmt.Sprintf("already did duty in this slot. %v not going to start. Quitting.", duty.Type.String()))
+		return nil
+	} else {
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.ShowStats(int(slot) - 1)
+		v.DutyRunners[duty.Type].GetBaseRunner().QBFTController.SetCurrentSlot(int(slot))
+	}
+
 	dutyRunner := v.DutyRunners[duty.Type]
 	if dutyRunner == nil {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
+
+	// v.Repetition_v += 1
+	// if v.Repetition_v > v.Repetitions {
+	// 	os.Exit(0)
+	// }
+
+	log(fmt.Sprintf("Setting true for %vslot %v,%v due to duty %v. %vRepetition: %v.%v", cBlue, int(slot), reset, duty.Type.String(), cPurple, v.Repetition_v, reset))
+	v.DoneDutyForSlot[int(slot)] = true
+	if v.SystemLoad == 0 {
+		sload,err := strconv.Atoi(os.Getenv("SLOAD"))
+		if err != nil {
+			sload = 1
+		}
+		v.SystemLoad = sload
+	} else {
+		// panic("QUITING")
+		// log("TERMINATING")
+		// os.Exit(0)
+		if v.SystemLoad == 1 {
+			v.SystemLoad = 0
+		}
+		v.SystemLoad += 20
+	}
+	if v.SystemLoad == 220 {
+		log("TERMINATING")
+		os.Exit(0)
+	}
+	log(fmt.Sprintf("%vSystem load: %v %v", cYellow, v.SystemLoad, reset))
+
+	dutyRunner.SetSystemLoad(v.SystemLoad)
+
+	v.Queues[dutyRunner.GetBaseRunner().BeaconRoleType].ClearQ()
+
 	return dutyRunner.StartNewDuty(duty)
 }
 
@@ -100,7 +200,7 @@ func (v *Validator) ProcessMessage(msg *queue.DecodedSSVMessage) error {
 
 	switch msg.GetType() {
 	case spectypes.SSVConsensusMsgType:
-		signedMsg, ok := msg.Body.(*specqbft.SignedMessage)
+		signedMsg, ok := msg.Body.(*messages.SignedMessage)
 		if !ok {
 			return errors.New("could not decode consensus message from network message")
 		}

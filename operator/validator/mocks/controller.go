@@ -7,8 +7,8 @@ package mocks
 import (
 	phase0 "github.com/attestantio/go-eth2-client/spec/phase0"
 	eth1 "github.com/MatheusFranco99/ssv/eth1"
-	validator "github.com/MatheusFranco99/ssv/protocol/v2/ssv/validator"
-	types "github.com/MatheusFranco99/ssv/protocol/v2/types"
+	validator "github.com/MatheusFranco99/ssv/protocol/v2_alea/ssv/validator"
+	types "github.com/MatheusFranco99/ssv/protocol/v2_alea/types"
 	gomock "github.com/golang/mock/gomock"
 	event "github.com/prysmaticlabs/prysm/async/event"
 	reflect "reflect"

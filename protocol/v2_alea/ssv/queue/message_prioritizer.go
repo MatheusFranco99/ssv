@@ -1,16 +1,16 @@
 package queue
 
 import (
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 )
 
 // State represents a portion of the the current state
 // that is relevant to the prioritization of messages.
 type State struct {
 	HasRunningInstance bool
-	Height             qbft.Height
-	Round              qbft.Round
+	Height             alea.Height
+	Round              alea.Round
 	Slot               phase0.Slot
 	Quorum             uint64
 }

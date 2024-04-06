@@ -3,12 +3,12 @@ package message
 import (
 	"sort"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
 // Aggregate is a utility that helps to ensure sorted signers
-func Aggregate(signedMsg *specqbft.SignedMessage, s spectypes.MessageSignature) error {
+func Aggregate(signedMsg *messages.SignedMessage, s spectypes.MessageSignature) error {
 	if err := signedMsg.Aggregate(s); err != nil {
 		return err
 	}

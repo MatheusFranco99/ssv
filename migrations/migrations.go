@@ -10,8 +10,8 @@ import (
 	"github.com/MatheusFranco99/ssv/ekm"
 	operatorstorage "github.com/MatheusFranco99/ssv/operator/storage"
 	validatorstorage "github.com/MatheusFranco99/ssv/operator/validator"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/eth1"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/eth1"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 

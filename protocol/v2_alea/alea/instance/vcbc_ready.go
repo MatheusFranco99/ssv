@@ -6,115 +6,163 @@ import (
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+
+	"fmt"
+
+	"sort"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
-func (i *Instance) uponVCBCReady(signedMessage *specalea.SignedMessage) error {
+func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
-	// get Data
+	// Decode
 	vcbcReadyData, err := signedMessage.Message.GetVCBCReadyData()
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: could not get vcbcReadyData data from signedMessage")
 	}
 
-	// get sender ID
+	// Get attributes
+	hash := vcbcReadyData.Hash
+	author := vcbcReadyData.Author
+	if author != i.State.Share.OperatorID {
+		return nil
+	}
 	senderID := signedMessage.GetSigners()[0]
 
-	// check if it's the first time. If not, return. If yes, update map and continue
-	if i.State.VCBCState.HasReceivedReady(vcbcReadyData.Author, vcbcReadyData.Priority, senderID) {
-		return nil
-	} else {
-		i.State.VCBCState.SetReceivedReady(vcbcReadyData.Author, vcbcReadyData.Priority, senderID, true)
+	i.State.VCBCReadyLogTag += 1
+
+	// Logger
+	log := func(str string) {
+
+		if i.State.HideLogs || i.State.DecidedLogOnly {
+			return
+		}
+		i.logger.Debug("$$$$$$"+cPurple+" UponVCBCReady "+reset+fmt.Sprint(i.State.VCBCReadyLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("author", int(author)), zap.Int("sender", int(senderID)))
 	}
 
-	// If this is the author of the VCBC proposals -> aggregate signature
-	if vcbcReadyData.Author == i.State.Share.OperatorID {
+	log("start")
 
-		// update W, the list of signedMessages to be aggregated later
-		i.State.VCBCState.AppendToW(vcbcReadyData.Author, vcbcReadyData.Priority, signedMessage)
-		W := i.State.VCBCState.GetW(vcbcReadyData.Author, vcbcReadyData.Priority)
+	// Start timer if not started before
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
+	}
 
-		// update counter associated with author and priority
-		i.State.VCBCState.IncrementR(vcbcReadyData.Author, vcbcReadyData.Priority)
-		r := i.State.VCBCState.GetR(vcbcReadyData.Author, vcbcReadyData.Priority)
+	// Verify if hash is correct
+	ownHash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(i.StartValue)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
+	if err != nil {
+		return errors.Wrap(err, "uponVCBCReady: could not compute own hash")
+	}
+	if !bytes.Equal(ownHash, hash) {
+		log("hash not equal. quitting.")
+		return errors.New("Hash not equal. Quitting.")
+	}
 
-		// if reached quorum, aggregate signatures and broadcast FINAL message
-		if r >= i.State.Share.Quorum {
+	// Update container
+	i.State.ReceivedReadys.Add(senderID, signedMessage)
 
-			aggregatedMessage, err := AggregateMsgs(W)
-			if err != nil {
-				return errors.Wrap(err, "uponVCBCReady: unable to aggregate messages to produce VCBCFinal")
-			}
+	// Check if already sent findal
+	hasSentFinal := i.State.ReceivedReadys.HasSentFinal()
+	if hasSentFinal {
+		log("has sent final. quitting.")
+		return nil
+	}
 
-			aggregatedMsgEncoded, err := aggregatedMessage.Encode()
-			if err != nil {
-				return errors.Wrap(err, "uponVCBCReady: could not encode aggregated msg")
-			}
+	// Check if has quorum to send final
+	hasQuorum := i.State.ReceivedReadys.HasQuorum()
+	if !hasQuorum {
+		log("dont have quorum. quitting.")
+		return nil
+	}
 
-			i.State.VCBCState.SetU(vcbcReadyData.Author, vcbcReadyData.Priority, aggregatedMsgEncoded)
-
-			vcbcFinalMsg, err := CreateVCBCFinal(i.State, i.config, vcbcReadyData.Hash, vcbcReadyData.Priority, aggregatedMsgEncoded, vcbcReadyData.Author)
-			if err != nil {
-				return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
-			}
-			i.Broadcast(vcbcFinalMsg)
-
-			i.uponVCBCFinal(vcbcFinalMsg)
-
+	// Aggregate ready messages as proof
+	aggregatedMsg := signedMessage
+	if i.State.UseBLS {
+		aggregatedMsg, err = aggregateMsgs(i.State.ReceivedReadys.GetMessages())
+		if err != nil {
+			return errors.Wrap(err, "uponVCBCReady: failed to aggregate messages")
 		}
 	}
+
+	// Create VCBC Final
+	vcbcFinalMsg, err := i.CreateVCBCFinal(hash, aggregatedMsg)
+	if err != nil {
+		return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
+	}
+
+	i.Broadcast(vcbcFinalMsg)
+
+	// Update state
+	i.State.ReceivedReadys.SetSentFinal()
+
+	log(fmt.Sprintf("%v sent final.", int(i.State.Share.OperatorID)))
 
 	return nil
 }
 
-func AggregateMsgs(msgs []*specalea.SignedMessage) (*specalea.SignedMessage, error) {
+func aggregateMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessage, error) {
 	if len(msgs) == 0 {
-		return nil, errors.New("AggregateMsgs: can't aggregate zero msgs")
+		return nil, errors.New("can't aggregate zero msgs")
 	}
 
-	var ret *specalea.SignedMessage
+	var ret *messages.SignedMessage
 	for _, m := range msgs {
 		if ret == nil {
 			ret = m.DeepCopy()
 		} else {
 			if err := ret.Aggregate(m); err != nil {
-				return nil, errors.Wrap(err, "AggregateMsgs: could not aggregate msg")
+				return nil, errors.Wrap(err, "could not aggregate msg")
 			}
 		}
 	}
+	sort.Slice(ret.Signers, func(i, j int) bool {
+		return ret.Signers[i] < ret.Signers[j]
+	})
 	return ret, nil
 }
 
 func isValidVCBCReady(
-	state *specalea.State,
+	state *messages.State,
 	config alea.IConfig,
-	signedMsg *specalea.SignedMessage,
+	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
-	if signedMsg.Message.MsgType != specalea.VCBCReadyMsgType {
-		return errors.New("msg type is not VCBCReadyMsgType")
+
+	// Logger
+	log := func(str string) {
+
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
+			return
+		}
+		logger.Debug("$$$$$$ UponMV_VCBCReady : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
 	}
+
+	log("start")
+
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
+	log("checked height")
 	if len(signedMsg.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return errors.Wrap(err, "msg signature invalid")
-	}
+	log("checked signers == 1")
 
 	VCBCReadyData, err := signedMsg.Message.GetVCBCReadyData()
+	log("got data")
 	if err != nil {
 		return errors.Wrap(err, "could not get VCBCReadyData data")
 	}
 	if err := VCBCReadyData.Validate(); err != nil {
 		return errors.Wrap(err, "VCBCReadyData invalid")
 	}
+	log("validated")
 
-	// author
+	// Check author
 	author := VCBCReadyData.Author
 	authorInCommittee := false
 	for _, opID := range operators {
@@ -125,49 +173,41 @@ func isValidVCBCReady(
 	if !authorInCommittee {
 		return errors.New("author (OperatorID) doesn't exist in Committee")
 	}
-
-	// priority & hash
-	priority := VCBCReadyData.Priority
-	if state.VCBCState.HasM(author, priority) {
-		localHash, err := GetProposalsHash(state.VCBCState.GetM(author, priority))
-		if err != nil {
-			return errors.Wrap(err, "could not get local hash")
-		}
-		if !bytes.Equal(localHash, VCBCReadyData.Hash) {
-			return errors.New("existing (priority,author) proposals have different hash")
-		}
-	}
+	log("checked author in committee")
 
 	return nil
 }
 
-func CreateVCBCReady(state *specalea.State, config alea.IConfig, hash []byte, priority specalea.Priority, author types.OperatorID) (*specalea.SignedMessage, error) {
-	vcbcReadyData := &specalea.VCBCReadyData{
-		Hash:     hash,
-		Priority: priority,
-		// Proof:			proof,
+func (i *Instance) CreateVCBCReady(hash []byte, author types.OperatorID) (*messages.SignedMessage, error) {
+
+	state := i.State
+
+	vcbcReadyData := &messages.VCBCReadyData{
+		Hash:   hash,
 		Author: author,
 	}
 	dataByts, err := vcbcReadyData.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "CreateVCBCReady: could not encode vcbcReadyData")
 	}
-	msg := &specalea.Message{
-		MsgType:    specalea.VCBCReadyMsgType,
+	msg := &messages.Message{
+		MsgType:    messages.VCBCReadyMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "CreateVCBCReady: failed signing filler msg")
+		panic(err)
 	}
 
-	signedMsg := &specalea.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+	signedMsg := &messages.SignedMessage{
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
+		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
 }

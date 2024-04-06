@@ -1,171 +1,231 @@
 package instance
 
 import (
+	"fmt"
+
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+
+	"math/rand"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
-func (i *Instance) uponABAConf(signedABAConf *specalea.SignedMessage) error {
+func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 
-	// get data
+	// Decode
 	ABAConfData, err := signedABAConf.Message.GetABAConfData()
 	if err != nil {
 		return errors.Wrap(err, "uponABAConf:could not get ABAConfData from signedABAConf")
 	}
 
-	// old message -> ignore
-	if ABAConfData.ACRound < i.State.ACState.ACRound {
-		return nil
-	}
-	if ABAConfData.Round < i.State.ACState.GetCurrentABAState().Round {
-		return nil
-	}
-	// if future round -> intialize future state
-	if ABAConfData.ACRound > i.State.ACState.ACRound {
-		i.State.ACState.InitializeRound(ABAConfData.ACRound)
-	}
-	if ABAConfData.Round > i.State.ACState.GetABAState(ABAConfData.ACRound).Round {
-		i.State.ACState.GetABAState(ABAConfData.ACRound).InitializeRound(ABAConfData.Round)
-	}
-
-	abaState := i.State.ACState.GetABAState(ABAConfData.ACRound)
-
-	// add the message to the containers
-	abaState.ABAConfContainer.AddMsg(signedABAConf)
-
-	// sender
+	// Get attributes
 	senderID := signedABAConf.GetSigners()[0]
+	acround := ABAConfData.ACRound
+	votes := ABAConfData.Votes
+	round := ABAConfData.Round
 
-	alreadyReceived := abaState.HasConf(ABAConfData.Round, senderID)
+	// Funciton identifier
+	i.State.AbaConfLogTag += 1
 
-	// if never received this msg, update
-	if !alreadyReceived {
-		abaState.SetConf(ABAConfData.Round, senderID, ABAConfData.Votes)
+	// logger
+	log := func(str string) {
 
+		if i.State.HideLogs || i.State.DecidedLogOnly {
+			return
+		}
+		i.logger.Debug("$$$$$$ UponABAConf "+fmt.Sprint(i.State.AbaConfLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Binary("votes", votes))
 	}
 
-	// reached strong support -> try to decide value
-	if abaState.CountConf(ABAConfData.Round) >= i.State.Share.Quorum {
+	log("start")
 
-		q := abaState.CountConfContainedInValues(ABAConfData.Round)
-		if q < i.State.Share.Quorum {
-			return nil
+	if i.State.ACState.IsTerminated() {
+		log("ac terminated. quitting.")
+		return nil
+	}
+
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
+	}
+
+	if i.State.ACState.CurrentACRound() > acround {
+		log("old acround. quitting.")
+		return nil
+	}
+
+	if i.State.ACState.GetABA(acround).CurrentRound() > round {
+		log("old aba round. quitting.")
+		return nil
+	}
+
+	aba := i.State.ACState.GetABA(acround)
+	abaround := aba.GetABARound(round)
+
+	abaround.AddConf(votes, senderID)
+	log("added conf")
+
+	if i.State.ACState.CurrentACRound() < acround {
+		log("future aba. quitting.")
+		return nil
+	}
+	if aba.CurrentRound() < round {
+		log("future aba round. quitting.")
+		return nil
+	}
+
+	len_conf := abaround.LenConf()
+	log(fmt.Sprintf("len conf: %v", len_conf))
+	if len_conf >= int(i.State.Share.Quorum) {
+		log("got conf quorum")
+
+		coin := i.State.CommonCoin.GetCoin(acround, round)
+
+		log(fmt.Sprintf("coin: %v", coin))
+
+		conf_values := abaround.GetConfValues()
+		log(fmt.Sprintf("conf values: %v", conf_values))
+
+		init_vote := coin
+		if len(conf_values) < 2 {
+			init_vote = conf_values[0]
+		}
+		log(fmt.Sprintf("init vote : %v", init_vote))
+
+		has_sent_init := aba.GetABARound(round + 1).HasSentInit(init_vote)
+		log(fmt.Sprintf("has sent init: %v", has_sent_init))
+
+		if !has_sent_init {
+
+			initMsg, err := i.CreateABAInit(init_vote, round+1, acround)
+			if err != nil {
+				return errors.Wrap(err, "uponABAConf: failed to create ABA Init message")
+			}
+			log("created aba init")
+
+			i.Broadcast(initMsg)
+			log("broadcasted abainit")
+
+			aba.GetABARound(round + 1).SetSentInit(init_vote)
+			aba.BumpRound()
+			log("set sent init and inc round")
 		}
 
-		// get common coin
-		s := i.config.GetCoinF()(abaState.Round)
+		if len(conf_values) == 1 && conf_values[0] == coin {
+			has_sent_finish := aba.HasSentFinish(coin)
+			log(fmt.Sprintf("has sent finish: %v", has_sent_finish))
+			if !has_sent_finish {
 
-		// if values = {0,1}, choose randomly (i.e. coin) value for next round
-		if len(abaState.Values[ABAConfData.Round]) == 2 {
-
-			abaState.SetVInput(ABAConfData.Round+1, s)
-
-		} else {
-			abaState.SetVInput(ABAConfData.Round+1, abaState.GetValues(ABAConfData.Round)[0])
-
-			// if value has only one value, sends FINISH
-			if abaState.GetValues(ABAConfData.Round)[0] == s {
-				// check if indeed never sent FINISH message for this vote
-				if !abaState.SentFinish(s) {
-					finishMsg, err := CreateABAFinish(i.State, i.config, s, ABAConfData.ACRound)
-					if err != nil {
-						return errors.Wrap(err, "uponABAConf: failed to create ABA Finish message")
-					}
-					i.Broadcast(finishMsg)
-					// update sent finish flag
-					abaState.SetSentFinish(s, true)
-					// process own finish msg
-					i.uponABAFinish(finishMsg)
+				finishMsg, err := i.CreateABAFinish(coin, acround)
+				if err != nil {
+					return errors.Wrap(err, "uponABAConf: failed to create ABA Finish message")
 				}
+				log("created aba finish")
+
+				i.Broadcast(finishMsg)
+				log("broadcasted abafinish")
+
+				aba.SetSentFinish(coin)
+				log("set sent finish")
+
 			}
 		}
 
-		// increment round
-		abaState.IncrementRound()
-
-		// start new round sending INIT message with vote
-		initMsg, err := CreateABAInit(i.State, i.config, abaState.GetVInput(abaState.Round), abaState.Round, ABAConfData.ACRound)
-		if err != nil {
-			return errors.Wrap(err, "uponABAConf: failed to create ABA Init message")
-		}
-		i.Broadcast(initMsg)
-		// update sent init flag
-		abaState.SetSentInit(abaState.Round, abaState.GetVInput(abaState.Round), true)
-		// process own aux msg
-		i.uponABAInit(initMsg)
 	}
+
+	log("finish")
 
 	return nil
 }
 
+func Coin(round int, author int, priority int) byte {
+	// Set the seed
+	rand.Seed(int64(round + author + priority))
+
+	// Generate a random integer between 0 and 1
+	result := byte(rand.Intn(2))
+
+	return result
+}
+
 func isValidABAConf(
-	state *specalea.State,
+	state *messages.State,
 	config alea.IConfig,
-	signedMsg *specalea.SignedMessage,
+	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
-	if signedMsg.Message.MsgType != specalea.ABAConfMsgType {
+
+	// logger
+	log := func(str string) {
+
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
+			return
+		}
+		logger.Debug("$$$$$$ UponMV_ABAConf : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
+	if signedMsg.Message.MsgType != messages.ABAConfMsgType {
 		return errors.New("msg type is not ABAConfMsgType")
 	}
+	log("checked msg type")
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
+	log("checked height")
 	if len(signedMsg.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return errors.Wrap(err, "msg signature invalid")
-	}
+	log("checked signers == 1")
 
 	ABAConfData, err := signedMsg.Message.GetABAConfData()
+	log("got data")
 	if err != nil {
 		return errors.Wrap(err, "could not get ABAConfData data")
 	}
 	if err := ABAConfData.Validate(); err != nil {
 		return errors.Wrap(err, "ABAConfData invalid")
 	}
-
-	// vote
-	votes := ABAConfData.Votes
-	for _, vote := range votes {
-		if vote != 0 && vote != 1 {
-			return errors.New("vote different than 0 and 1")
-		}
-	}
+	log("validated")
 
 	return nil
 }
 
-func CreateABAConf(state *specalea.State, config alea.IConfig, votes []byte, round specalea.Round, acRound specalea.ACRound) (*specalea.SignedMessage, error) {
-	ABAConfData := &specalea.ABAConfData{
+func (i *Instance) CreateABAConf(votes []byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+
+	state := i.State
+
+	ABAConfData := &messages.ABAConfData{
 		Votes:   votes,
 		Round:   round,
-		ACRound: acRound,
+		ACRound: acround,
 	}
 	dataByts, err := ABAConfData.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "CreateABAConf: could not encode abaconf data")
 	}
-	msg := &specalea.Message{
-		MsgType:    specalea.ABAConfMsgType,
+	msg := &messages.Message{
+		MsgType:    messages.ABAConfMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "CreateABAConf: failed signing abaconf msg")
+		panic(err)
 	}
 
-	signedMsg := &specalea.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+	signedMsg := &messages.SignedMessage{
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
+		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
 }

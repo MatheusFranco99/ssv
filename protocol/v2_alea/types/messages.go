@@ -2,7 +2,8 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
@@ -32,7 +33,7 @@ type EventMsg struct {
 }
 
 type TimeoutData struct {
-	Height qbft.Height
+	Height alea.Height
 }
 
 type ExecuteDutyData struct {

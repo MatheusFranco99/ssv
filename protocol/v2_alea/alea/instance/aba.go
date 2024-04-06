@@ -1,134 +1,59 @@
 package instance
 
 import (
-	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"fmt"
 
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	// "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 )
 
-func (i *Instance) StartAgreementComponent() error {
+func (i *Instance) StartABA() error {
 
-	for {
+	// Function identifier
+	i.State.AbaLogTag += 1
 
-		// check if it should stop performing agreement
-		if i.State.StopAgreement {
-			break
-		}
+	// logger
+	log := func(str string) {
 
-		// calculate the round leader (to get value to be decided on)
-		leader := i.config.GetProposerF()(i.State, specalea.Round(i.State.ACState.ACRound))
-
-		// get the local queue associated with the leader's id (create if there isn't one)
-		if _, exists := i.State.VCBCState.Queues[leader]; !exists {
-			i.State.VCBCState.Queues[leader] = specalea.NewVCBCQueue()
-		}
-		queue := i.State.VCBCState.Queues[leader]
-
-		// get the value of the queue with the lowest priority value
-		value, priority := queue.Peek()
-
-		// decide own vote
-		vote := byte(0)
-		if value == nil {
-			vote = byte(0)
-		} else {
-			vote = byte(1)
-		}
-
-		// start ABA protocol
-		result, err := i.StartABA(vote)
-		if err != nil {
-			return errors.Wrap(err, "failed to start ABA and get result")
-		}
-		if i.State.StopAgreement {
-			break
-		}
-
-		if result == 1 {
-			// if the protocol agreed on the value of the leader replica, deliver it
-
-			// if ABA decided 1 but own vote was 0, start recover mechanism to get VCBC messages not received from leader
-			if vote == 0 {
-				if !i.State.VCBCState.HasM(leader, priority) {
-					// create FILLGAP message
-					fillerContLen := i.State.FillerContainer.Len(i.State.AleaDefaultRound)
-					fillGapMsg, err := CreateFillGap(i.State, i.config, leader, priority)
-					if err != nil {
-						return errors.Wrap(err, "StartAgreementComponent: failed to create FillGap message")
-					}
-					i.Broadcast(fillGapMsg)
-					// wait for the value to be received
-					i.WaitFillGapResponse(leader, priority, fillerContLen)
-
-				}
-			}
-
-			// get decided value
-			value, priority = queue.Peek()
-
-			// remove the value from the queue and add it to S
-			queue.Dequeue()
-
-			i.State.Delivered.Enqueue(value, priority)
-
-			// return the value to the client
-			i.Deliver(value)
-		}
-		// increment the round number
-		i.State.ACState.IncrementRound()
-	}
-	return nil
-}
-
-func (i *Instance) WaitFillGapResponse(leader types.OperatorID, priority specalea.Priority, fillerContLen int) {
-	// gets the leader queue
-	queue := i.State.VCBCState.Queues[leader]
-	currentFillerNum := fillerContLen
-	for {
-		// if has the desired priority, returns
-		_, localPriority := queue.Peek()
-		if localPriority >= priority {
+		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return
 		}
-
-		// waits until a FILLER signal is received (actived on the uponFiller function)
-		for {
-			newLen := i.State.FillerContainer.Len(i.State.AleaDefaultRound)
-			if newLen > currentFillerNum {
-				currentFillerNum = newLen
-				break
-			}
-		}
+		i.logger.Debug("$$$$$$ UponStartAlea "+fmt.Sprint(i.State.AbaLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("ACRound", int(i.State.ACState.ACRound)))
 	}
-}
 
-func (i *Instance) StartABA(vote byte) (byte, error) {
-	// set ABA's input value
-	i.State.ACState.GetCurrentABAState().SetVInput(i.State.ACState.GetCurrentABAState().Round, vote)
+	log("start")
 
-	// broadcast INIT message with input vote
-	initMsg, err := CreateABAInit(i.State, i.config, vote, i.State.ACState.GetCurrentABAState().Round, i.State.ACState.ACRound)
+	if i.State.ACState.IsTerminated() {
+		log("ac terminated. quitting.")
+		return nil
+	}
+
+	acround := i.State.ACState.ACRound
+	leader := i.State.Share.Committee[int(acround)%len(i.State.Share.Committee)].OperatorID
+
+	log(fmt.Sprintf("leader: %v", int(leader)))
+
+	vote := byte(0)
+	if i.State.VCBCState.HasData(leader) {
+		vote = byte(1)
+	}
+	log(fmt.Sprintf("vote: %v", int(vote)))
+
+	initMsg, err := i.CreateABAInit(vote, specalea.FirstRound, acround)
 	if err != nil {
-		return byte(2), errors.Wrap(err, "StartABA: failed to create ABA Init message")
+		return errors.Wrap(err, "UponStartABA: failed to create ABA Init message")
 	}
+	log("created aba init")
+
+	aba := i.State.ACState.GetABA(acround)
+	abaround := aba.GetABARound(specalea.FirstRound)
+	abaround.SetSentInit(vote)
+	log("set sent init")
+
 	i.Broadcast(initMsg)
+	log("broadcasted aba init")
 
-	// update sent flag
-	i.State.ACState.GetCurrentABAState().SetSentInit(i.State.ACState.GetCurrentABAState().Round, vote, true)
-
-	// process own init msg
-	i.uponABAInit(initMsg)
-
-	// wait until channel Terminate receives a signal
-	for {
-		if i.State.ACState.GetCurrentABAState().Terminate || i.State.StopAgreement {
-			break
-		}
-	}
-
-	// i.State.ACState.GetCurrentABAState().Terminate = false
-
-	// returns the decided value
-	return i.State.ACState.GetCurrentABAState().Vdecided, nil
+	return nil
 }

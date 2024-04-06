@@ -5,16 +5,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
 )
 
 type SyncCommitteeRunner struct {
@@ -23,7 +25,7 @@ type SyncCommitteeRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck specqbft.ProposedValueCheckF
+	valCheck specalea.ProposedValueCheckF
 	logger   *zap.Logger
 }
 
@@ -34,7 +36,7 @@ func NewSyncCommitteeRunner(
 	beacon specssv.BeaconNode,
 	network specssv.Network,
 	signer spectypes.KeyManager,
-	valCheck specqbft.ProposedValueCheckF,
+	valCheck specalea.ProposedValueCheckF,
 ) Runner {
 	logger := logger.With(zap.String("validator", hex.EncodeToString(share.ValidatorPubKey)))
 	return &SyncCommitteeRunner{
@@ -54,6 +56,11 @@ func NewSyncCommitteeRunner(
 	}
 }
 
+
+func (r *SyncCommitteeRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
+}
+
 func (r *SyncCommitteeRunner) StartNewDuty(duty *spectypes.Duty) error {
 	return r.BaseRunner.baseStartNewDuty(r, duty)
 }
@@ -67,7 +74,7 @@ func (r *SyncCommitteeRunner) ProcessPreConsensus(signedMsg *specssv.SignedParti
 	return errors.New("no pre consensus sigs required for sync committee role")
 }
 
-func (r *SyncCommitteeRunner) ProcessConsensus(signedMsg *specqbft.SignedMessage) error {
+func (r *SyncCommitteeRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
 	decided, decidedValue, err := r.BaseRunner.baseConsensusMsgProcessing(r, signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -134,9 +141,9 @@ func (r *SyncCommitteeRunner) ProcessPostConsensus(signedMsg *specssv.SignedPart
 			ValidatorIndex:  r.GetState().DecidedValue.Duty.ValidatorIndex,
 			Signature:       specSig,
 		}
-		if err := r.GetBeaconNode().SubmitSyncMessage(msg); err != nil {
-			return errors.Wrap(err, "could not submit to Beacon chain reconstructed signed sync committee")
-		}
+		// if err := r.GetBeaconNode().SubmitSyncMessage(msg); err != nil {
+		// 	return errors.Wrap(err, "could not submit to Beacon chain reconstructed signed sync committee")
+		// }
 		r.logger.Debug("successfully submitted sync committee!", zap.Any("slot", msg.Slot),
 			zap.Any("height", r.BaseRunner.QBFTController.Height))
 	}
@@ -164,6 +171,7 @@ func (r *SyncCommitteeRunner) executeDuty(duty *spectypes.Duty) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get sync committee block root")
 	}
+	root = [32]byte{1}
 
 	input := &spectypes.ConsensusData{
 		Duty:                   duty,
@@ -196,7 +204,7 @@ func (r *SyncCommitteeRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *SyncCommitteeRunner) GetValCheckF() specqbft.ProposedValueCheckF {
+func (r *SyncCommitteeRunner) GetValCheckF() specalea.ProposedValueCheckF {
 	return r.valCheck
 }
 

@@ -1,7 +1,7 @@
 package tasks
 
 import (
-	"github.com/MatheusFranco99/ssv/protocol/v2/queue"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/queue"
 	"sync"
 	"time"
 )

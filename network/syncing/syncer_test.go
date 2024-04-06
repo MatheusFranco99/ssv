@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/network/syncing"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,7 @@ func (m *mockSyncer) SyncHighestDecided(ctx context.Context, id spectypes.Messag
 	return nil
 }
 
-func (m *mockSyncer) SyncDecidedByRange(ctx context.Context, id spectypes.MessageID, from specqbft.Height, to specqbft.Height, handler syncing.MessageHandler) error {
+func (m *mockSyncer) SyncDecidedByRange(ctx context.Context, id spectypes.MessageID, from specalea.Height, to specalea.Height, handler syncing.MessageHandler) error {
 	return nil
 }
 

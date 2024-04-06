@@ -8,10 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	"github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 	"github.com/MatheusFranco99/ssv/utils/tasks"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -47,7 +48,7 @@ type Syncer interface {
 	SyncDecidedByRange(
 		ctx context.Context,
 		id spectypes.MessageID,
-		from, to specqbft.Height,
+		from, to specalea.Height,
 		handler MessageHandler,
 	) error
 }
@@ -57,9 +58,9 @@ type Network interface {
 	LastDecided(id spectypes.MessageID) ([]protocolp2p.SyncResult, error)
 	GetHistory(
 		id spectypes.MessageID,
-		from, to specqbft.Height,
+		from, to specalea.Height,
 		targets ...string,
-	) ([]protocolp2p.SyncResult, specqbft.Height, error)
+	) ([]protocolp2p.SyncResult, specalea.Height, error)
 }
 
 type syncer struct {
@@ -100,7 +101,7 @@ func (s *syncer) SyncHighestDecided(
 	}
 
 	results := protocolp2p.SyncResults(lastDecided)
-	results.ForEachSignedMessage(func(m *specqbft.SignedMessage) (stop bool) {
+	results.ForEachSignedMessage(func(m *messages.SignedMessage) (stop bool) {
 		if ctx.Err() != nil {
 			return true
 		}
@@ -122,7 +123,7 @@ func (s *syncer) SyncHighestDecided(
 func (s *syncer) SyncDecidedByRange(
 	ctx context.Context,
 	id spectypes.MessageID,
-	from, to qbft.Height,
+	from, to alea.Height,
 	handler MessageHandler,
 ) error {
 	if ctx.Err() != nil {
@@ -143,7 +144,7 @@ func (s *syncer) SyncDecidedByRange(
 		id,
 		from,
 		to,
-		func(sm *specqbft.SignedMessage) error {
+		func(sm *messages.SignedMessage) error {
 			raw, err := sm.Encode()
 			if err != nil {
 				logger.Debug("could not encode signed message", zap.Error(err))
@@ -168,13 +169,13 @@ func (s *syncer) getDecidedByRange(
 	ctx context.Context,
 	logger *zap.Logger,
 	mid spectypes.MessageID,
-	from, to specqbft.Height,
-	handler func(*specqbft.SignedMessage) error,
+	from, to specalea.Height,
+	handler func(*messages.SignedMessage) error,
 ) error {
 	const maxRetries = 2
 
 	var (
-		visited = make(map[specqbft.Height]struct{})
+		visited = make(map[specalea.Height]struct{})
 		msgs    []protocolp2p.SyncResult
 	)
 
@@ -191,7 +192,7 @@ func (s *syncer) getDecidedByRange(
 				return err
 			}
 			handled := 0
-			protocolp2p.SyncResults(msgs).ForEachSignedMessage(func(m *specqbft.SignedMessage) (stop bool) {
+			protocolp2p.SyncResults(msgs).ForEachSignedMessage(func(m *messages.SignedMessage) (stop bool) {
 				if ctx.Err() != nil {
 					return true
 				}
@@ -229,9 +230,9 @@ func (s *syncer) getDecidedByRange(
 func (s *syncer) formatSyncResults(msgs []protocolp2p.SyncResult) string {
 	var v []string
 	for _, m := range msgs {
-		var sm *specqbft.SignedMessage
+		var sm *messages.SignedMessage
 		if m.Msg.MsgType == spectypes.SSVConsensusMsgType {
-			sm = &specqbft.SignedMessage{}
+			sm = &messages.SignedMessage{}
 			if err := sm.Decode(m.Msg.Data); err != nil {
 				v = append(v, fmt.Sprintf("(%v)", err))
 				continue

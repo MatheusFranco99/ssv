@@ -5,17 +5,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
+	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	specssv "github.com/MatheusFranco99/ssv-spec-AleaBFT/ssv"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/qbft/controller"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/controller"
 )
 
 type ProposerRunner struct {
@@ -26,7 +27,7 @@ type ProposerRunner struct {
 	beacon   specssv.BeaconNode
 	network  specssv.Network
 	signer   spectypes.KeyManager
-	valCheck specqbft.ProposedValueCheckF
+	valCheck specalea.ProposedValueCheckF
 	logger   *zap.Logger
 }
 
@@ -37,7 +38,7 @@ func NewProposerRunner(
 	beacon specssv.BeaconNode,
 	network specssv.Network,
 	signer spectypes.KeyManager,
-	valCheck specqbft.ProposedValueCheckF,
+	valCheck specalea.ProposedValueCheckF,
 ) Runner {
 	logger := logger.With(zap.String("validator", hex.EncodeToString(share.ValidatorPubKey)))
 	return &ProposerRunner{
@@ -55,6 +56,10 @@ func NewProposerRunner(
 		valCheck: valCheck,
 		logger:   logger.With(zap.String("who", "ProposerRunner")),
 	}
+}
+
+func (r *ProposerRunner) SetSystemLoad(v int) {
+	r.BaseRunner.SetSystemLoad(v)
 }
 
 func (r *ProposerRunner) StartNewDuty(duty *spectypes.Duty) error {
@@ -113,7 +118,7 @@ func (r *ProposerRunner) ProcessPreConsensus(signedMsg *specssv.SignedPartialSig
 	return nil
 }
 
-func (r *ProposerRunner) ProcessConsensus(signedMsg *specqbft.SignedMessage) error {
+func (r *ProposerRunner) ProcessConsensus(signedMsg *messages.SignedMessage) error {
 	decided, decidedValue, err := r.BaseRunner.baseConsensusMsgProcessing(r, signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -294,7 +299,7 @@ func (r *ProposerRunner) GetState() *State {
 	return r.BaseRunner.State
 }
 
-func (r *ProposerRunner) GetValCheckF() specqbft.ProposedValueCheckF {
+func (r *ProposerRunner) GetValCheckF() specalea.ProposedValueCheckF {
 	return r.valCheck
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 var (

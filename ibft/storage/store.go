@@ -6,7 +6,7 @@ import (
 	"log"
 	"sync"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -15,7 +15,7 @@ import (
 	"github.com/MatheusFranco99/ssv/ibft/storage/forks"
 	forksfactory "github.com/MatheusFranco99/ssv/ibft/storage/forks/factory"
 	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
-	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	aleastorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
@@ -48,7 +48,7 @@ type ibftStorage struct {
 }
 
 // New create new ibft storage
-func New(db basedb.IDb, logger *zap.Logger, prefix string, forkVersion forksprotocol.ForkVersion) qbftstorage.QBFTStore {
+func New(db basedb.IDb, logger *zap.Logger, prefix string, forkVersion forksprotocol.ForkVersion) aleastorage.ALEAStore {
 	return &ibftStorage{
 		prefix:   []byte(prefix),
 		db:       db,
@@ -69,7 +69,7 @@ func (i *ibftStorage) OnFork(forkVersion forksprotocol.ForkVersion) error {
 }
 
 // GetHighestInstance returns the StoredInstance for the highest instance.
-func (i *ibftStorage) GetHighestInstance(identifier []byte) (*qbftstorage.StoredInstance, error) {
+func (i *ibftStorage) GetHighestInstance(identifier []byte) (*aleastorage.StoredInstance, error) {
 	val, found, err := i.get(highestInstanceKey, identifier[:])
 	if !found {
 		return nil, nil
@@ -77,26 +77,26 @@ func (i *ibftStorage) GetHighestInstance(identifier []byte) (*qbftstorage.Stored
 	if err != nil {
 		return nil, err
 	}
-	ret := &qbftstorage.StoredInstance{}
+	ret := &aleastorage.StoredInstance{}
 	if err := ret.Decode(val); err != nil {
 		return nil, errors.Wrap(err, "could not decode instance")
 	}
 	return ret, nil
 }
 
-func (i *ibftStorage) SaveInstance(instance *qbftstorage.StoredInstance) error {
+func (i *ibftStorage) SaveInstance(instance *aleastorage.StoredInstance) error {
 	return i.saveInstance(instance, true, false)
 }
 
-func (i *ibftStorage) SaveHighestInstance(instance *qbftstorage.StoredInstance) error {
+func (i *ibftStorage) SaveHighestInstance(instance *aleastorage.StoredInstance) error {
 	return i.saveInstance(instance, false, true)
 }
 
-func (i *ibftStorage) SaveHighestAndHistoricalInstance(instance *qbftstorage.StoredInstance) error {
+func (i *ibftStorage) SaveHighestAndHistoricalInstance(instance *aleastorage.StoredInstance) error {
 	return i.saveInstance(instance, true, true)
 }
 
-func (i *ibftStorage) saveInstance(instance *qbftstorage.StoredInstance, toHistory, asHighest bool) error {
+func (i *ibftStorage) saveInstance(instance *aleastorage.StoredInstance, toHistory, asHighest bool) error {
 	value, err := instance.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode instance")
@@ -123,7 +123,7 @@ func (i *ibftStorage) saveInstance(instance *qbftstorage.StoredInstance, toHisto
 }
 
 // GetInstance returns historical StoredInstance for the given identifier and height.
-func (i *ibftStorage) GetInstance(identifier []byte, height specqbft.Height) (*qbftstorage.StoredInstance, error) {
+func (i *ibftStorage) GetInstance(identifier []byte, height specalea.Height) (*aleastorage.StoredInstance, error) {
 	i.forkLock.RLock()
 	defer i.forkLock.RUnlock()
 
@@ -134,7 +134,7 @@ func (i *ibftStorage) GetInstance(identifier []byte, height specqbft.Height) (*q
 	if err != nil {
 		return nil, err
 	}
-	ret := &qbftstorage.StoredInstance{}
+	ret := &aleastorage.StoredInstance{}
 	if err := ret.Decode(val); err != nil {
 		return nil, errors.Wrap(err, "could not decode instance")
 	}
@@ -142,11 +142,11 @@ func (i *ibftStorage) GetInstance(identifier []byte, height specqbft.Height) (*q
 }
 
 // GetInstancesInRange returns historical StoredInstance's in the given range.
-func (i *ibftStorage) GetInstancesInRange(identifier []byte, from specqbft.Height, to specqbft.Height) ([]*qbftstorage.StoredInstance, error) {
+func (i *ibftStorage) GetInstancesInRange(identifier []byte, from specalea.Height, to specalea.Height) ([]*aleastorage.StoredInstance, error) {
 	i.forkLock.RLock()
 	defer i.forkLock.RUnlock()
 
-	instances := make([]*qbftstorage.StoredInstance, 0)
+	instances := make([]*aleastorage.StoredInstance, 0)
 
 	for seq := from; seq <= to; seq++ {
 		instance, err := i.GetInstance(identifier, seq)

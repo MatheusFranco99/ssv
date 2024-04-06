@@ -7,7 +7,7 @@ import (
 
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 // SSVShare is a combination of spectypes.Share and its Metadata.

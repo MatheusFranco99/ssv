@@ -6,11 +6,12 @@ import (
 
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"go.uber.org/zap"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
+	aleastorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 )
 
 // HandleDecidedQuery handles TypeDecided queries.
-func HandleDecidedQuery(logger *zap.Logger, qbftStorage qbftstorage.QBFTStore, nm *NetworkMessage) {
+func HandleDecidedQuery(logger *zap.Logger, qbftStorage aleastorage.ALEAStore, nm *NetworkMessage) {
 	logger.Debug("handles decided request",
 		zap.Uint64("from", nm.Msg.Filter.From),
 		zap.Uint64("to", nm.Msg.Filter.To),
@@ -38,14 +39,14 @@ func HandleDecidedQuery(logger *zap.Logger, qbftStorage qbftstorage.QBFTStore, n
 	}
 
 	msgID := spectypes.NewMsgID(pkRaw, message.BeaconRoleFromString(string(nm.Msg.Filter.Role)))
-	from := specqbft.Height(nm.Msg.Filter.From)
-	to := specqbft.Height(nm.Msg.Filter.To)
+	from := specalea.Height(nm.Msg.Filter.From)
+	to := specalea.Height(nm.Msg.Filter.To)
 	instances, err := qbftStorage.GetInstancesInRange(msgID[:], from, to)
 	if err != nil {
 		logger.Warn("failed to get instances", zap.Error(err))
 		res.Data = []string{"internal error - could not get decided messages"}
 	} else {
-		msgs := make([]*specqbft.SignedMessage, 0, len(instances))
+		msgs := make([]*messages.SignedMessage, 0, len(instances))
 		for _, instance := range instances {
 			msgs = append(msgs, instance.DecidedMessage)
 		}

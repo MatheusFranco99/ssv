@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func TestSSVMsgID(t *testing.T) {
 		msgData := `{"message":{"type":3,"round":1,"identifier":"OTFiZGZjOWQxYzU4NzZkYTEwY...","height":28276,"value":"mB0aAAAAAAA4AAAAAAAAADpTC1djq..."},"signature":"jrB0+Z9zyzzVaUpDMTlCt6Om9mj...","signer_ids":[2,3,4]}`
 		msg := spectypes.SSVMessage{
 			MsgType: spectypes.SSVConsensusMsgType,
-			MsgID:   specqbft.ControllerIdToMessageID([]byte("OTFiZGZjOWQxYzU4NzZkYTEwY")),
+			MsgID:   specalea.ControllerIdToMessageID([]byte("OTFiZGZjOWQxYzU4NzZkYTEwY")),
 			Data:    []byte(msgData),
 		}
 		raw, err := msg.Encode()

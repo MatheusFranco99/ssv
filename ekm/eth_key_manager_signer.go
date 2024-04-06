@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"sync"
 
+	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	apiv1bbellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
@@ -11,18 +12,17 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/eth2-key-manager"
+	eth2keymanager "github.com/bloxapp/eth2-key-manager"
 	"github.com/bloxapp/eth2-key-manager/core"
 	"github.com/bloxapp/eth2-key-manager/signer"
 	slashingprotection "github.com/bloxapp/eth2-key-manager/slashing_protection"
 	"github.com/bloxapp/eth2-key-manager/wallets"
-	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	"github.com/ferranbt/fastssz"
+	ssz "github.com/ferranbt/fastssz"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 

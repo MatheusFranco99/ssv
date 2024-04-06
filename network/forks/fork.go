@@ -6,7 +6,7 @@ import (
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/protocol"
 
-	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	p2pprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 )
 
 // Fork is an interface for network specific fork implementations

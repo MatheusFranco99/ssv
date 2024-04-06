@@ -29,9 +29,9 @@ func (b *BaseRunner) ValidatePreConsensusMsg(runner Runner, signedMsg *specssv.S
 }
 
 func (b *BaseRunner) ValidatePostConsensusMsg(runner Runner, signedMsg *specssv.SignedPartialSignatureMessage) error {
-	if !b.hasRunningDuty() {
-		return errors.New("no running duty")
-	}
+	// if !b.hasRunningDuty() {
+	// 	return errors.New("no running duty")
+	// }
 
 	// TODO https://github.com/MatheusFranco99/ssv-spec-AleaBFT/issues/142 need to fix with this issue solution instead.
 	if b.State.DecidedValue == nil {

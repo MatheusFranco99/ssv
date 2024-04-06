@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const bufSize = 1024
+const bufSize = 16384
 
 func newMessageRouter(logger *zap.Logger, msgID forks.MsgIDFunc) *messageRouter {
 	return &messageRouter{

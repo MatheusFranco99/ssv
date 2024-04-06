@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/MatheusFranco99/ssv/beacon/goclient"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 //go:generate mockgen -package=mocks -destination=./mocks/fetcher.go -source=./fetcher.go

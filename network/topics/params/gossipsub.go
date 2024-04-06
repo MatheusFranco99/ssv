@@ -7,9 +7,9 @@ import (
 
 var (
 	// gsD topic stable mesh target count
-	gsD = 8
+	gsD = 3
 	// gsDlo topic stable mesh low watermark
-	gsDlo = 6
+	gsDlo = 3
 	// gsDhi topic stable mesh high watermark
 	gsDhi = 12
 
@@ -40,6 +40,7 @@ func GossipSubParams() pubsub.GossipSubParams {
 	params.HistoryGossip = gsMcacheGossip
 	params.MaxIHaveLength = gsMaxIHaveLength
 	params.MaxIHaveMessages = gsMaxIHaveMessages
+	params.Dout = 0
 
 	return params
 }

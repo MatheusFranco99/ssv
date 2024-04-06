@@ -4,7 +4,7 @@ import (
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 
-	qbftstorage "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	aleastorage "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
 )
 
 type signing interface {
@@ -23,7 +23,7 @@ type IConfig interface {
 	// GetNetwork returns a p2p Network instance
 	GetNetwork() specalea.Network
 	// GetStorage returns a storage instance
-	GetStorage() qbftstorage.QBFTStore
+	GetStorage() aleastorage.ALEAStore
 	// GetTimer returns round timer
 	GetTimer() specalea.Timer
 	// GetCoinF returns a shared coin
@@ -36,7 +36,7 @@ type Config struct {
 	Domain      spectypes.DomainType
 	ValueCheckF specalea.ProposedValueCheckF
 	ProposerF   specalea.ProposerF
-	Storage     qbftstorage.QBFTStore
+	Storage     aleastorage.ALEAStore
 	Network     specalea.Network
 	Timer       specalea.Timer
 	CoinF       specalea.CoinF
@@ -73,7 +73,7 @@ func (c *Config) GetNetwork() specalea.Network {
 }
 
 // GetStorage returns a storage instance
-func (c *Config) GetStorage() qbftstorage.QBFTStore {
+func (c *Config) GetStorage() aleastorage.ALEAStore {
 	return c.Storage
 }
 

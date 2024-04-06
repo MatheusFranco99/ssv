@@ -7,10 +7,10 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/MatheusFranco99/ssv/protocol/v2/message"
-	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2/p2p"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/message"
+	protocolp2p "github.com/MatheusFranco99/ssv/protocol/v2_alea/p2p"
 
-	specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
+	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -233,7 +233,7 @@ func (m *mockNetwork) Broadcast(msg *spectypes.SSVMessage) error {
 	return nil
 }
 
-func (m *mockNetwork) GetHistory(mid spectypes.MessageID, from, to specqbft.Height, targets ...string) ([]protocolp2p.SyncResult, specqbft.Height, error) {
+func (m *mockNetwork) GetHistory(mid spectypes.MessageID, from, to specalea.Height, targets ...string) ([]protocolp2p.SyncResult, specalea.Height, error) {
 	return nil, 0, nil
 }
 
@@ -287,11 +287,11 @@ func (m *mockNetwork) SyncHighestDecided(mid spectypes.MessageID) error {
 	return nil
 }
 
-func (m *mockNetwork) SyncDecidedByRange(identifier spectypes.MessageID, to, from specqbft.Height) {
+func (m *mockNetwork) SyncDecidedByRange(identifier spectypes.MessageID, to, from specalea.Height) {
 	//TODO implement me
 }
 
-func (m *mockNetwork) SyncHighestRoundChange(mid spectypes.MessageID, height specqbft.Height) error {
+func (m *mockNetwork) SyncHighestRoundChange(mid spectypes.MessageID, height specalea.Height) error {
 	spk := hex.EncodeToString(mid.GetPubKey())
 	topic := spk
 

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 	"github.com/bloxapp/eth2-key-manager/core"
 
 	"github.com/MatheusFranco99/ssv/operator/duties/mocks"
-	"github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 )
 
 func TestDutyFetcher_GetDuties(t *testing.T) {

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-	qbftstorage "github.com/MatheusFranco99/ssv/ibft/storage"
+	aleastorage "github.com/MatheusFranco99/ssv/ibft/storage"
 	"github.com/MatheusFranco99/ssv/operator/fee_recipient"
 	"github.com/MatheusFranco99/ssv/operator/slot_ticker"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -21,8 +21,8 @@ import (
 	"github.com/MatheusFranco99/ssv/operator/storage"
 	"github.com/MatheusFranco99/ssv/operator/validator"
 	forksprotocol "github.com/MatheusFranco99/ssv/protocol/forks"
-	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2/blockchain/beacon"
-	qbftstorageprotocol "github.com/MatheusFranco99/ssv/protocol/v2/qbft/storage"
+	aleastorageprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/storage"
+	beaconprotocol "github.com/MatheusFranco99/ssv/protocol/v2_alea/blockchain/beacon"
 	"github.com/MatheusFranco99/ssv/storage/basedb"
 )
 
@@ -65,7 +65,7 @@ type operatorNode struct {
 	beacon           beaconprotocol.Beacon
 	net              network.P2PNetwork
 	storage          storage.Storage
-	qbftStorage      qbftstorageprotocol.QBFTStore
+	qbftStorage      aleastorageprotocol.ALEAStore
 	eth1Client       eth1.Client
 	dutyCtrl         duties.DutyController
 	feeRecipientCtrl fee_recipient.RecipientController
@@ -79,7 +79,7 @@ type operatorNode struct {
 
 // New is the constructor of operatorNode
 func New(opts Options) Node {
-	qbftStorage := qbftstorage.New(opts.DB, opts.Logger, spectypes.BNRoleAttester.String(), opts.ForkVersion)
+	qbftStorage := aleastorage.New(opts.DB, opts.Logger, spectypes.BNRoleAttester.String(), opts.ForkVersion)
 	ticker := slot_ticker.NewTicker(opts.Context, opts.Logger, opts.ETHNetwork, phase0.Epoch(opts.GenesisEpoch))
 
 	node := &operatorNode{

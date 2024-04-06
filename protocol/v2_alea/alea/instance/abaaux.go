@@ -1,141 +1,184 @@
 package instance
 
 import (
+	"fmt"
+
 	specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
+	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
-func (i *Instance) uponABAAux(signedABAAux *specalea.SignedMessage) error {
+func (i *Instance) uponABAAux(signedABAAux *messages.SignedMessage) error {
 
-	// get message Data
+	// Decode
 	ABAAuxData, err := signedABAAux.Message.GetABAAuxData()
 	if err != nil {
 		return errors.Wrap(err, "uponABAAux: could not get ABAAuxData from signedABAAux")
 	}
 
-	// old message -> ignore
-	if ABAAuxData.ACRound < i.State.ACState.ACRound {
-		return nil
-	}
-	if ABAAuxData.Round < i.State.ACState.GetCurrentABAState().Round {
-		return nil
-	}
-
-	// if future round -> intialize future state
-	if ABAAuxData.ACRound > i.State.ACState.ACRound {
-		i.State.ACState.InitializeRound(ABAAuxData.ACRound)
-	}
-	if ABAAuxData.Round > i.State.ACState.GetABAState(ABAAuxData.ACRound).Round {
-		i.State.ACState.GetABAState(ABAAuxData.ACRound).InitializeRound(ABAAuxData.Round)
-	}
-
-	abaState := i.State.ACState.GetABAState(ABAAuxData.ACRound)
-
-	// add the message to the containers
-	abaState.ABAAuxContainer.AddMsg(signedABAAux)
-
-	// sender
+	// Sender
 	senderID := signedABAAux.GetSigners()[0]
+	acround := ABAAuxData.ACRound
+	vote := ABAAuxData.Vote
+	round := ABAAuxData.Round
 
-	alreadyReceived := abaState.HasAux(ABAAuxData.Round, senderID, ABAAuxData.Vote)
+	// Funciton identifier
+	i.State.AbaAuxLogTag += 1
 
-	// if never received this msg, increment counter
-	if !alreadyReceived {
-		abaState.SetAux(ABAAuxData.Round, senderID, ABAAuxData.Vote)
+	// logger
+	log := func(str string) {
 
+		if i.State.HideLogs || i.State.DecidedLogOnly {
+			return
+		}
+		i.logger.Debug("$$$$$$ UponABAAux "+fmt.Sprint(i.State.AbaAuxLogTag)+": "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("acround", int(acround)), zap.Int("sender", int(senderID)), zap.Int("round", int(round)), zap.Int("vote", int(vote)))
 	}
 
-	// if received 2f+1 AUX messages, try to send CONF
-	if (abaState.CountAux(ABAAuxData.Round, 0)+abaState.CountAux(ABAAuxData.Round, 1)) >= i.State.Share.Quorum && !abaState.SentConf(ABAAuxData.Round) {
+	log("start")
 
-		q := abaState.CountAuxInValues(ABAAuxData.Round)
+	if i.State.ACState.IsTerminated() {
+		log("ac terminated. quitting.")
+		return nil
+	}
 
-		if q < i.State.Share.Quorum {
-			return nil
-		}
+	if i.initTime == -1 {
+		i.initTime = makeTimestamp()
+	}
 
-		// broadcast CONF message
-		confMsg, err := CreateABAConf(i.State, i.config, abaState.Values[ABAAuxData.Round], ABAAuxData.Round, ABAAuxData.ACRound)
+	if i.State.ACState.CurrentACRound() > acround {
+		log("old acround. quitting.")
+		return nil
+	}
+
+	if i.State.ACState.GetABA(acround).CurrentRound() > round {
+		log("old aba round. quitting.")
+		return nil
+	}
+
+	aba := i.State.ACState.GetABA(acround)
+	abaround := aba.GetABARound(round)
+
+	abaround.AddAux(vote, senderID)
+	log("added aux")
+
+	if i.State.ACState.CurrentACRound() < acround {
+		log("future aba. quitting.")
+		return nil
+	}
+	if aba.CurrentRound() < round {
+		log("future aba round. quitting.")
+		return nil
+	}
+
+	if abaround.HasSentConf() {
+		log("already sent conf. quitting.")
+		return nil
+	}
+
+	if abaround.LenAux() >= int(i.State.Share.Quorum) {
+		log("got aux quorum.")
+
+		confValues := abaround.GetConfValues()
+		log(fmt.Sprintf("conf values: %v", confValues))
+
+		confMsg, err := i.CreateABAConf(confValues, round, acround)
 		if err != nil {
 			return errors.Wrap(err, "uponABAAux: failed to create ABA Conf message after strong support")
 		}
-		i.Broadcast(confMsg)
+		log("created aba conf")
 
-		// update sent flag
-		abaState.SetSentConf(ABAAuxData.Round, true)
-		// process own conf msg
-		i.uponABAConf(confMsg)
+		i.Broadcast(confMsg)
+		log("broadcasted")
+
+		abaround.SetSentConf()
+		log("set sent conf")
 	}
 
+	log("finish")
 	return nil
 }
 
 func isValidABAAux(
-	state *specalea.State,
+	state *messages.State,
 	config alea.IConfig,
-	signedMsg *specalea.SignedMessage,
+	signedMsg *messages.SignedMessage,
 	valCheck specalea.ProposedValueCheckF,
 	operators []*types.Operator,
+	logger *zap.Logger,
 ) error {
-	if signedMsg.Message.MsgType != specalea.ABAAuxMsgType {
+
+	// logger
+	log := func(str string) {
+
+		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
+			return
+		}
+		logger.Debug("$$$$$$ UponMV_ABAAux : "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()))
+	}
+
+	log("start")
+
+	if signedMsg.Message.MsgType != messages.ABAAuxMsgType {
 		return errors.New("msg type is not ABAAuxMsgType")
 	}
+	log("checked msg type")
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
+	log("checked height")
 	if len(signedMsg.GetSigners()) != 1 {
 		return errors.New("msg allows 1 signer")
 	}
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		return errors.Wrap(err, "msg signature invalid")
-	}
+	log("checked signers == 1")
 
 	ABAAuxData, err := signedMsg.Message.GetABAAuxData()
+	log("got data")
+
 	if err != nil {
 		return errors.Wrap(err, "could not get ABAAuxData data")
 	}
 	if err := ABAAuxData.Validate(); err != nil {
 		return errors.Wrap(err, "ABAAuxData invalid")
 	}
-
-	// vote
-	vote := ABAAuxData.Vote
-	if vote != 0 && vote != 1 {
-		return errors.New("vote different than 0 and 1")
-	}
+	log("validated")
 
 	return nil
 }
 
-func CreateABAAux(state *specalea.State, config alea.IConfig, vote byte, round specalea.Round, acRound specalea.ACRound) (*specalea.SignedMessage, error) {
-	ABAAuxData := &specalea.ABAAuxData{
+func (i *Instance) CreateABAAux(vote byte, round specalea.Round, acround specalea.ACRound) (*messages.SignedMessage, error) {
+
+	state := i.State
+
+	ABAAuxData := &messages.ABAAuxData{
 		Vote:    vote,
 		Round:   round,
-		ACRound: acRound,
+		ACRound: acround,
 	}
 	dataByts, err := ABAAuxData.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "CreateABAAux: could not encode abaaux data")
 	}
-	msg := &specalea.Message{
-		MsgType:    specalea.ABAAuxMsgType,
+	msg := &messages.Message{
+		MsgType:    messages.ABAAuxMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
+	sig, hash_map, err := i.Sign(msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "CreateABAAux: failed signing abaaux msg")
+		panic(err)
 	}
 
-	signedMsg := &specalea.SignedMessage{
-		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.OperatorID},
-		Message:   msg,
+	signedMsg := &messages.SignedMessage{
+		Signature:          sig,
+		Signers:            []types.OperatorID{state.Share.OperatorID},
+		Message:            msg,
+		DiffieHellmanProof: hash_map,
 	}
 	return signedMsg, nil
 }

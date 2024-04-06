@@ -122,6 +122,60 @@ docker-local:
 	@echo "nodes $(NODES)"
 	@docker-compose -f docker-compose-local.yaml up --build $(NODES)
 
+# NODES=ssv-node-1
+# .PHONY: docker-local1
+# docker-local1:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-1.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2
+# .PHONY: docker-local2
+# docker-local2:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-2.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7 ssv-node-8
+# .PHONY: docker-local8
+# docker-local8:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-8.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7
+# .PHONY: docker-local7
+# docker-local7:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-7.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7 ssv-node-8 ssv-node-9 ssv-node-10
+# .PHONY: docker-local10
+# docker-local10:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-10.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7 ssv-node-8 ssv-node-9 ssv-node-10 ssv-node-11 ssv-node-12 ssv-node-13
+# .PHONY: docker-local13
+# docker-local13:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-13.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7 ssv-node-8 ssv-node-9 ssv-node-10 ssv-node-11 ssv-node-12 ssv-node-13 ssv-node-14 ssv-node-15 ssv-node-16 ssv-node-17 ssv-node-18 ssv-node-19
+# .PHONY: docker-local19
+# docker-local19:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-19.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7 ssv-node-8 ssv-node-9 ssv-node-10 ssv-node-11 ssv-node-12 ssv-node-13 ssv-node-14 ssv-node-15 ssv-node-16 ssv-node-17 ssv-node-18 ssv-node-19 ssv-node-20 ssv-node-21 ssv-node-22 ssv-node-23 ssv-node-24 ssv-node-25 ssv-node-26 ssv-node-27 ssv-node-28 ssv-node-29 ssv-node-30 ssv-node-31
+# .PHONY: docker-local31
+# docker-local31:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-31.yaml up --build $(NODES)
+
+# NODES=ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4 ssv-node-5 ssv-node-6 ssv-node-7 ssv-node-8 ssv-node-9 ssv-node-10 ssv-node-11 ssv-node-12 ssv-node-13 ssv-node-14 ssv-node-15 ssv-node-16
+# .PHONY: docker-local16
+# docker-local16:
+# 	@echo "nodes $(NODES)"
+# 	@docker-compose -f docker-compose-local-16.yaml up --build $(NODES)
+
 DEBUG_NODES=ssv-node-1-dev ssv-node-2-dev ssv-node-3-dev ssv-node-4-dev
 .PHONY: docker-debug
 docker-debug:
