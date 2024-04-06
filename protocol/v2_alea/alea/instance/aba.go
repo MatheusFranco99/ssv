@@ -11,7 +11,7 @@ import (
 
 func (i *Instance) StartABA() error {
 
-	//funciton identifier
+	// Function identifier
 	i.State.AbaLogTag += 1
 
 	// logger
@@ -32,12 +32,7 @@ func (i *Instance) StartABA() error {
 
 	acround := i.State.ACState.ACRound
 	leader := i.State.Share.Committee[int(acround)%len(i.State.Share.Committee)].OperatorID
-	// opIDList := make([]types.OperatorID, len(i.State.Share.Committee))
-	// for idx, op := range i.State.Share.Committee {
-	// 	opIDList[idx] = op.OperatorID
-	// }
-	// leader := opIDList[(acround)%len(opIDList)]
-	// i.config.GetProposerF()(i.State, specalea.Round(i.State.ACState.ACRound))
+
 	log(fmt.Sprintf("leader: %v", int(leader)))
 
 	vote := byte(0)
@@ -59,15 +54,6 @@ func (i *Instance) StartABA() error {
 
 	i.Broadcast(initMsg)
 	log("broadcasted aba init")
-
-	// specialVoteMsg, err := CreateABASpecialVote(i.State, i.config, vote, acround)
-	// if err != nil {
-	// 	return errors.Wrap(err, "UponStartABA: failed to create ABA special vote message")
-	// }
-	// log("created aba special vote")
-
-	// i.Broadcast(specialVoteMsg)
-	// log("broadcasted aba special vote")
 
 	return nil
 }

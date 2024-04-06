@@ -16,18 +16,18 @@ import (
 
 func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error { //(bool, []byte, error) {
 
-	// get data
+	// Decode
 	ABAFinishData, err := signedABAFinish.Message.GetABAFinishData()
 	if err != nil {
 		return errors.Wrap(err, "uponABAFinish: could not get ABAFinishData from signedABAConf")
 	}
 
-	// sender
+	// Sender
 	senderID := signedABAFinish.GetSigners()[0]
 	acround := ABAFinishData.ACRound
 	vote := ABAFinishData.Vote
 
-	//funciton identifier
+	// Funciton identifier
 	i.State.AbaFinishLogTag += 1
 
 	// logger
@@ -103,12 +103,6 @@ func (i *Instance) uponABAFinish(signedABAFinish *messages.SignedMessage) error 
 
 		if int(vote) == 1 {
 
-			// acround := int(i.State.ACState.ACRound)
-			// opIDList := make([]types.OperatorID, len(i.State.Share.Committee))
-			// for idx, op := range i.State.Share.Committee {
-			// 	opIDList[idx] = op.OperatorID
-			// }
-			// leader := opIDList[(acround)%len(opIDList)]
 			leader := i.State.Share.Committee[int(acround)%len(i.State.Share.Committee)].OperatorID
 			log("recalculated leader")
 
@@ -188,15 +182,6 @@ func isValidABAFinish(
 		return errors.Wrap(err, "ABAFinishData invalid")
 	}
 	log("validated")
-
-	// Signature will be checked outside
-	// counter := state.AbaFinishCounter
-	// data := ABAFinishData
-	// counter[data.ACRound] += 1
-	// if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound] == state.Share.Quorum || counter[data.ACRound] == state.Share.PartialQuorum) {
-	// 	Verify(state, config, signedMsg, operators)
-	// 	log("checked signature")
-	// }
 
 	return nil
 }

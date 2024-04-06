@@ -10,6 +10,7 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Microsecond)
 }
 
+// Timer util to log performance
 type Timer struct{}
 
 var (

@@ -4,6 +4,9 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 )
 
+// BLS Behaviour:
+// - VCBC Final: verify the aggregated message
+// - Others: verify the single message
 func (i *Instance) BLSBehaviorProcessing(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 	if msg.Message.MsgType == messages.VCBCFinalMsgType {
 
@@ -19,14 +22,13 @@ func (i *Instance) BLSBehaviorProcessing(msg *messages.SignedMessage) (decided b
 	return i.ProcessMsgLogic(msg)
 }
 
+// BLS Aggregation Behaviour:
+// - VCBC Send: verify + process
+// - VCBC Ready, ABA Conf, CommonCoin: Wait for Quorum. Once quorum, verify then process
+// - VCBC Final: Wait quorum and then process each single msg
+// - ABA Init, Aux, Finish: Wait partial quorum and then quorum -> process each batch
 func (i *Instance) BLSAggBehaviorProcessing(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 
-	/*
-		VCBC Send: verify + process
-		VCBC Ready, Conf, CommonCoin: Wait for Quorum
-		VCBC Final: wait threshold and then process each single msg
-		ABA Init, Aux, Finish: Wait partial quorum and then quorum -> process batch of turns
-	*/
 	if msg.Message.MsgType == messages.VCBCSendMsgType {
 		i.Verify(msg)
 		return i.ProcessMsgLogic(msg)
@@ -111,34 +113,36 @@ func (i *Instance) BLSAggBehaviorProcessing(msg *messages.SignedMessage) (decide
 	}
 }
 
+// HMAC Behaviour:
+// - VCBC Final:
+//   - Wait quorum -> aggregate and BLS verify the aggregated msg fields + process batch
+//   - Post quorum -> BLS verify the aggregated msg + process msg logic
+//
+// - VCBC Ready: Wait for quorum and verify aggregated signature
+// - Others: Verify HMAC and process
 func (i *Instance) HMACBehaviorProcessing(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 
-	// If Final:
-	// 		i) Wait quorum -> aggregate and BLS verify the aggregated msg fields + process buffer o msgs
-	//		ii) post quorum -> BLS verify the aggregated msg + process msg logic
 	if msg.Message.MsgType == messages.VCBCFinalMsgType {
 
 		i.State.FinalContainer.AddMessage(msg)
 
 		return i.WaitVCBCFinal(i.State.FinalContainer, msg)
 
-		// If Ready -> Wait for quorum and verify aggregated signature
 	} else if msg.Message.MsgType == messages.VCBCReadyMsgType {
 
 		i.State.ReadyContainer.AddMessage(msg)
 
 		return i.WaitQuorum(i.State.ReadyContainer)
 
-		// Any other message type -> Verify (hmac) and process
 	} else {
 		i.Verify(msg)
 		return i.ProcessMsgLogic(msg)
 	}
 }
 
+// Mock for future testing
 func (i *Instance) RSABehaviorProcessing(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 	if msg.Message.MsgType == messages.VCBCFinalMsgType {
-		// simulate verifying a buffer of a quorum of messagaes
 		num_verifications := uint64(0)
 		for num_verifications < i.State.Share.Quorum {
 			i.Verify(msg)
@@ -150,7 +154,8 @@ func (i *Instance) RSABehaviorProcessing(msg *messages.SignedMessage) (decided b
 	return i.ProcessMsgLogic(msg)
 }
 
+// Mock for future testing
 func (i *Instance) EDDSABehaviorProcessing(msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
-	// Does the same thing as RSA
+	// Same behaviour as RSA
 	return i.RSABehaviorProcessing(msg)
 }

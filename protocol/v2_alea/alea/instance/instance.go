@@ -19,9 +19,6 @@ import (
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea"
 	"github.com/MatheusFranco99/ssv/protocol/v2_alea/alea/messages"
 
-	// specqbft "github.com/MatheusFranco99/ssv-spec-AleaBFT/qbft"
-	// spectypes "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
-
 	spectypesalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/types"
 	"github.com/pkg/errors"
 
@@ -30,12 +27,6 @@ import (
 
 var logger = logging.Logger("ssv/protocol/alea/instance").Desugar()
 
-// func makeTimestamp() int64 {
-// 	return time.Now().UnixNano() / int64(time.Microsecond)
-// }
-
-// Instance is a single QBFT instance that starts with a Start call (including a value).
-// Every new msg the ProcessMsg function needs to be called
 type Instance struct {
 	State  *messages.State
 	config alea.IConfig
@@ -74,27 +65,22 @@ func NewInstance(
 	bls, err := strconv.Atoi(os.Getenv("BLS"))
 	if err != nil {
 		bls = 1
-		// panic(err)
 	}
 	blsagg, err := strconv.Atoi(os.Getenv("BLSAGG"))
 	if err != nil {
 		blsagg = 0
-		// panic(err)
 	}
 	dh, err := strconv.Atoi(os.Getenv("DH"))
 	if err != nil {
 		dh = 0
-		// panic(err)
 	}
 	eddsa, err := strconv.Atoi(os.Getenv("EDDSA"))
 	if err != nil {
 		eddsa = 0
-		// panic(err)
 	}
 	rsa, err := strconv.Atoi(os.Getenv("RSA"))
 	if err != nil {
 		rsa = 0
-		// panic(err)
 	}
 
 	bls_f := (bls == 1)
@@ -214,9 +200,6 @@ func (i *Instance) Start(value []byte, height specalea.Height) {
 			}
 			i.logger.Debug("$$$$$$"+cGreen+" UponStart "+reset+"1: "+str+"$$$$$$", zap.Int64("time(micro)", makeTimestamp()), zap.Int("own operator id", int(i.State.Share.OperatorID)))
 		}
-
-		// log("starting alea instance")
-		// log(fmt.Sprintf("start %v %v %v",i.State.Share.Quorum, i.State.Share.PartialQuorum, len(i.State.Share.Committee)))
 
 		i.StartValue = value
 		i.State.Round = specalea.FirstRound

@@ -35,11 +35,6 @@ func (i *Instance) ValidateAndProcess(msg *messages.SignedMessage) (decided bool
 		return false, nil, nil, errors.New("past round")
 	}
 
-	// err := i.ValidateSemantics(msg)
-	// if err != nil {
-	// 	return false, nil, nil, errors.Wrap(err, "invalid message semantics")
-	// }
-
 	// Normal BLS
 	if i.State.UseBLS && !i.State.AggregateVerify {
 		return i.BLSBehaviorProcessing(msg)
@@ -61,13 +56,13 @@ func (i *Instance) CheckReadyFiter(msg *messages.SignedMessage) (bool, error) {
 
 	if msg.Message.MsgType == messages.VCBCReadyMsgType {
 
-		// get Data
+		// Decode
 		vcbcReadyData, err := msg.Message.GetVCBCReadyData()
 		if err != nil {
 			return true, errors.Wrap(err, "ProcessMsg: could not get vcbcReadyData data from signedMessage")
 		}
 
-		// get attributes
+		// Get attributes
 		author := vcbcReadyData.Author
 		if author != i.State.Share.OperatorID {
 			return true, nil

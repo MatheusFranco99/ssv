@@ -14,11 +14,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// uponCommonCoin process proposal message
-// Assumes message is valid!
+// UponCommonCoin process proposal message
 func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 
-	// get Data
+	// Decode
 	commonCoinData, err := signedMessage.Message.GetCommonCoinData()
 	if err != nil {
 		return errors.Wrap(err, "uponProposal: could not get proposal data from signedProposal")
@@ -27,7 +26,7 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 	shareSig := commonCoinData.ShareSign
 	senderID := signedMessage.GetSigners()[0]
 
-	//funciton identifier
+	// Funciton identifier
 	i.State.CommonCoinLogTag += 1
 
 	// logger
@@ -41,6 +40,7 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
+	// Start timer if not started
 	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
@@ -50,9 +50,11 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 		return nil
 	}
 
+	// Update state
 	i.State.CommonCoinContainer.AddSignature(senderID, shareSig)
 	log("added signature")
 
+	// Process quorum
 	if i.State.CommonCoinContainer.HasQuorum() {
 		log("got quorum")
 
@@ -62,6 +64,7 @@ func (i *Instance) uponCommonCoin(signedMessage *messages.SignedMessage) error {
 		}
 		log("recalculated root")
 
+		// Reconstruct
 		signature, err := i.State.CommonCoinContainer.ReconstructSignatureAndVerify(root.Value, i.State.Share.ValidatorPubKey)
 		if err != nil {
 			return errors.Wrap(err, "UponCommonCoin: error reconstructing signature")
@@ -99,12 +102,6 @@ func isValidCommonCoin(
 		return errors.New("msg allows 1 signer")
 	}
 
-	// Signature will be checked outside
-	// state.CommonCoinCounter += 1
-	// if !(state.UseBLS) || !(state.AggregateVerify) || (state.CommonCoinCounter == state.Share.Quorum) {
-	// 	Verify(state, config, signedMessage, operators)
-	// }
-
 	msgData, err := signedMessage.Message.GetCommonCoinData()
 	if err != nil {
 		return errors.Wrap(err, "could not get common coin data")
@@ -118,9 +115,6 @@ func isValidCommonCoin(
 
 func (i *Instance) SendCommonCoinShare() error {
 
-	//funciton identifier
-
-	// logger
 	log := func(str string) {
 		if i.State.HideLogs || i.State.DecidedLogOnly {
 			return

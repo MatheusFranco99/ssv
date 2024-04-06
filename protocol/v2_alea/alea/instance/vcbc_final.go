@@ -18,21 +18,21 @@ import (
 
 func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
-	// get Data
+	// Decode
 	vcbcFinalData, err := signedMessage.Message.GetVCBCFinalData()
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCFinal: could not get vcbcFinalData data from signedMessage")
 	}
 
-	// get sender ID
+	// Get attributes
 	senderID := signedMessage.GetSigners()[0]
 	hash := vcbcFinalData.Hash
 	aggregated_msg := vcbcFinalData.AggregatedMessage
 
-	//function identifier
+	// Function identifier
 	i.State.VCBCFinalLogTag += 1
 
-	// logger
+	// Logger
 	log := func(str string) {
 
 		if i.State.HideLogs || (i.State.DecidedLogOnly && !strings.Contains(str, "Total time")) {
@@ -44,25 +44,29 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
+	// Init time if not started before
 	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
 
+	// Check if has data
 	if !i.State.SentReadys.Has(senderID) {
 		log("does not have data")
 		return nil
 	}
 
 	data := i.State.SentReadys.Get(senderID)
-	// log("get data")
 
 	i.State.VCBCState.SetVCBCData(senderID, data, hash, aggregated_msg) //aggregatedSignature,nodeIDs)
 	log(fmt.Sprintf("%v saved vcbc data from %v", int(i.State.Share.OperatorID), int(senderID)))
 
+	// If decided and waiting for VCBC check if this is the VCBC you are waiting for
 	if i.State.WaitForVCBCAfterDecided {
+		// Check signer
 		if i.State.WaitForVCBCAfterDecided_Author == senderID {
 			log("it was waiting for such vcbc final to terminate")
 
+			// Decide instance
 			if !i.State.Decided {
 				i.finalTime = makeTimestamp()
 				diff := i.finalTime - i.initTime
@@ -72,6 +76,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 		}
 	}
 
+	// Check if all possible VCBCs were received and if they are equal
 	if i.State.EqualVCBCOptimization && i.State.VCBCState.GetLen() == int(len(i.State.Share.Committee)) {
 		log("received N VCBC Final")
 		if i.State.VCBCState.AllEqual() {
@@ -86,6 +91,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 		}
 	}
 
+	// Start ABA (if not started) and if reached quorum (if using this optimization)
 	if !i.State.StartedABA {
 		if !i.State.WaitVCBCQuorumOptimization || (i.State.VCBCState.GetLen() >= int(i.State.Share.Quorum)) {
 			log("launching ABA")
@@ -102,7 +108,7 @@ func (i *Instance) uponVCBCFinal(signedMessage *messages.SignedMessage) error {
 
 // Returns aggregated msg in vcbc final
 func GetAggregatedMessageFromVCBCFinal(msg *messages.SignedMessage) (*messages.SignedMessage, error) {
-	// get Data
+	// Decode
 	vcbcFinalData, err := msg.Message.GetVCBCFinalData()
 	if err != nil {
 		return nil, errors.Wrap(err, "GetAggregatedMessageFromVCBCFinal: could not get vcbcFinalData data from signedMessage")
@@ -144,10 +150,6 @@ func isValidVCBCFinal(
 	}
 	log("checked signers == 1")
 
-	// Signature will be verified outside
-	// Verify(state, config, signedMsg, operators)
-	// log("checked signature")
-
 	VCBCFinalData, err := signedMsg.Message.GetVCBCFinalData()
 	log("got data")
 	if err != nil {
@@ -157,15 +159,6 @@ func isValidVCBCFinal(
 		return errors.Wrap(err, "VCBCFinalData invalid")
 	}
 	log("validated")
-
-	// !Below is commented because it was verifying this signature twice
-	// aggregated_msg := VCBCFinalData.AggregatedMessage
-
-	// verify signature
-	// if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-	// 	return errors.Wrap(err, "aggregated msg signature invalid")
-	// }
-	// log("checked aggregated message")
 
 	return nil
 }

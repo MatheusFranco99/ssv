@@ -31,9 +31,6 @@ func (ps *PSigContainer) ReconstructSignature(root []byte, validatorPubKey []byt
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to reconstruct signatures")
 	}
-	// if err := types.VerifyReconstructedSignature(signature, validatorPubKey, root); err != nil {
-	// 	// return nil, errors.Wrap(err, "failed to verify reconstruct signature")
-	// }
 	return signature.Serialize(), nil
 }
 
@@ -43,15 +40,12 @@ func (ps *PSigContainer) ReconstructSignatureAndVerify(root []byte, validatorPub
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to reconstruct signatures")
 	}
-	// if err := types.VerifyReconstructedSignature(signature, validatorPubKey, root); err != nil {
-	// 	return nil, errors.Wrap(err, "failed to verify reconstruct signature")
-	// }
 	return signature.Serialize(), nil
 }
 
 func (ps *PSigContainer) AggregateSignatures(validatorPubKey []byte) (types.Signature, error) {
 	// Reconstruct signatures
-	
+
 	var ans types.Signature
 	for _, signature := range ps.Signatures {
 		if ans == nil || len(ans) == 0 {

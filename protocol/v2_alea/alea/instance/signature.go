@@ -40,32 +40,36 @@ tAboUGBxTDq3ZroNism3DaMIbKPyYrAqhKov1h5V
 	RSASignature  = "8351441e84e57ed96080df8d19e5755901879a1672e791d63b90de872e609f2e7cf578813dda3a2fcf27474ee978ac5a8df5c29d65b69fb9ac244cf543627646500da0a4f2d825ca61fadf14dc7407e13cbebafc125a05ac5a321ab4210bff11063a846c1a587a981a43340e3599a2a51cf9c895854175e4b3b84a23c83d2b03a3831196b679669399c971afd1296a8bfc9e29bae66013f1bdb37872e504233beeaf3f068649a29c93b3e47a790e07736950ff34b674973e23ec965ba48d54bb904b41100665e9f40baad34960fb17f18de4115b0d0de59fe3830fb361af59c2e01b1ba886e58e3082cdc510a50a51da4ad6f7cbb25d5b36af3e166220a603ff"
 )
 
+// Sign depending on cryptography scheme
 func (i *Instance) Sign(msg *messages.Message) ([]byte, map[types.OperatorID][32]byte, error) {
 
 	state := i.State
 	config := i.config
 
 	sig := []byte{}
-	hash_map := make(map[types.OperatorID][32]byte)
+	hashMap := make(map[types.OperatorID][32]byte)
 	var err error
 	if state.UseBLS {
+		// Sign using BLS
 		sig, err = config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
 		if err != nil {
-			return sig, hash_map, errors.Wrap(err, "CreateVCBCSend: failed signing filler msg")
+			return sig, hashMap, errors.Wrap(err, "CreateVCBCSend: failed signing filler msg")
 		}
 	} else if state.UseDiffieHellman {
-		msg_bytes, err := msg.Encode()
+		// Use MAC
+		msgBytes, err := msg.Encode()
 		if err != nil {
-			return sig, hash_map, errors.Wrap(err, "CreateVCBCSend: failed to encode message")
+			return sig, hashMap, errors.Wrap(err, "CreateVCBCSend: failed to encode message")
 		}
-		hash_map = state.DiffieHellmanContainerOneTimeCost.GetHashMap(msg_bytes)
+		hashMap = state.DiffieHellmanContainerOneTimeCost.GetHashMap(msgBytes)
 	} else if state.UseEDDSA {
-		// sig = MockEDDSASignature()
+		// Future testing: try EDDSA scheme
 		sig, _ = MockEDDSASignature()
 	} else if state.UseRSA {
+		// Future testing: try RSA scheme
 		sig, _ = MockRSASigning()
 	}
-	return sig, hash_map, nil
+	return sig, hashMap, nil
 }
 
 func (i *Instance) Verify(signedMsg *messages.SignedMessage) error {
@@ -75,10 +79,12 @@ func (i *Instance) Verify(signedMsg *messages.SignedMessage) error {
 	operators := i.State.Share.Committee
 
 	if state.UseBLS {
+		// Verify BLS
 		if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 			return errors.Wrap(err, "msg signature invalid")
 		}
 	} else if state.UseDiffieHellman {
+		// Verify MAC
 		msg_bytes, err := signedMsg.Message.Encode()
 		if err != nil {
 			return errors.Wrap(err, "Could not encode message")
@@ -87,10 +93,12 @@ func (i *Instance) Verify(signedMsg *messages.SignedMessage) error {
 			return errors.New("Failed Diffie Hellman verification")
 		}
 	} else if state.UseEDDSA {
+		// Future testing: try EDDSA scheme
 		if !MockEDDSAVerification() {
 			return errors.New("Could not verify EDDSA signature")
 		}
 	} else if state.UseRSA {
+		// Future testing: try RSA scheme
 		return MockRSAVerification()
 	}
 	return nil
@@ -106,17 +114,16 @@ func (i *Instance) VerifyVCBCFinal(signedMsg *messages.SignedMessage) error {
 		return errors.Wrap(err, "VerifyVCBCFinal: could not get vcbcFinalData data from signedMessage")
 	}
 
-	// get sender ID
-	aggregated_msg := vcbcFinalData.AggregatedMessage
+	aggregatedMsg := vcbcFinalData.AggregatedMessage
 
-	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
+	if err := aggregatedMsg.Signature.VerifyByOperators(aggregatedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "msg signature invalid")
 	}
 	return nil
 }
 
 func (i *Instance) VerifyBLSAggregate(signedMsgs []*messages.SignedMessage) error {
-	aggregated_msg, err := aggregateMsgs(signedMsgs)
+	aggregatedMsg, err := aggregateMsgs(signedMsgs)
 	if err != nil {
 		return err
 	}
@@ -125,8 +132,7 @@ func (i *Instance) VerifyBLSAggregate(signedMsgs []*messages.SignedMessage) erro
 	operators := i.State.Share.Committee
 
 	// verify signature
-	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		// return nil
+	if err := aggregatedMsg.Signature.VerifyByOperators(aggregatedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "aggregated msg signature invalid")
 	}
 	return nil
@@ -137,7 +143,7 @@ func (i *Instance) VerifyBLSAggregateFinals(signedMsgs []*messages.SignedMessage
 	config := i.config
 	operators := i.State.Share.Committee
 
-	aggregate_msgs := make([]*messages.SignedMessage, len(signedMsgs))
+	aggregatedMsg := make([]*messages.SignedMessage, len(signedMsgs))
 	for i, _ := range signedMsgs {
 
 		aggregated_msg_i, err := GetAggregatedMessageFromVCBCFinal(signedMsgs[i])
@@ -145,21 +151,21 @@ func (i *Instance) VerifyBLSAggregateFinals(signedMsgs []*messages.SignedMessage
 			return errors.Wrap(err, "VerifyBLSAggregateFinals: could not get vcbcFinalData data from signedMessage")
 		}
 
-		aggregate_msgs[i] = aggregated_msg_i
+		aggregatedMsg[i] = aggregated_msg_i
 	}
-	aggregated_msg, err := aggregateMsgs(aggregate_msgs)
+	aggregated_msg, err := aggregateMsgs(aggregatedMsg)
 	if err != nil {
 		return err
 	}
 
-	// verify signature
+	// Verify signature
 	if err := aggregated_msg.Signature.VerifyByOperators(aggregated_msg, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
-		// return nil
 		return errors.Wrap(err, "aggregated msg signature invalid")
 	}
 	return nil
 }
 
+// Mock for future testing
 func MockEDDSASignature() ([]byte, error) {
 	// Parse the private key
 	privateKeyBytes, err := hex.DecodeString(Ed25519PrivateKey)
@@ -168,12 +174,13 @@ func MockEDDSASignature() ([]byte, error) {
 	}
 	privateKey := ed25519.PrivateKey(privateKeyBytes)
 
-	// Calculate the signature
+	// Sign
 	signature := ed25519.Sign(privateKey, data)
 
 	return signature, nil
 }
 
+// Mock for future testing
 func MockEDDSAVerification() bool {
 
 	publicKeyBytes, err := hex.DecodeString(Ed25519PublicKey)
@@ -186,16 +193,18 @@ func MockEDDSAVerification() bool {
 	}
 	publicKey := ed25519.PublicKey(publicKeyBytes)
 
-	// Verify the signature
+	// Verify
 	return ed25519.Verify(publicKey, data, signatureBytes)
 
 }
 
+// Mock for future testing
 func MockRSASigning() ([]byte, error) {
 	sign, err := rsa.SignPKCS1v15(rand.Reader, rsaPrivateKey, crypto.SHA256, rawDigest)
 	return sign, err
 }
 
+// Mock for future testing
 func MockRSAVerification() error {
 	return rsa.VerifyPKCS1v15(&rsaPrivateKey.PublicKey, crypto.SHA256, rawDigest, rawSig)
 }

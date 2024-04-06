@@ -18,13 +18,13 @@ import (
 
 func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
-	// get Data
+	// Decode
 	vcbcReadyData, err := signedMessage.Message.GetVCBCReadyData()
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: could not get vcbcReadyData data from signedMessage")
 	}
 
-	// get attributes
+	// Get attributes
 	hash := vcbcReadyData.Hash
 	author := vcbcReadyData.Author
 	if author != i.State.Share.OperatorID {
@@ -34,7 +34,7 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	i.State.VCBCReadyLogTag += 1
 
-	// logger
+	// Logger
 	log := func(str string) {
 
 		if i.State.HideLogs || i.State.DecidedLogOnly {
@@ -45,60 +45,58 @@ func (i *Instance) uponVCBCReady(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
+	// Start timer if not started before
 	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
 
-	own_hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(i.StartValue)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
+	// Verify if hash is correct
+	ownHash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(i.StartValue)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: could not compute own hash")
 	}
-	// log("computed own hash")
-
-	if !bytes.Equal(own_hash, hash) {
+	if !bytes.Equal(ownHash, hash) {
 		log("hash not equal. quitting.")
+		return errors.New("Hash not equal. Quitting.")
 	}
-	// log("compared hashes")
 
+	// Update container
 	i.State.ReceivedReadys.Add(senderID, signedMessage)
-	// log("added to received readys")
 
-	has_sent_final := i.State.ReceivedReadys.HasSentFinal()
-	if has_sent_final {
+	// Check if already sent findal
+	hasSentFinal := i.State.ReceivedReadys.HasSentFinal()
+	if hasSentFinal {
 		log("has sent final. quitting.")
 		return nil
 	}
 
-	// len_readys := i.State.ReceivedReadys.GetLen()
-	// log(fmt.Sprintf("len readys: %v", len_readys))
-
-	has_quorum := i.State.ReceivedReadys.HasQuorum()
-	if !has_quorum {
+	// Check if has quorum to send final
+	hasQuorum := i.State.ReceivedReadys.HasQuorum()
+	if !hasQuorum {
 		log("dont have quorum. quitting.")
 		return nil
 	}
 
 	// Aggregate ready messages as proof
-
-	aggregated_msg := signedMessage
+	aggregatedMsg := signedMessage
 	if i.State.UseBLS {
-		aggregated_msg, err = aggregateMsgs(i.State.ReceivedReadys.GetMessages())
+		aggregatedMsg, err = aggregateMsgs(i.State.ReceivedReadys.GetMessages())
 		if err != nil {
 			return errors.Wrap(err, "uponVCBCReady: failed to aggregate messages")
 		}
 	}
 
-	vcbcFinalMsg, err := i.CreateVCBCFinal(hash, aggregated_msg)
+	// Create VCBC Final
+	vcbcFinalMsg, err := i.CreateVCBCFinal(hash, aggregatedMsg)
 	if err != nil {
 		return errors.Wrap(err, "uponVCBCReady: failed to create VCBCReady message with proof")
 	}
-	// log("created vcbc final")
 
 	i.Broadcast(vcbcFinalMsg)
-	// log("broadcasted")
 
+	// Update state
 	i.State.ReceivedReadys.SetSentFinal()
-	// log("set sent final.")
+
 	log(fmt.Sprintf("%v sent final.", int(i.State.Share.OperatorID)))
 
 	return nil
@@ -119,7 +117,6 @@ func aggregateMsgs(msgs []*messages.SignedMessage) (*messages.SignedMessage, err
 			}
 		}
 	}
-	// TODO: REWRITE THIS!
 	sort.Slice(ret.Signers, func(i, j int) bool {
 		return ret.Signers[i] < ret.Signers[j]
 	})
@@ -135,7 +132,7 @@ func isValidVCBCReady(
 	logger *zap.Logger,
 ) error {
 
-	// logger
+	// Logger
 	log := func(str string) {
 
 		if state.HideLogs || state.HideValidationLogs || state.DecidedLogOnly {
@@ -146,9 +143,6 @@ func isValidVCBCReady(
 
 	log("start")
 
-	// if signedMsg.Message.MsgType != specalea.VCBCReadyMsgType {
-	// 	return errors.New("msg type is not VCBCReadyMsgType")
-	// }
 	if signedMsg.Message.Height != state.Height {
 		return errors.New("wrong msg height")
 	}
@@ -168,7 +162,7 @@ func isValidVCBCReady(
 	}
 	log("validated")
 
-	// author
+	// Check author
 	author := VCBCReadyData.Author
 	authorInCommittee := false
 	for _, opID := range operators {
@@ -180,16 +174,6 @@ func isValidVCBCReady(
 		return errors.New("author (OperatorID) doesn't exist in Committee")
 	}
 	log("checked author in committee")
-
-	// Signature will be checked outside
-	// If it's not using BLS -> verify
-	// If it's using BLS but it's not using AggregateVerify -> verify
-	// If it's using BLS and AggregateVerify, verify only when quorum is reached
-	// state.ReadyCounter[author] += 1
-	// if !(state.UseBLS) || !(state.AggregateVerify) || (state.ReadyCounter[author] == state.Share.Quorum) {
-	// 	Verify(state, config, signedMsg, operators)
-	// 	log("checked signature")
-	// }
 
 	return nil
 }

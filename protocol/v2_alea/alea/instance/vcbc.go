@@ -3,7 +3,6 @@ package instance
 import (
 	"github.com/pkg/errors"
 
-	// specalea "github.com/MatheusFranco99/ssv-spec-AleaBFT/alea"
 	"go.uber.org/zap"
 )
 
@@ -20,12 +19,11 @@ func (i *Instance) StartVCBC(data []byte) error {
 
 	log("start")
 
-	// create VCBCSend message and broadcasts
+	// Create VCBCSend message and broadcasts
 	msgToBroadcast, err := i.CreateVCBCSend(data)
 	if err != nil {
 		return errors.Wrap(err, "StartVCBC: failed to create VCBCSend message")
 	}
-	// log("created vcbc send")
 
 	i.Broadcast(msgToBroadcast)
 	log("broadcasted")

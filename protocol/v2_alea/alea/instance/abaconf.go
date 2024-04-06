@@ -16,19 +16,19 @@ import (
 
 func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 
-	// get data
+	// Decode
 	ABAConfData, err := signedABAConf.Message.GetABAConfData()
 	if err != nil {
 		return errors.Wrap(err, "uponABAConf:could not get ABAConfData from signedABAConf")
 	}
 
-	// sender
+	// Get attributes
 	senderID := signedABAConf.GetSigners()[0]
 	acround := ABAConfData.ACRound
 	votes := ABAConfData.Votes
 	round := ABAConfData.Round
 
-	//funciton identifier
+	// Funciton identifier
 	i.State.AbaConfLogTag += 1
 
 	// logger
@@ -80,12 +80,6 @@ func (i *Instance) uponABAConf(signedABAConf *messages.SignedMessage) error {
 	log(fmt.Sprintf("len conf: %v", len_conf))
 	if len_conf >= int(i.State.Share.Quorum) {
 		log("got conf quorum")
-
-		// coin := i.config.GetCoinF()(round)
-		// coin := byte(1)
-		// rand.Seed(int64(acround)+int64(round))
-		// coin := byte(rand.Intn(2))
-		// coin := Coin(int(round), int(author), int(priority))
 
 		coin := i.State.CommonCoin.GetCoin(acround, round)
 
@@ -198,18 +192,6 @@ func isValidABAConf(
 		return errors.Wrap(err, "ABAConfData invalid")
 	}
 	log("validated")
-
-	// Signature will be checked outside
-	// counter := state.AbaConfCounter
-	// data := ABAConfData
-	// if _, ok := counter[data.ACRound]; !ok {
-	// 	counter[data.ACRound] = make(map[specalea.Round]uint64)
-	// }
-	// counter[data.ACRound][data.Round] += 1
-	// if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound][data.Round] == state.Share.Quorum || counter[data.ACRound][data.Round] == state.Share.PartialQuorum) {
-	// 	Verify(state, config, signedMsg, operators)
-	// 	log("checked signature")
-	// }
 
 	return nil
 }

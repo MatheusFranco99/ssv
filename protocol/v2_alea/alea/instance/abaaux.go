@@ -14,19 +14,19 @@ import (
 
 func (i *Instance) uponABAAux(signedABAAux *messages.SignedMessage) error {
 
-	// get message Data
+	// Decode
 	ABAAuxData, err := signedABAAux.Message.GetABAAuxData()
 	if err != nil {
 		return errors.Wrap(err, "uponABAAux: could not get ABAAuxData from signedABAAux")
 	}
 
-	// sender
+	// Sender
 	senderID := signedABAAux.GetSigners()[0]
 	acround := ABAAuxData.ACRound
 	vote := ABAAuxData.Vote
 	round := ABAAuxData.Round
 
-	//funciton identifier
+	// Funciton identifier
 	i.State.AbaAuxLogTag += 1
 
 	// logger
@@ -145,18 +145,6 @@ func isValidABAAux(
 		return errors.Wrap(err, "ABAAuxData invalid")
 	}
 	log("validated")
-
-	// Signature will be checked outside
-	// counter := state.AbaAuxCounter
-	// data := ABAAuxData
-	// if _, ok := counter[data.ACRound]; !ok {
-	// 	counter[data.ACRound] = make(map[specalea.Round]uint64)
-	// }
-	// counter[data.ACRound][data.Round] += 1
-	// if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound][data.Round] == state.Share.Quorum || counter[data.ACRound][data.Round] == state.Share.PartialQuorum) {
-	// 	Verify(state, config, signedMsg, operators)
-	// 	log("checked signature")
-	// }
 
 	return nil
 }

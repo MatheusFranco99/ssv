@@ -16,19 +16,19 @@ import (
 
 func (i *Instance) uponABAInit(signedABAInit *messages.SignedMessage) error {
 
-	// get data
+	// Decode
 	abaInitData, err := signedABAInit.Message.GetABAInitData()
 	if err != nil {
 		return errors.Wrap(err, "uponABAInit: could not get abainitdata from signedABAInit")
 	}
 
-	// sender
+	// Get attributes
 	senderID := signedABAInit.GetSigners()[0]
 	acround := abaInitData.ACRound
 	round := abaInitData.Round
 	vote := abaInitData.Vote
 
-	//funciton identifier
+	// Funciton identifier
 	i.State.AbaInitLogTag += 1
 
 	// logger
@@ -238,18 +238,6 @@ func isValidABAInit(
 		return errors.Wrap(err, "ABAInitData invalid")
 	}
 	log("validated")
-
-	// Signature will be checked outside
-	// counter := state.AbaInitCounter
-	// data := ABAInitData
-	// if _, ok := counter[data.ACRound]; !ok {
-	// 	counter[data.ACRound] = make(map[specalea.Round]uint64)
-	// }
-	// counter[data.ACRound][data.Round] += 1
-	// if !(state.UseBLS) || !(state.AggregateVerify) || (counter[data.ACRound][data.Round] == state.Share.Quorum || counter[data.ACRound][data.Round] == state.Share.PartialQuorum) {
-	// 	Verify(state, config, signedMsg, operators)
-	// 	log("checked signature")
-	// }
 
 	return nil
 }

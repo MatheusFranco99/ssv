@@ -561,9 +561,6 @@ func (signedMsg *SignedMessage) DeepCopy() *SignedMessage {
 // Validate returns error if msg validation doesn't pass.
 // Msg validation checks the msg, it's variables for validity.
 func (signedMsg *SignedMessage) Validate() error {
-	// if len(signedMsg.Signature) != 96 {
-	// 	return errors.New("message signature is invalid")
-	// }
 	if len(signedMsg.Signers) == 0 {
 		return errors.New("message signers is empty")
 	}

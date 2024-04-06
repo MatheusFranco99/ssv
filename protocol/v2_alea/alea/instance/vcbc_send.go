@@ -14,17 +14,17 @@ import (
 
 func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
-	// get Data
+	// Decode
 	vcbcSendData, err := signedMessage.Message.GetVCBCSendData()
 	if err != nil {
 		errors.New("uponVCBCSend: could not get vcbcSendData data from signedMessage")
 	}
 
-	// sender
+	// Get sender
 	sender := signedMessage.GetSigners()[0]
 	data := vcbcSendData.Data
 
-	//funciton identifier
+	// Funciton identifier
 	i.State.VCBCSendLogTag += 1
 
 	// logger
@@ -38,35 +38,32 @@ func (i *Instance) uponVCBCSend(signedMessage *messages.SignedMessage) error {
 
 	log("start")
 
+	// Init time if not initialized before
 	if i.initTime == -1 {
 		i.initTime = makeTimestamp()
 	}
 
-	has_sent := i.State.SentReadys.Has(sender)
-	// log(fmt.Sprintf("check if has sent %v", has_sent))
+	// Check if already send VCBC Ready
+	hasSent := i.State.SentReadys.Has(sender)
 
-	// if never sent ready, or have already sent and the data is equal
-	if !has_sent || (has_sent && i.State.SentReadys.EqualData(sender, data)) {
+	// If never sent ready, or have already sent and the data is equal
+	if !hasSent || (hasSent && i.State.SentReadys.EqualData(sender, data)) {
 
+		// Update state
 		i.State.SentReadys.Add(sender, data)
-		// log("added to sent readys structure")
 
-		// create VCBCReady message with hash
+		// Create VCBCReady message with hash
 		hash, err := types.ComputeSigningRoot(messages.NewByteRoot([]byte(data)), types.ComputeSignatureDomain(i.config.GetSignatureDomainType(), types.QBFTSignatureType))
 		if err != nil {
 			return errors.Wrap(err, "uponVCBCSend: could not compute data hash")
 		}
-		// log("computed hash")
 
 		vcbcReadyMsg, err := i.CreateVCBCReady(hash, sender)
 		if err != nil {
 			return errors.New("uponVCBCSend: failed to create VCBCReady message with proof")
 		}
-		// log("created VCBCReady")
 
-		// FIX ME : send specifically to author
 		i.Broadcast(vcbcReadyMsg)
-		// log("broadcasted")
 		log(fmt.Sprintf("%v sent ready to %v", int(i.State.Share.OperatorID), int(sender)))
 	}
 
@@ -105,10 +102,6 @@ func isValidVCBCSend(
 		return errors.New("msg allows 1 signer")
 	}
 	log("checked number of signers is 1")
-
-	// Signature will be verified outside
-	// Verify(state, config, signedMsg, operators)
-	// log("checked signature")
 
 	VCBCSendData, err := signedMsg.Message.GetVCBCSendData()
 

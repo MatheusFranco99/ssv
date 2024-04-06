@@ -20,6 +20,8 @@ func InitializeContainerAcRound(container map[specalea.ACRound]*messages.Message
 		container[acround] = messages.NewMsgContainer()
 	}
 }
+
+// Check if has quorum and, if so, verify and process the quorum of messages
 func (i *Instance) WaitQuorum(container *messages.MessageContainer) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 
 	if container.Len() == int(i.State.Share.Quorum) {
@@ -51,13 +53,12 @@ func (i *Instance) WaitPartialQuorumAndQuorum(container *messages.MessageContain
 	}
 }
 
+// Wait VCBC Final:
+// - VCBC Final:
+//   - Wait quorum -> aggregate and BLS verify the aggregated msg fields + process buffer o msgs
+//   - Post quorum -> BLS verify the aggregated msg + process msg logic
 func (i *Instance) WaitVCBCFinal(container *messages.MessageContainer, msg *messages.SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *messages.SignedMessage, err error) {
 
-	// If Final:
-	// 		i) Wait quorum -> aggregate and BLS verify the aggregated msg fields + process buffer o msgs
-	//		ii) post quorum -> BLS verify the aggregated msg + process msg logic
-
-	// i) Quorum -> aggregate and BLS verify the aggregated msg fields + process buffer o msgs
 	if container.Len() == int(i.State.Share.Quorum) {
 		err := i.VerifyBLSAggregateFinals(container.GetMessages())
 		if err != nil {
@@ -65,7 +66,6 @@ func (i *Instance) WaitVCBCFinal(container *messages.MessageContainer, msg *mess
 		}
 		return i.ProcessBufferOfMessages(container.GetMessages())
 
-		// ii) Post quorum -> BLS verify the aggregated msg + process msg logic
 	} else if container.Len() > int(i.State.Share.Quorum) {
 
 		aggregated_msg, err := GetAggregatedMessageFromVCBCFinal(msg)
@@ -79,7 +79,6 @@ func (i *Instance) WaitVCBCFinal(container *messages.MessageContainer, msg *mess
 
 		return i.ProcessMsgLogic(msg)
 
-		// Wait
 	} else {
 		return i.State.Decided, i.State.DecidedValue, i.State.DecidedMessage, nil
 	}
